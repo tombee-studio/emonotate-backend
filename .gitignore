@@ -1,0 +1,7 @@
+.DS_Store
+*.pyc
+node_modules
+npm-debug.log
+frontend/build/*
+venv/
+migrations/

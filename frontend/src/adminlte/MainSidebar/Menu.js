@@ -9,6 +9,12 @@ const allLinks = [
         text: "Users",
         to: "/admin/users/",
         icon: "fa fa-users"
+    },
+    {
+        permission: "users.view_content",
+        text: "Contents",
+        to: "/admin/contents/",
+        icon: "fa fa-users"
     }
 ];
 

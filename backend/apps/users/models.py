@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
                                         BaseUserManager)
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
 
@@ -91,3 +92,33 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
             first_name=self.first_name,
             last_name=self.last_name,
         )
+
+
+class ValueType(models.Model):
+    title = models.CharField(default='', max_length=256)
+    axis_type = models.IntegerField(choices=(
+        (1, '平常状態を含んで上と下がある値'),
+        (2, '平常状態から上にしか上がらない値')), default=1)
+
+    def __str__(self):
+        return self.title
+
+
+class Content(models.Model):
+    title = models.CharField(max_length=256)
+    url = models.URLField(default='', max_length=1024)
+
+    def __str__(self):
+        return self.title
+
+
+class Curve(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(EmailUser,
+                             default=1,
+                             on_delete=models.CASCADE)
+    content = models.ForeignKey(Content, on_delete=models.PROTECT)
+    value_type = models.ForeignKey(ValueType, default=1, on_delete=models.CASCADE)
+    values = JSONField()
+    version = models.CharField(max_length=16)
+

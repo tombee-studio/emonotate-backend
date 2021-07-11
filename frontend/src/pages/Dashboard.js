@@ -167,7 +167,7 @@ export default function Dashboard(props) {
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
-          <Box pt={4}>
+          <Box m={1}>
             <UsersList users={users} />
           </Box>
           <Box pt={4}>

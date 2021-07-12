@@ -6,6 +6,14 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
 
+import random
+import string
+
+
+def randomname(n):
+    randlst = [random.choice(string.ascii_letters + string.digits) for i in range(n)]
+    return ''.join(randlst)
+
 
 class EmailUserManager(BaseUserManager):
     def _create_user(self, email, password, is_staff, is_superuser,
@@ -54,11 +62,10 @@ class EmailUserManager(BaseUserManager):
 
 
 class EmailUser(AbstractBaseUser, PermissionsMixin):
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
+    username = models.CharField(max_length=32, default=randomname(8))
 
     email = models.EmailField(
-        max_length=254,
+        max_length=256,
         unique=True,
         error_messages={
             'unique': 'That email address is already taken.'
@@ -72,7 +79,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['username']
 
     class Meta:
         permissions = (
@@ -81,17 +88,6 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
     def __unicode__(self):
         return self.email
-
-    def get_short_name(self):
-        return '{first_name}'.format(
-            first_name=self.first_name
-        )
-
-    def get_full_name(self):
-        return '{first_name} {last_name}'.format(
-            first_name=self.first_name,
-            last_name=self.last_name,
-        )
 
 
 class ValueType(models.Model):

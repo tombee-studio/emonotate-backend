@@ -89,6 +89,12 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     def __unicode__(self):
         return self.email
 
+    def get_short_name(self):
+        return self.username
+
+    def get_full_name(self):
+        return '%s(%s)' % (self.username, self.email)
+
 
 class ValueType(models.Model):
     title = models.CharField(default='', max_length=256)

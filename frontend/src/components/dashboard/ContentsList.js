@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pagination } from '@material-ui/lab';
-import { Card } from '@material-ui/core';
+import { Card, Divider, Grid } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -60,39 +60,55 @@ class UsersList extends React.Component {
       return (
         <Card>
           <Box m={2}>
-            <Pagination 
-              count={contents.pagination.total_pages}
-              style={{ flexGrow: 1 }}
-              variant="outlined" 
-              shape="rounded"
-              onChange={handlePaginate} />
-            <List className={classes.root}>
-              {
-                contents.models.map(content => (
-                  <ListItem alignItems="flex-start" key={content.id}>
-                    <ListItemAvatar>
-                      <Avatar alt={content.title} />
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={content.title}
-                      secondary={
-                        <React.Fragment>
-                          <Typography
-                            component="span"
-                            variant="body2"
-                            className={classes.inline}
-                            color="textPrimary"
-                          >
-                            {content.title}
-                          </Typography>
-                        </React.Fragment>
-                      }
-                    />
-                  </ListItem>
-                ))
-              }
-            </List>
+            <Grid container>
+              <Grid item xs={3}>
+                <Typography component="h5" variant="h5">
+                  動画
+                </Typography>
+              </Grid>
+              <Grid item xs={6} />
+              <Grid item 
+                style={{ flexGrow: 0 }} 
+                xs={3}>
+                <Pagination 
+                  count={contents.pagination.total_pages}
+                  variant="outlined" 
+                  shape="rounded"
+                  onChange={handlePaginate} />
+              </Grid>
+            </Grid>
           </Box>
+          <Divider />
+          <List className={classes.root}>
+            {
+              contents.models.map(content => (
+                <ListItem alignItems="flex-start"
+                  button
+                  key={content.id} 
+                  component="a" 
+                  href={'/app/new/' + content.id}>
+                  <ListItemAvatar>
+                    <Avatar alt={content.title} />
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={content.title}
+                    secondary={
+                      <React.Fragment>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          className={classes.inline}
+                          color="textPrimary"
+                        >
+                          {content.title}
+                        </Typography>
+                      </React.Fragment>
+                    }
+                  />
+                </ListItem>
+              ))
+            }
+          </List>
         </Card>
       );
     } else {

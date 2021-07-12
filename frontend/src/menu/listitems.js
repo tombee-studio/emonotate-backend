@@ -12,11 +12,5 @@ export const mainListItems = (
       </ListItemIcon>
       <ListItemText primary="ダッシュボード" />
     </ListItem>
-    <ListItem button component="a" href="/app/edit/">
-      <ListItemIcon>
-        <EditIcon />
-      </ListItemIcon>
-      <ListItemText primary="編集" />
-    </ListItem>
   </div>
 );

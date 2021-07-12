@@ -10,7 +10,7 @@ export default class App extends React.Component {
           {<Redirect to="/app/dashboard/" />}
         </Route>
         <Route exact path='/app/dashboard/' component={ Dashboard } />
-        <Route exact path='/app/edit/' component={ Dashboard } />
+        <Route exact path='/app/new/:id' component={ Dashboard } />
       </Router>
     );
   }

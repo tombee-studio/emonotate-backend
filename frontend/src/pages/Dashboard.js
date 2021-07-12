@@ -17,14 +17,14 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import { mainListItems } from '../menu/listitems';
-import UsersList from '../components/dashboard/UsersList';
+import ContentsList from '../components/dashboard/ContentsList';
 
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
       {'Copyright © '}
       <Link color="inherit" href="https://material-ui.com/">
-        Your Website
+        emonotate.com
       </Link>{' '}
       {new Date().getFullYear()}
       {'.'}
@@ -114,7 +114,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function Dashboard(props) {
-  const { users } = props;
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
   const handleDrawerOpen = () => {
@@ -167,8 +166,8 @@ export default function Dashboard(props) {
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
-          <Box pt={4}>
-            <UsersList users={users} />
+          <Box m={1}>
+            <ContentsList />
           </Box>
           <Box pt={4}>
             <Copyright />

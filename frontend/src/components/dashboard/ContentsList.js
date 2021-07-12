@@ -9,6 +9,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import Typography from '@material-ui/core/Typography';
+import ContentsListAPI from '../../helper/dashboard/ContentsListAPI';
 
 const styles = (theme) => ({
   root: {
@@ -25,50 +26,55 @@ class UsersList extends React.Component {
     super(props);
 
     this.state = {};
+    this.api = new ContentsListAPI();
   }
 
   componentDidMount() {
-    fetch('/api/users/?format=json')
-      .then(res => res.json())
-      .then(users => {
+    this.api.call(
+      contents => {
         this.setState({
-          users: users
+          contents: contents
         });
-      }); 
+      },
+      err => {
+        throw err;
+      });
   }
 
   render() {
     const { classes } = this.props;
-    const { users } = this.state;
+    const { contents } = this.state;
     const handlePaginate = (e, page) => {
-      fetch(`/api/users/?format=json&page=${page}`)
-        .then(res => {
-          return res.json();
-        })
-        .then(users => {
+      this.api.call(
+        contents => {
           this.setState({
-            users: users
+            contents: contents
           });
-        });
+        },
+        err => {
+          throw err;
+        },
+        page);
     };
-    if(users) {
+    if(contents) {
       return (
         <Card>
           <Box m={2}>
             <Pagination 
-              count={users.pagination.total_pages} 
+              count={contents.pagination.total_pages}
+              style={{ flexGrow: 1 }}
               variant="outlined" 
               shape="rounded"
               onChange={handlePaginate} />
             <List className={classes.root}>
               {
-                users.models.map(user => (
-                  <ListItem alignItems="flex-start" key={user.id}>
+                contents.models.map(content => (
+                  <ListItem alignItems="flex-start" key={content.id}>
                     <ListItemAvatar>
-                      <Avatar alt={user.first_name} />
+                      <Avatar alt={content.title} />
                     </ListItemAvatar>
                     <ListItemText
-                      primary={user.first_name + " " + user.last_name}
+                      primary={content.title}
                       secondary={
                         <React.Fragment>
                           <Typography
@@ -77,7 +83,7 @@ class UsersList extends React.Component {
                             className={classes.inline}
                             color="textPrimary"
                           >
-                            {user.email}
+                            {content.title}
                           </Typography>
                         </React.Fragment>
                       }
@@ -90,7 +96,13 @@ class UsersList extends React.Component {
         </Card>
       );
     } else {
-      return (<Card />);
+      return (
+        <Card>
+          <Box>
+            LOAD DATA...
+          </Box>
+        </Card>
+      );
     }
   };
 };

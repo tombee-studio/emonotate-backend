@@ -17,7 +17,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import { mainListItems } from '../menu/listitems';
-import UsersList from '../components/dashboard/UsersList';
+import ContentsList from '../components/dashboard/ContentsList';
 
 function Copyright() {
   return (
@@ -114,7 +114,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function Dashboard(props) {
-  const { users } = props;
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
   const handleDrawerOpen = () => {
@@ -168,7 +167,7 @@ export default function Dashboard(props) {
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
           <Box m={1}>
-            <UsersList users={users} />
+            <ContentsList />
           </Box>
           <Box pt={4}>
             <Copyright />

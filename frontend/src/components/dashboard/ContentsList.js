@@ -1,13 +1,8 @@
 import React from 'react';
 import { Pagination } from '@material-ui/lab';
-import { Card, Divider, Grid } from '@material-ui/core';
+import { Card, Divider, Grid, ImageListItem } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import { Box } from '@material-ui/core';
-import ListItemText from '@material-ui/core/ListItemText';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import Avatar from '@material-ui/core/Avatar';
+import { Box, ImageList, ImageListItemBar } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
 import ContentsListAPI from '../../helper/dashboard/ContentsListAPI';
 
@@ -58,58 +53,35 @@ class UsersList extends React.Component {
     };
     if(contents) {
       return (
-        <Card>
+        <Box className={classes.root}>
           <Box m={2}>
-            <Grid container>
-              <Grid item xs={3}>
-                <Typography component="h5" variant="h5">
-                  動画
-                </Typography>
-              </Grid>
-              <Grid item xs={6} />
-              <Grid item 
-                style={{ flexGrow: 0 }} 
-                xs={3}>
-                <Pagination 
-                  count={contents.pagination.total_pages}
-                  variant="outlined" 
-                  shape="rounded"
-                  onChange={handlePaginate} />
-              </Grid>
-            </Grid>
+            <Pagination 
+              count={contents.pagination.total_pages}
+              variant="outlined" 
+              shape="rounded"
+              onChange={handlePaginate} />
           </Box>
-          <Divider />
-          <List className={classes.root}>
+          <ImageList cols={4} gap={16} style={{bgcolor: "#000"}}>
             {
               contents.models.map(content => (
-                <ListItem alignItems="flex-start"
-                  button
+                <ImageListItem
                   key={content.id} 
                   component="a" 
                   href={'/app/new/' + content.id}>
-                  <ListItemAvatar>
-                    <Avatar alt={content.title} />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={content.title}
-                    secondary={
-                      <React.Fragment>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          className={classes.inline}
-                          color="textPrimary"
-                        >
-                          {content.title}
-                        </Typography>
-                      </React.Fragment>
-                    }
+                  <img
+                    srcSet={`https://placehold.jp/640x480.png`}
+                    alt={content.title}
+                    loading="lazy"
                   />
-                </ListItem>
+                  <ImageListItemBar
+                    title={content.title}
+                    subtitle={<span>added by: {content.user.username}</span>}
+                  />
+                </ImageListItem>
               ))
             }
-          </List>
-        </Card>
+          </ImageList>
+        </Box>
       );
     } else {
       return (

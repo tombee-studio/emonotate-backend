@@ -20,10 +20,15 @@ class ValueTypeSerializer(serializers.ModelSerializer):
 
 
 class ContentSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
     class Meta:
         model = Content
 
 
 class CurveSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    content = ContentSerializer()
+
     class Meta:
         model = Curve

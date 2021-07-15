@@ -75,7 +75,7 @@ class UsersList extends React.Component {
                   />
                   <ImageListItemBar
                     title={content.title}
-                    subtitle={<span>added by: {content.user.username}</span>}
+                    subtitle={<span>added by: {content.user.email}</span>}
                   />
                 </ImageListItem>
               ))

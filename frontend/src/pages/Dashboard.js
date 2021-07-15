@@ -165,14 +165,15 @@ export default function Dashboard(props) {
       </Drawer>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <Container maxWidth="lg" className={classes.container}>
+        <Box m={2}>
+          <Divider />
           <Box m={1}>
             <ContentsList />
           </Box>
           <Box pt={4}>
             <Copyright />
           </Box>
-        </Container>
+        </Box>
       </main>
     </div>
   );

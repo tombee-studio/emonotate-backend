@@ -87,7 +87,7 @@ class MakeCurveComponent extends React.Component {
               ref={node => this.chartNode = node}
               version="1.1"
               width="100%"
-              height="100%" />
+              height="240px" />
           </Grid>
         </Grid>
       </Box>

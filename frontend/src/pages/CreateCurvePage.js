@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
+import { useEffect } from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Drawer from '@material-ui/core/Drawer';
-import Box from '@material-ui/core/Box';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
@@ -11,13 +11,12 @@ import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import Badge from '@material-ui/core/Badge';
-import Container from '@material-ui/core/Container';
 import Link from '@material-ui/core/Link';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import { mainListItems } from '../menu/listitems';
-import ContentsList from '../components/dashboard/ContentsList';
+import MakeCurveComponent from '../components/CreateCurvePage/MakeCurveComponent';
 
 function Copyright() {
   return (
@@ -113,16 +112,39 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function Dashboard(props) {
-  const classes = useStyles();
-  const [open, setOpen] = React.useState(false);
+const CreateCurvePage = (props) => {
+  const { params } = props.match;
+  const id = parseInt(params.id, 10);
+  const classes= useStyles();
+  const [open, setOpen] = useState(false);
+  const [content, setContent] = useState({
+    "id": 1,
+    "user": {
+        "id": 1,
+        "username": "",
+        "email": "",
+        "last_login": "",
+        "is_active": true,
+        "date_joined": "",
+        "last_updated": ""
+    },
+    "title": "",
+    "url": ""
+  });
   const handleDrawerOpen = () => {
     setOpen(true);
   };
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+
+  useEffect(() => {
+    fetch(`/api/contents/${id}?format=json`)
+      .then(res => res.json())
+      .then(content => {
+        setContent(content);
+      });
+  }, []);
 
   return (
     <div className={classes.root}>
@@ -165,16 +187,14 @@ export default function Dashboard(props) {
       </Drawer>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <Box m={2}>
-          <Divider />
-          <Box m={1}>
-            <ContentsList />
-          </Box>
-          <Box pt={4}>
-            <Copyright />
-          </Box>
-        </Box>
+        <MakeCurveComponent content={content} valueType={{
+          "id": 1,
+          "title": "幸福度",
+          "axis_type": 1
+        }} />
       </main>
     </div>
   );
-}
+};
+
+export default CreateCurvePage;

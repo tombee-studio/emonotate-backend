@@ -107,6 +107,7 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
+    user = models.ForeignKey(EmailUser, default=101, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
 

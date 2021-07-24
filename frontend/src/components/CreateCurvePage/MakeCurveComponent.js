@@ -10,8 +10,6 @@ class MakeCurveComponent extends React.Component {
     this.createEmotionalArcInputField = this.createEmotionalArcInputField.bind(this);
   }
 
-
-
   createEmotionalArcInputField() {
     const { valueType } = this.props;
     const value_type = valueType;
@@ -77,7 +75,7 @@ class MakeCurveComponent extends React.Component {
               id="video"
               ref={node => this.videoNode = node}
               src={content.url}
-              width="640px"
+              height="320px"
               type="video/mp4"
               controls />
           </Grid>
@@ -87,7 +85,7 @@ class MakeCurveComponent extends React.Component {
               ref={node => this.chartNode = node}
               version="1.1"
               width="100%"
-              height="240px" />
+              height="280px" />
           </Grid>
         </Grid>
       </Box>

@@ -1,7 +1,6 @@
 import React from "react";
 import { Box } from "@material-ui/core";
 import { Grid } from "@material-ui/core";
-import { Helmet } from "react-helmet";
 import videojs from 'video.js'
 import "video.js/dist/video-js.css"
 
@@ -9,7 +8,7 @@ class MakeCurveComponent extends React.Component {
   constructor(props) {
     super(props);
 
-    const { content } = props;
+    const { content } = this.props;
 
     this.CONSTANT = {
       video: 'video',
@@ -80,18 +79,14 @@ class MakeCurveComponent extends React.Component {
 
   render() {
     return (
-      <Box m={2}>
-        <Helmet>
-          <script src="/static/users/js/emotional-arc-input-field.js" />
-          <link rel="stylesheet" href="/static/users/css/emotional-arc-input-field.css" />
-          <script src="/static/users/d3/d3.min.js" />
-        </Helmet>
+      <div>
         <Grid container>
           <Grid item>
             <div data-vjs-player>
               <video
                 id={ this.CONSTANT.video }
                 ref={ node => this.videoNode = node }
+                height={300}
                 className="video-js" />
             </div>
           </Grid>
@@ -104,7 +99,7 @@ class MakeCurveComponent extends React.Component {
               height="280px" />
           </Grid>
         </Grid>
-      </Box>
+      </div>
     );
   }
 };

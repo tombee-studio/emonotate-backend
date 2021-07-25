@@ -19,6 +19,8 @@ import { mainListItems } from '../menu/listitems';
 import MakeCurveComponent from '../components/CreateCurvePage/MakeCurveComponent';
 import { Box } from '@material-ui/core';
 
+import { Helmet } from "react-helmet";
+
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
@@ -150,6 +152,11 @@ const CreateCurvePage = (props) => {
   return (
     <div className={classes.root}>
       <CssBaseline />
+      <Helmet>
+          <script src="/static/users/js/emotional-arc-input-field.js" />
+          <link rel="stylesheet" href="/static/users/css/emotional-arc-input-field.css" />
+          <script src="/static/users/d3/d3.min.js" />
+      </Helmet>
       <AppBar position="absolute" className={clsx(classes.appBar, open && classes.appBarShift)}>
         <Toolbar className={classes.toolbar}>
           <IconButton
@@ -188,11 +195,17 @@ const CreateCurvePage = (props) => {
       </Drawer>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <MakeCurveComponent content={content} valueType={{
-          "id": 1,
-          "title": "幸福度",
-          "axis_type": 1
-        }} />
+        <Box m={2}>
+          { 
+          content.url ?
+            <MakeCurveComponent content={content} valueType={{
+              "id": 1,
+              "title": "幸福度",
+              "axis_type": 1
+            }} /> :
+            <div>少々お待ちください</div>
+          }
+        </Box>
         <Box pt={4}>
           <Copyright />
         </Box>

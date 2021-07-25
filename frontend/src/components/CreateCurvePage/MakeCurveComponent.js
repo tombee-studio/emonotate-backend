@@ -75,10 +75,12 @@ class MakeCurveComponent extends React.Component {
       console.log('READY');
     });
 
-    window.onload = () => {
-      console.log('ON LOAD');
-      this.createEmotionalArcInputField();
-    };
+    document.addEventListener('readystatechange', () => {
+      if(document.readyState == 'complete') {
+        console.log('ON LOAD');
+        this.createEmotionalArcInputField();
+      }
+    });
   }
 
   render() {

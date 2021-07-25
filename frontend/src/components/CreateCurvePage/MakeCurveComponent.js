@@ -20,7 +20,7 @@ class MakeCurveComponent extends React.Component {
       autoplay: true,
       controls: true,
       sources: [{
-        src: 'https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_480_1_5MG.mp4',
+        src: content.url,
         type: 'video/mp4'
       }]
     }
@@ -71,15 +71,10 @@ class MakeCurveComponent extends React.Component {
   }
 
   componentDidMount() {
-    this.player = videojs(this.videoNode, this.videoJsOptions, () => {
-      console.log('READY');
-    });
+    this.player = videojs(this.videoNode, this.videoJsOptions);
 
-    document.addEventListener('readystatechange', () => {
-      if(document.readyState == 'complete') {
-        console.log('ON LOAD');
-        this.createEmotionalArcInputField();
-      }
+    this.player.on('loadedmetadata', () => {
+      this.createEmotionalArcInputField();
     });
   }
 

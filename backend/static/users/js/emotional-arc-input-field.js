@@ -9,7 +9,6 @@ function EmotionalArcField(chartNode, videoNode, axis, option) {
     if(!this.chart || !this.video || !this.axis) throw `can't find node`;
 
     this.video.addEventListener('loadeddata', () => {
-        console.log('LOADED DATA');
         this.isValid = true;
         this.onInitVideoLoaded();
         this.onVideoLoaded();

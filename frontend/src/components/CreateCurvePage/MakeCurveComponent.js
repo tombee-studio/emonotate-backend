@@ -1,5 +1,5 @@
 import React from "react";
-import { Box } from "@material-ui/core";
+import { DataGrid } from '@material-ui/data-grid';
 import { Grid } from "@material-ui/core";
 import videojs from 'video.js'
 import "video.js/dist/video-js.css"
@@ -9,7 +9,6 @@ class MakeCurveComponent extends React.Component {
     super(props);
 
     const { content } = this.props;
-
     this.CONSTANT = {
       video: 'video',
       chart: 'chart',
@@ -43,29 +42,32 @@ class MakeCurveComponent extends React.Component {
       };
     }
     axis.title = value_type.title;
-    var inputField = new EmotionalArcField(this.chartNode, this.videoNode, axis, { 
+    this.inputField = new EmotionalArcField(this.chartNode, this.videoNode, axis, { 
         'r': 12,
         'color': 'black',
     });
-    inputField.onVideoLoaded = () => {
-        var dataset = [];
-        dataset.push({
-            x: 0.0,
-            y: 0.0,
-            axis: 'v',
-            type: 'fixed',
-            text:   "",
-            reason: "",
-        });
-        dataset.push({
-            x: inputField.duration,
-            y: 0.0,
-            axis: 'v',
-            type: 'fixed',
-            text:   "",
-            reason: "",
-        });
-        inputField.load(dataset);
+    this.inputField.onVideoLoaded = () => {
+      const dataset = [
+        {
+          id: 0,
+          x: 0.0,
+          y: 0.0,
+          axis: 'v',
+          type: 'fixed',
+          text:   "",
+          reason: "",
+        }, {
+          id: 1,
+          x: this.inputField.duration,
+          y: 0.0,
+          axis: 'v',
+          type: 'fixed',
+          text:   "",
+          reason: "",
+      }];
+      if(this.inputField) {
+        this.inputField.load(dataset);
+      }
     };
   }
 
@@ -78,10 +80,30 @@ class MakeCurveComponent extends React.Component {
   }
 
   render() {
+    const columns = [
+      {
+        field: 'id',
+        headerName: '通し番号',
+        width: 30
+      }, 
+      {
+        field: 'x',
+        headerName: '時間',
+        width: 30
+      }, {
+        field: 'y',
+        headerName: '値',
+        width: 30
+      }, {
+        field: 'text',
+        headerName: '説明',
+        width: 200
+      }
+    ];
     return (
       <div>
         <Grid container>
-          <Grid item>
+          <Grid item xs={7}>
             <div data-vjs-player>
               <video
                 id={ this.CONSTANT.video }

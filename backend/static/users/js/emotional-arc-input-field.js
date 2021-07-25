@@ -14,13 +14,17 @@ function EmotionalArcField(chartNode, videoNode, axis, option) {
         this.onVideoLoaded();
 
         video.addEventListener('timeupdate', () => {
-            this.current = this.video.currentTime;
-            this.svg.select(".head-line")
-                .attr("x1", this.xScale(this.current))
-                .attr("x2", this.xScale(this.current));
+            this.updateVideo();
         });
     });
     return this;
+}
+
+EmotionalArcField.prototype.updateVideo = function() {
+    this.current = this.video.currentTime;
+    this.svg.select(".head-line")
+        .attr("x1", this.xScale(this.current))
+        .attr("x2", this.xScale(this.current));
 }
 
 EmotionalArcField.prototype.onInitVideoLoaded = function() {

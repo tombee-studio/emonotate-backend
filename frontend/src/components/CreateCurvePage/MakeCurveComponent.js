@@ -2,15 +2,29 @@ import React from "react";
 import { Box } from "@material-ui/core";
 import { Grid } from "@material-ui/core";
 import { Helmet } from "react-helmet";
+import videojs from 'video.js'
+import "video.js/dist/video-js.css"
 
 class MakeCurveComponent extends React.Component {
   constructor(props) {
     super(props);
 
+    const { content } = props;
+
+    this.CONSTANT = {
+      video: 'video',
+      chart: 'chart',
+    };
     this.createEmotionalArcInputField = this.createEmotionalArcInputField.bind(this);
+    this.videoJsOptions = {
+      autoplay: true,
+      controls: true,
+      sources: [{
+        src: content.url,
+        type: 'video/mp4'
+      }]
+    }
   }
-
-
 
   createEmotionalArcInputField() {
     const { valueType } = this.props;
@@ -57,13 +71,14 @@ class MakeCurveComponent extends React.Component {
   }
 
   componentDidMount() {
-    window.onload = () => {
+    this.player = videojs(this.videoNode, this.videoJsOptions);
+
+    this.player.on('loadedmetadata', () => {
       this.createEmotionalArcInputField();
-    };
+    });
   }
 
   render() {
-    const { content } = this.props;
     return (
       <Box m={2}>
         <Helmet>
@@ -73,21 +88,20 @@ class MakeCurveComponent extends React.Component {
         </Helmet>
         <Grid container>
           <Grid item>
-            <video
-              id="video"
-              ref={node => this.videoNode = node}
-              src={content.url}
-              width="640px"
-              type="video/mp4"
-              controls />
+            <div data-vjs-player>
+              <video
+                id={ this.CONSTANT.video }
+                ref={ node => this.videoNode = node }
+                className="video-js" />
+            </div>
           </Grid>
           <Grid item xs={12}>
             <svg
-              id="chart"
+              id={ this.CONSTANT.chart }
               ref={node => this.chartNode = node}
               version="1.1"
               width="100%"
-              height="240px" />
+              height="280px" />
           </Grid>
         </Grid>
       </Box>

@@ -8,26 +8,30 @@ function EmotionalArcField(chartNode, videoNode, axis, option) {
     this.option = option;
     if(!this.chart || !this.video || !this.axis) throw `can't find node`;
 
-    video.addEventListener('loadeddata', () => {
+    this.video.addEventListener('loadeddata', () => {
         this.isValid = true;
         this.onInitVideoLoaded();
         this.onVideoLoaded();
 
-        video.addEventListener('timeupdate', () => {
-            this.current = this.video.currentTime;
-            this.svg.select(".head-line")
-                .attr("x1", this.xScale(this.current))
-                .attr("x2", this.xScale(this.current));
+        this.video.addEventListener('timeupdate', () => {
+            this.updateVideo();
         });
     });
     return this;
+}
+
+EmotionalArcField.prototype.updateVideo = function() {
+    this.current = this.video.currentTime;
+    this.svg.select(".head-line")
+        .attr("x1", this.xScale(this.current))
+        .attr("x2", this.xScale(this.current));
 }
 
 EmotionalArcField.prototype.onInitVideoLoaded = function() {
     var self = this;
     this.data = [];
     this.svg = d3.select('#chart');
-    var margin = { top: 20, right: 20, bottom: 40, left: 40 };
+    var margin = { top: 20, right: 20, bottom: 20, left: 40 };
     this.current = 0.0;
     this.duration = this.video.duration;
     this.size = {

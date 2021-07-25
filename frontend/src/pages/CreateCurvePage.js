@@ -17,6 +17,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import { mainListItems } from '../menu/listitems';
 import MakeCurveComponent from '../components/CreateCurvePage/MakeCurveComponent';
+import { Box } from '@material-ui/core';
 
 function Copyright() {
   return (
@@ -161,7 +162,7 @@ const CreateCurvePage = (props) => {
             <MenuIcon />
           </IconButton>
           <Typography component="h1" variant="h6" color="inherit" noWrap className={classes.title}>
-            Dashboard
+            emonotate
           </Typography>
           <IconButton color="inherit">
             <Badge badgeContent={4} color="secondary">
@@ -192,6 +193,9 @@ const CreateCurvePage = (props) => {
           "title": "幸福度",
           "axis_type": 1
         }} />
+        <Box pt={4}>
+          <Copyright />
+        </Box>
       </main>
     </div>
   );

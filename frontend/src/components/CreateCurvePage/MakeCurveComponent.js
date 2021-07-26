@@ -1,5 +1,6 @@
 import React from "react";
 import { DataGrid } from '@material-ui/data-grid';
+import Helmet from 'react-helmet';
 import { Grid } from "@material-ui/core";
 import videojs from 'video.js'
 import "video.js/dist/video-js.css"
@@ -102,6 +103,11 @@ class MakeCurveComponent extends React.Component {
     ];
     return (
       <div>
+        <Helmet>
+          <script src="/static/users/js/emotional-arc-input-field.js" />
+          <link rel="stylesheet" href="/static/users/css/emotional-arc-input-field.css" />
+          <script src="/static/users/d3/d3.min.js" />
+        </Helmet>
         <Grid container>
           <Grid item xs={7}>
             <div data-vjs-player>

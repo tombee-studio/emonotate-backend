@@ -27,6 +27,9 @@ class MakeCurveComponent extends React.Component {
         type: 'video/mp4'
       }]
     }
+    this.state = {
+      dataset: []
+    };
   }
 
   createEmotionalArcInputField() {
@@ -71,6 +74,9 @@ class MakeCurveComponent extends React.Component {
       }];
       if(this.inputField) {
         this.inputField.load(dataset);
+        this.setState({
+          dataset: dataset
+        });
       }
     };
   }
@@ -87,24 +93,26 @@ class MakeCurveComponent extends React.Component {
     const columns = [
       {
         field: 'id',
-        headerName: '通し番号',
-        width: 30
+        headerName: '番号',
+        width: 120,
       }, 
       {
         field: 'x',
         headerName: '時間',
-        width: 30
+        width: 120,
       }, {
         field: 'y',
         headerName: '値',
-        width: 30
+        width: 120,
       }, {
         field: 'text',
         headerName: '説明',
-        width: 200
+        width: 400,
+        editable: true
       }
     ];
     const { user } = window.django;
+    const { dataset } = this.state;
     return (
       <div>
         <Helmet>
@@ -113,7 +121,7 @@ class MakeCurveComponent extends React.Component {
           <script src="/static/users/d3/d3.min.js" />
         </Helmet>
         <Grid container>
-          <Grid item xs={7}>
+          <Grid item xs={5}>
             <div data-vjs-player>
               <video
                 id={ this.CONSTANT.video }
@@ -121,6 +129,14 @@ class MakeCurveComponent extends React.Component {
                 height={280}
                 className="video-js" />
             </div>
+          </Grid>
+          <Grid item xs={7}>
+            { this.state && 
+              <DataGrid
+                rows={dataset}
+                columns={columns}
+              />
+            }
           </Grid>
           <Grid item xs={12}>
             <svg

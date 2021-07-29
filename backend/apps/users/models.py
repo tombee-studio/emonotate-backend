@@ -110,6 +110,7 @@ class Content(models.Model):
     user = models.ForeignKey(EmailUser, default=101, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
+    data_type = models.CharField(default='video/mp4', max_length=32)
 
     def __str__(self):
         return self.title
@@ -124,4 +125,7 @@ class Curve(models.Model):
     value_type = models.ForeignKey(ValueType, default=1, on_delete=models.CASCADE)
     values = JSONField()
     version = models.CharField(max_length=16)
+
+    def __str__(self):
+        return '{} {}'.format(self.content.title, self.id)
 

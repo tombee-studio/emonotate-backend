@@ -20,16 +20,16 @@ class ValueTypeSerializer(serializers.ModelSerializer):
 
 
 class ContentSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Content
 
 
 class CurveSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    content = ContentSerializer()
-    value_type = ValueTypeSerializer()
+    content = ContentSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
+    value_type = ValueTypeSerializer(read_only=True)
 
     class Meta:
         model = Curve

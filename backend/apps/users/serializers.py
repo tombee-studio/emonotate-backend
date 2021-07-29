@@ -27,9 +27,5 @@ class ContentSerializer(serializers.ModelSerializer):
 
 
 class CurveSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    content = ContentSerializer()
-    value_type = ValueTypeSerializer()
-
     class Meta:
         model = Curve

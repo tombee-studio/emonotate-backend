@@ -197,35 +197,56 @@ EmotionalArcField.prototype.onDraggablePoint = function() {
         });
 }
 
-EmotionalArcField.prototype.submitTo = function(url) {
-    var data = this.data;
-    fetch(url, {
+EmotionalArcField.prototype.submit = function(user, content, valueType, version) {
+    var data = {
+        'user': user.id,
+        'content': content.id,
+        'value_type': valueType.id,
+        'values': this.data,
+        'version': version
+    };
+    fetch('/api/curves/?format=json', {
         method: 'POST',
         headers: {
-            'X-CSRFToken': CSRF_TOKEN,
+            'X-CSRFToken': window.django.csrf,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
     }).then(function(res) {
-        if(res.status != 200) throw res;
+        if(res.status != 200 && res.status != 201) throw res;
         return res.json();
     }).then(function(json) {
-        window.location = json;
+        window.location = '/';
+    }).catch(err => {
+        return err.text();
+    }).then(text => {
+        console.log(text);
     });
 }
 
-EmotionalArcField.prototype.updateOf = function(curveId) {
-    var data = this.data;
-    fetch(`/api/curve/${curveId}`, {
+EmotionalArcField.prototype.updateOf = function(curveId, content, valueType, version) {
+    var data = {
+        'user': user.id,
+        'content': content.id,
+        'value_type': valueType.id,
+        'values': this.data,
+        'version': version
+    };
+    fetch(`/api/curves/${curveId}?format=json`, {
         method: 'PUT',
         headers: {
-            'X-CSRFToken': CSRF_TOKEN
+            'X-CSRFToken': window.django.csrf,
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
     }).then(function(res) {
-        if(res.status != 200) throw res;
+        if(res.status != 200 && res.status != 201) throw res;
         return res.json();
     }).then(function(json) {
-        window.location = json;
+        window.location = '/';
+    }).catch(err => {
+        return err.text();
+    }).then(text => {
+        console.log(text);
     });
 }

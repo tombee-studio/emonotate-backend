@@ -1,15 +1,19 @@
 import React from "react";
 import { DataGrid } from '@material-ui/data-grid';
 import Helmet from 'react-helmet';
-import { Grid } from "@material-ui/core";
-import videojs from 'video.js'
-import "video.js/dist/video-js.css"
+import { Button, Grid } from "@material-ui/core";
+import UserAPI from "../../helper/UserAPI";
+import videojs from 'video.js';
+import "video.js/dist/video-js.css";
 
 class MakeCurveComponent extends React.Component {
   constructor(props) {
     super(props);
 
-    const { content } = this.props;
+    const { content, valueType } = this.props;
+    this.api = new UserAPI();
+    this.content = content;
+    this.value_type = valueType;
     this.CONSTANT = {
       video: 'video',
       chart: 'chart',
@@ -26,8 +30,7 @@ class MakeCurveComponent extends React.Component {
   }
 
   createEmotionalArcInputField() {
-    const { valueType } = this.props;
-    const value_type = valueType;
+    const value_type = this.value_type;
     if(value_type.axis_type == 1){
       var axis = {
           maxValue: 1,
@@ -101,12 +104,13 @@ class MakeCurveComponent extends React.Component {
         width: 200
       }
     ];
+    const { user } = window.django;
     return (
       <div>
         <Helmet>
           <script src="/static/users/js/emotional-arc-input-field.js" />
           <link rel="stylesheet" href="/static/users/css/emotional-arc-input-field.css" />
-          <script src="/static/users/d3/d3.min.js" />
+          <script src="https://d3js.org/d3.v5.js" />
         </Helmet>
         <Grid container>
           <Grid item xs={7}>
@@ -114,7 +118,7 @@ class MakeCurveComponent extends React.Component {
               <video
                 id={ this.CONSTANT.video }
                 ref={ node => this.videoNode = node }
-                height={300}
+                height={280}
                 className="video-js" />
             </div>
           </Grid>
@@ -125,6 +129,15 @@ class MakeCurveComponent extends React.Component {
               version="1.1"
               width="100%"
               height="280px" />
+          </Grid>
+          <Grid item>
+            <Button onClick={(e) => {
+              this.api.call(user.id, (user) => {
+                this.inputField.submit(user, this.content, this.value_type, '1.1');
+              }, (err) => { console.log(err.body); });
+            }}>
+              感情曲線を追加
+            </Button>
           </Grid>
         </Grid>
       </div>

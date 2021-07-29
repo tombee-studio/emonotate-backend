@@ -3,7 +3,6 @@ import { Pagination } from '@material-ui/lab';
 import { Card, Divider, Grid, ImageListItem } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Box, ImageList, ImageListItemBar } from '@material-ui/core';
-import Typography from '@material-ui/core/Typography';
 import ContentsListAPI from '../../helper/dashboard/ContentsListAPI';
 
 const styles = (theme) => ({

@@ -25,7 +25,7 @@ class ContentViewSet(viewsets.ModelViewSet):
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all()
-    search_fields = 'id'
+    search_fields = ('id', 'user')
 
 
 class UserViewSet(viewsets.ModelViewSet):

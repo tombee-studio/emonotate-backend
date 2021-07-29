@@ -1,7 +1,7 @@
 import React from "react";
 import { DataGrid } from '@material-ui/data-grid';
 import Helmet from 'react-helmet';
-import { Button, Grid } from "@material-ui/core";
+import { Button, Grid, Select } from "@material-ui/core";
 import UserAPI from "../../helper/UserAPI";
 import videojs from 'video.js';
 import "video.js/dist/video-js.css";
@@ -110,7 +110,7 @@ class MakeCurveComponent extends React.Component {
         <Helmet>
           <script src="/static/users/js/emotional-arc-input-field.js" />
           <link rel="stylesheet" href="/static/users/css/emotional-arc-input-field.css" />
-          <script src="https://d3js.org/d3.v5.js" />
+          <script src="/static/users/d3/d3.min.js" />
         </Helmet>
         <Grid container>
           <Grid item xs={7}>

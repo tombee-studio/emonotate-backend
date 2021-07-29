@@ -27,6 +27,9 @@ class CurveViewSet(viewsets.ModelViewSet):
     queryset = Curve.objects.all()
     search_fields = ('id', 'user')
 
+    def get_queryset(self):
+        return Curve.objects.filter(user=self.request.user)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer

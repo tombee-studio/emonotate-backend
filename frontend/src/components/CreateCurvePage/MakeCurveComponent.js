@@ -131,7 +131,10 @@ class MakeCurveComponent extends React.Component {
               height="280px" />
           </Grid>
           <Grid item>
-            <Button onClick={(e) => {
+            <Button
+              color="primary"
+              variant="contained"
+              onClick={(e) => {
               this.api.call(user.id, (user) => {
                 this.inputField.submit(user, this.content, this.value_type, '1.1');
               }, (err) => { console.log(err.body); });

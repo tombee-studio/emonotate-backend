@@ -1,9 +1,9 @@
 import React from 'react';
 import { Pagination } from '@material-ui/lab';
-import { Card, Divider, Grid, ImageListItem } from '@material-ui/core';
+import { Card, List, ListItem } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { Box, ImageList, ImageListItemBar } from '@material-ui/core';
-import ContentsListAPI from '../../helper/dashboard/ContentsListAPI';
+import { Box } from '@material-ui/core';
+import CurvesListAPI from '../../helper/dashboard/CurvesListAPI';
 
 const styles = (theme) => ({
   root: {
@@ -20,14 +20,14 @@ class UsersList extends React.Component {
     super(props);
 
     this.state = {};
-    this.api = new ContentsListAPI();
+    this.api = new CurvesListAPI();
   }
 
   componentDidMount() {
     this.api.call(
-      contents => {
+      curves => {
         this.setState({
-          contents: contents
+          curves: curves
         });
       },
       err => {
@@ -37,12 +37,12 @@ class UsersList extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { contents } = this.state;
+    const { curves } = this.state;
     const handlePaginate = (e, page) => {
       this.api.call(
-        contents => {
+        curves => {
           this.setState({
-            contents: contents
+            curves: curves
           });
         },
         err => {
@@ -50,35 +50,16 @@ class UsersList extends React.Component {
         },
         page);
     };
-    if(contents) {
+    if(curves) {
       return (
         <Box className={classes.root}>
           <Box m={2}>
             <Pagination 
-              count={contents.pagination.total_pages}
+              count={curves.pagination.total_pages}
               variant="outlined" 
               shape="rounded"
               onChange={handlePaginate} />
           </Box>
-          <ImageList cols={4} gap={16} style={{bgcolor: "#000"}}>
-            {
-              contents.models.map(content => (
-                <ImageListItem
-                  key={content.id} 
-                  component="a" 
-                  href={'/app/new/' + content.id}>
-                  <img
-                    srcSet={`https://picsum.photos/640/480/?random`}
-                    alt={content.title}
-                  />
-                  <ImageListItemBar
-                    title={content.title}
-                    subtitle={<span>added by: {content.user.email}</span>}
-                  />
-                </ImageListItem>
-              ))
-            }
-          </ImageList>
         </Box>
       );
     } else {

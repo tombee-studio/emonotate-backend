@@ -74,9 +74,6 @@ class MakeCurveComponent extends React.Component {
       }];
       if(this.inputField) {
         this.inputField.load(dataset);
-        this.setState({
-          dataset: dataset
-        });
       }
     };
   }
@@ -112,7 +109,6 @@ class MakeCurveComponent extends React.Component {
       }
     ];
     const { user } = window.django;
-    const { dataset } = this.state;
     return (
       <div>
         <Helmet>
@@ -131,9 +127,9 @@ class MakeCurveComponent extends React.Component {
             </div>
           </Grid>
           <Grid item xs={7}>
-            { this.state && 
+            { this.inputField && 
               <DataGrid
-                rows={dataset}
+                rows={this.inputField.data}
                 columns={columns}
               />
             }

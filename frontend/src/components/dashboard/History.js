@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pagination } from '@material-ui/lab';
-import { Card, Chip, List, ListItem, ListItemText } from '@material-ui/core';
+import { Card, Chip, Grid, List, ListItem, ListItemText, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
 import CurvesListAPI from '../../helper/dashboard/CurvesListAPI';
@@ -54,15 +54,24 @@ class UsersList extends React.Component {
       return (
         <Box className={classes.root}>
           <Box m={2}>
-            <Pagination 
-              count={curves.pagination.total_pages}
-              variant="outlined" 
-              shape="rounded"
-              onChange={handlePaginate} />
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography component="h3">
+                  履歴
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Pagination 
+                  count={curves.pagination.total_pages}
+                  variant="outlined" 
+                  shape="rounded"
+                  onChange={handlePaginate} />
+              </Grid>
+            </Grid>
             <List>
               {
                 curves.models.map(curve => {
-                  return <ListItem key={curve.id} compontent="a" button>
+                  return <ListItem key={curve.id} compontent="a" href={`/edit/${curve.id}`} button>
                     <ListItemText color="primary">
                       { curve.content.title }
                     </ListItemText>

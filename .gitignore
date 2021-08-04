@@ -5,3 +5,4 @@ npm-debug.log
 frontend/build/*
 venv/
 migrations/
+.env

@@ -1,9 +1,8 @@
 import os
-
 from .common import *
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '46!g%w_ntu+30stszjgam2s-o@)1=+@&^f9*e4(+@x5@wym#z+'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

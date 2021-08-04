@@ -7,6 +7,6 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('users.urls')),
     url(r'^app/', app, name='app'),
-    url('^auth/', include('django.contrib.auth.urls')),
+    url(r'^auth/', include('django.contrib.auth.urls')),
     url('^$', index, name='index'),
 ]

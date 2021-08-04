@@ -4,6 +4,7 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import CreateCurvePage from './pages/CreateCurvePage';
 import HistoryPage from './pages/HistoryPage';
+import ContentListPage from './pages/ContentListPage';
 
 export default class App extends React.Component {
   render() {
@@ -16,6 +17,7 @@ export default class App extends React.Component {
             </Route>
             <Route exact path='/app/dashboard/' component={ Dashboard } />
             <Route exact path='/app/history/' component={ HistoryPage } />
+            <Route exact path='/app/content/' component={ ContentListPage } />
             <Route exact path='/app/new/:id' component={ CreateCurvePage } />
           </Switch>
         </MainLayout>

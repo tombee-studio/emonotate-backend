@@ -1,9 +1,9 @@
 import React from 'react';
 import Box from '@material-ui/core/Box';
-import ContentsList from '../components/dashboard/ContentsList';
 import { Divider } from '@material-ui/core';
 import AddContent from '../components/content-list-page/AddContent';
 import ContentsListAPI from '../helper/dashboard/ContentsListAPI';
+import ContentsHistoryList from '../components/content-list-page/ContentsHistoryList';
 
 export default function Dashboard(props) {
   const postAPI = new ContentsListAPI();
@@ -21,7 +21,7 @@ export default function Dashboard(props) {
       }} />
       <Divider />
       <Box m={1}>
-        <ContentsList />
+        <ContentsHistoryList />
       </Box>
     </Box>
   );

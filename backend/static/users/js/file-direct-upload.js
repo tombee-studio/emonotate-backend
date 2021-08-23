@@ -2,7 +2,6 @@ function getSignedRequest(file){
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "/api/sign_s3?file_name="+file.name+"&file_type="+file.type);
     var submitButton = document.getElementById('submit-button');
-    console.log("upload 開始");
     xhr.onreadystatechange = function(){
         if(xhr.readyState === 4){
             if(xhr.status === 200){
@@ -34,7 +33,6 @@ function uploadFile(file, s3Data, url){
     xhr.onreadystatechange = function() {
         if(xhr.readyState === 4){
             if(xhr.status === 200 || xhr.status === 204){
-                console.log("upload 終了");
                 document.getElementById("id_movie").value = encodeURI(url);
             }
             else{
@@ -46,7 +44,12 @@ function uploadFile(file, s3Data, url){
 }
 
 window.onload = function() {
-    document.getElementById('id_file').onchange = function() {
+    const fileComponent = document.getElementById('id_file');
+    const movieComponent = document.getElementById('id_movie');
+    if(!fileComponent) throw "NOT EXISTING FILE FORM";
+    if(!movieComponent) throw "NOT EXISTING URL FORM";
+
+    fileComponent.onchange = function() {
         var files = document.getElementById("id_file").files;
         var file = files[0];
         if(!file){

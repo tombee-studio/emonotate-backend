@@ -23,25 +23,33 @@ const useStyles = makeStyles((theme) => ({
 
 const AddContent = (props) => {
   const classes = useStyles();
-  const [data, setData] = useState({});
+  const { postAPI } = props;
+  const [title, setTitle] = useState('');
+  const [url, setURL] = useState('');
+  const handleSubmit = event => {
+    event.preventDefault();
+    postAPI({
+      'title': title,
+      'url': url,
+      'data_type': 'video/mp4',
+    })
+  };
 
   return (
     <Box m={1}>
       <Helmet>
         <script src="/static/users/js/file-direct-upload.js" />
       </Helmet>
-      <FormControl className={classes.root}>
+      <form className={classes.root} onSubmit={handleSubmit}>
         <TextField
           style={{ margin: 8 }}
           placeholder="タイトル"
           fullWidth
-          id="filled-basic"
+          id="title"
           label="タイトル"
-          onChange={(ev) => {
-            setData({
-              'title': ev.currentTarget.value,
-            })
-          }} />
+          required={true}
+          value={title}
+          onInput={ e=>setTitle(e.target.value)} />
         <Button
           component="label"
         >
@@ -58,18 +66,19 @@ const AddContent = (props) => {
           fullWidth
           id="id_movie"
           label="URL"
-          onChange={(ev) => {
-            setData({
-              'url': ev.currentTarget.value,
-            })
-          }} />
+          id="id_movie"
+          required={true}
+          value={url}
+          onInput={ e=>setURL(e.target.value)}
+          />
         <Button
-          disabled={!(data.url && data.title)}
+          id="button"
+          type="submit"
           color="primary"
           variant="contained">
             コンテンツの追加
         </Button>
-      </FormControl>
+      </form>
     </Box>
   );
 };

@@ -24,7 +24,7 @@ class UsersList extends React.Component {
   }
 
   componentDidMount() {
-    this.api.call(
+    this.api.get(
       contents => {
         this.setState({
           contents: contents
@@ -39,7 +39,7 @@ class UsersList extends React.Component {
     const { classes } = this.props;
     const { contents } = this.state;
     const handlePaginate = (e, page) => {
-      this.api.call(
+      this.api.get(
         contents => {
           this.setState({
             contents: contents

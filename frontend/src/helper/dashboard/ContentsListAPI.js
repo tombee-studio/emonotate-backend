@@ -1,6 +1,6 @@
 
 export default class ContentsListAPI {
-  call(success, failed, page) {
+  get(success, failed, page) {
     if(page) {
       fetch(`/api/contents/?format=json&page=${page}`)
         .then(res => {
@@ -14,5 +14,17 @@ export default class ContentsListAPI {
       .then(success)
       .catch(failed);
     }
+  }
+
+  post(data) {
+    return fetch('/api/contents/?format=json', {
+      method: 'post',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.django.csrf,
+      },
+      body: JSON.stringify(data)
+    })
   }
 };

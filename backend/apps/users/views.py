@@ -28,6 +28,14 @@ class ContentViewSet(viewsets.ModelViewSet):
     search_fields = 'id'
 
 
+class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ContentSerializer
+    queryset = Content.objects.all()
+
+    def get_queryset(self):
+        return Content.objects.filter(user=self.request.user)
+
+
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all()

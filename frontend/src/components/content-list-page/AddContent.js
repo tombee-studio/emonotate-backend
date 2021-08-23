@@ -1,4 +1,4 @@
-import { Button, FormControl, TextField, Box } from '@material-ui/core';
+import { Button, TextField, Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { useState } from 'react';
@@ -43,7 +43,6 @@ const AddContent = (props) => {
       <form className={classes.root} onSubmit={handleSubmit}>
         <TextField
           style={{ margin: 8 }}
-          placeholder="タイトル"
           fullWidth
           id="title"
           label="タイトル"
@@ -69,14 +68,16 @@ const AddContent = (props) => {
           id="id_movie"
           required={true}
           value={url}
-          onInput={ e=>setURL(e.target.value)}
+          onChange={value => {
+            setURL(value);
+          }}
           />
         <Button
           id="button"
           type="submit"
           color="primary"
           variant="contained">
-            コンテンツの追加
+            送信
         </Button>
       </form>
     </Box>

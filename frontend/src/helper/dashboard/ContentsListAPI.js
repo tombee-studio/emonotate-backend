@@ -18,14 +18,14 @@ export default class ContentsListAPI {
 
   history(success, failed, page) {
     if(page) {
-      fetch(`/api/history_contents/?format=json&page=${page}`)
+      fetch(`/history/contents/?format=json&page=${page}`)
         .then(res => {
           return res.json();
         })
         .then(success)
         .catch(failed);
     } else {
-      fetch('/api/history_contents/?format=json')
+      fetch('/history/contents/?format=json')
       .then(res => res.json())
       .then(success)
       .catch(failed);

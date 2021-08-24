@@ -3,7 +3,7 @@ import { Pagination } from '@material-ui/lab';
 import { Card, Chip, Grid, List, ListItem, ListItemText, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
-import CurvesListAPI from '../../helper/dashboard/CurvesListAPI';
+import CurvesListAPI from '../../helper/CurvesListAPI';
 
 const styles = (theme) => ({
   root: {

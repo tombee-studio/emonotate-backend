@@ -1,9 +1,9 @@
 import React from 'react';
 import { Pagination } from '@material-ui/lab';
-import { Card, Divider, Grid, ImageListItem } from '@material-ui/core';
+import { Card, List, ListItem, ListItemText } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { Box, ImageList, ImageListItemBar } from '@material-ui/core';
-import ContentsListAPI from '../../helper/ContentsListAPI';
+import { Box } from '@material-ui/core';
+import ValueTypeListAPI from '../../helper/ValueTypeListAPI';
 
 const styles = (theme) => ({
   root: {
@@ -20,14 +20,14 @@ class UsersList extends React.Component {
     super(props);
 
     this.state = {};
-    this.api = new ContentsListAPI();
+    this.api = new ValueTypeListAPI();
   }
 
   componentDidMount() {
     this.api.history(
-      contents => {
+      valuetypes => {
         this.setState({
-          contents: contents
+          valuetypes: valuetypes
         });
       },
       err => {
@@ -37,12 +37,12 @@ class UsersList extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { contents } = this.state;
+    const { valuetypes } = this.state;
     const handlePaginate = (e, page) => {
       this.api.history(
-        contents => {
+        valuetypes => {
           this.setState({
-            contents: contents
+            valuetypes: valuetypes
           });
         },
         err => {
@@ -50,35 +50,42 @@ class UsersList extends React.Component {
         },
         page);
     };
-    if(contents) {
+
+    const generate = (data, element) => {
+      return data.map((value) =>
+        React.cloneElement(element, {
+          id: value.id,
+          primary: value.title,
+          secondary: value.title,
+        }),
+      );
+    };
+
+    if(valuetypes) {
       return (
         <Box className={classes.root}>
           <Box m={2}>
             <Pagination 
-              count={contents.pagination.total_pages}
+              count={valuetypes.pagination.total_pages}
               variant="outlined" 
               shape="rounded"
               onChange={handlePaginate} />
           </Box>
-          <ImageList cols={4} gap={16} style={{bgcolor: "#000"}}>
+          <Box m={2}>
+          <List>
             {
-              contents.models.map(content => (
-                <ImageListItem
-                  key={content.id} 
-                  component="a" 
-                  href={'/app/new/' + content.id}>
-                  <img
-                    srcSet={`https://picsum.photos/640/480/?random`}
-                    alt={content.title}
+              valuetypes.models.map(item => (
+                <ListItem button>
+                  <ListItemText
+                    key={item.id}
+                    primary={item.title}
+                    secondary={item.axis_type == 1 ? "対義語あり" :　"対義語なし"}
                   />
-                  <ImageListItemBar
-                    title={content.title}
-                    subtitle={<span>added by: {content.user.email}</span>}
-                  />
-                </ImageListItem>
+                </ListItem>
               ))
             }
-          </ImageList>
+            </List>
+          </Box>
         </Box>
       );
     } else {

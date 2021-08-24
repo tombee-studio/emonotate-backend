@@ -22,6 +22,14 @@ class ValueTypeViewSet(viewsets.ModelViewSet):
     search_fields = 'id'
 
 
+class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ValueTypeSerializer
+    queryset = ValueType.objects.all()
+
+    def get_queryset(self):
+        return ValueType.objects.filter(user=self.request.user)
+
+
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all()

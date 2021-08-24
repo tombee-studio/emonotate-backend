@@ -1,6 +1,8 @@
 from django.conf.urls import url, include
+from django.conf.urls.static import static
 from django.contrib import admin
 
+from .settings.devl import STATIC_URL, STATIC_ROOT
 from .views import app, index
 
 urlpatterns = [
@@ -10,4 +12,4 @@ urlpatterns = [
     url(r'^app/', app, name='app'),
     url(r'^auth/', include('django.contrib.auth.urls')),
     url('^$', index, name='index'),
-]
+] + static(STATIC_URL, document_root=STATIC_ROOT)

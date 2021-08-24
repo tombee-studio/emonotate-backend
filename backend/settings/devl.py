@@ -36,3 +36,5 @@ INSTALLED_APPS += (
 STATICFILES_DIRS.append(
     os.path.join(BASE_DIR, os.pardir, 'frontend', 'dist'),
 )
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'backend/static')

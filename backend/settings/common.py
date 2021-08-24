@@ -96,7 +96,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-LOGIN_REDIRECT_URL = reverse_lazy("/")
+LOGIN_REDIRECT_URL = reverse_lazy("app")
 LOGIN_URL = reverse_lazy("login")
 
 REST_FRAMEWORK = {

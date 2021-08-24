@@ -97,7 +97,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
 
 class ValueType(models.Model):
-    user = models.ForeignKey(EmailUser, default=101, on_delete=models.CASCADE)
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
     axis_type = models.IntegerField(choices=(
         (1, '平常状態を含んで上と下がある値'),
@@ -108,7 +108,7 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
-    user = models.ForeignKey(EmailUser, default=101, on_delete=models.CASCADE)
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
     data_type = models.CharField(default='video/mp4', max_length=32)

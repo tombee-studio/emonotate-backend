@@ -1,6 +1,7 @@
 var path = require("path");
 var webpack = require("webpack");
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 
 module.exports = {
@@ -31,11 +32,7 @@ module.exports = {
                 "NODE_ENV": JSON.stringify("production")
             }
         }),
-        new webpack.optimize.UglifyJsPlugin({
-            compressor: {
-                warnings: false
-            }
-        })
+        new UglifyJSPlugin()
     ],
     module: {
         loaders: [
@@ -62,6 +59,10 @@ module.exports = {
                 // move images found within CSS to the build directory
                 test: /\.(jpg|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: "file?name=[path][name].[ext]?[hash]&context=./node_modules"
+            },
+            { 
+                test: /(\.css$)/, 
+                loaders: ['style-loader', 'css-loader', 'postcss-loader'] 
             }
         ]
     }

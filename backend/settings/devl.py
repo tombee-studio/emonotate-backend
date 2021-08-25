@@ -33,8 +33,7 @@ INSTALLED_APPS += (
     'autofixture',
 )
 
-STATICFILES_DIRS.append(
+STATICFILES_DIRS = [
     os.path.join(BASE_DIR, os.pardir, 'frontend', 'dist'),
-)
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    os.path.join(BASE_DIR, "static"),
+]

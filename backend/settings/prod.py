@@ -7,8 +7,6 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 
-DEBUG = True
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -28,6 +26,8 @@ INSTALLED_APPS += (
     'autofixture',
 )
 
-STATICFILES_DIRS.append(
+STATICFILES_DIRS = [
     os.path.join(BASE_DIR, os.pardir, 'frontend', 'dist'),
-)
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')

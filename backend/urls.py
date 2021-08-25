@@ -14,6 +14,6 @@ urlpatterns = [
     url('^$', index, name='index'),
 ]
 
-if not DEBUG:
+if DEBUG:
     from .settings.devl import STATIC_ROOT
     urlpatterns += static(STATIC_URL, document_root=STATIC_ROOT)

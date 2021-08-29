@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ValueTypeSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
     class Meta:
         model = ValueType
 
@@ -27,9 +28,12 @@ class ContentSerializer(serializers.ModelSerializer):
 
 
 class CurveSerializer(serializers.ModelSerializer):
-    content = ContentSerializer(read_only=True)
     user = UserSerializer(read_only=True)
-    value_type = ValueTypeSerializer(read_only=True)
-
     class Meta:
         model = Curve
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
+        ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        return ret

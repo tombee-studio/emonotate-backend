@@ -44,13 +44,16 @@ class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return Content.objects.filter(user=self.request.user)
 
 
-class CurveViewSet(viewsets.ModelViewSet):
+class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all()
     search_fields = ('id', 'user')
 
-    def get_queryset(self):
-        return Curve.objects.filter(user=self.request.user)
+
+class CurveViewSet(viewsets.ModelViewSet):
+    serializer_class = CurveSerializer
+    queryset = Curve.objects.all()
+    search_fields = ('id', 'user')
 
 
 class UserViewSet(viewsets.ModelViewSet):

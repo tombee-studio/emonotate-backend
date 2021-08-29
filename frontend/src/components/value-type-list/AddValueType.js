@@ -26,9 +26,11 @@ const AddContent = (props) => {
   const { postAPI } = props;
   const [title, setTitle] = useState('');
   const [axisType, setAxisType] = useState(0);
+  const { user } = window.django;
   const handleSubmit = event => {
     event.preventDefault();
     postAPI({
+      'user': user.id,
       'title': title,
       'axis_type': axisType,
     })

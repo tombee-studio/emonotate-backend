@@ -26,9 +26,11 @@ const AddContent = (props) => {
   const { postAPI } = props;
   const [title, setTitle] = useState('');
   const [url, setURL] = useState('');
+  const { user } = window.django;
   const handleSubmit = event => {
     event.preventDefault();
     postAPI({
+      'user': user.id,
       'title': title,
       'url': url,
       'data_type': 'video/mp4',

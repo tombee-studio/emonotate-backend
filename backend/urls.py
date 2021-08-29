@@ -1,3 +1,4 @@
+import os
 from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -15,6 +16,7 @@ urlpatterns = [
 ]
 
 if DEBUG:
-    import os
-    from .settings.common import BASE_DIR
-    urlpatterns += static(STATIC_URL, document_root=os.path.join(BASE_DIR, 'static'))
+    urlpatterns += static(STATIC_URL)
+else:
+    from .settings.prod import STATIC_ROOT
+    urlpatterns += static(STATIC_URL, STATIC_ROOT)

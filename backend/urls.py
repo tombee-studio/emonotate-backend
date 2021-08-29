@@ -3,7 +3,7 @@ from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from .settings.devl import STATIC_URL, DEBUG
+from .settings.common import STATIC_URL, BASE_DIR
 from .views import app, index
 
 urlpatterns = [
@@ -15,8 +15,10 @@ urlpatterns = [
     url('^$', index, name='index'),
 ]
 
-if DEBUG:
+if os.environ['STAGE'] == 'DEVL':
     urlpatterns += static(STATIC_URL)
-else:
+elif os.environ['STAGE'] == 'ALPHA':
+    urlpatterns += static(STATIC_URL, document_root=os.path.join(BASE_DIR, 'static'))
+elif os.environ['STAGE'] == 'PROD':
     from .settings.prod import STATIC_ROOT
     urlpatterns += static(STATIC_URL, STATIC_ROOT)

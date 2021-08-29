@@ -24,14 +24,17 @@ class UsersList extends React.Component {
   }
 
   componentDidMount() {
-    this.api.call(
-      curves => {
+    this.api.history()
+      .then(res => {
+        return res.json()
+      })
+      .then(curves => {
         this.setState({
           curves: curves
-        });
-      },
-      err => {
-        throw err;
+        })
+      })
+      .catch(err => {
+        console.log(err)
       });
   }
 
@@ -39,16 +42,18 @@ class UsersList extends React.Component {
     const { classes } = this.props;
     const { curves } = this.state;
     const handlePaginate = (e, page) => {
-      this.api.call(
-        curves => {
+      this.api.history(page)
+        .then(res => {
+          return res.json()
+        })
+        .then(curves => {
           this.setState({
             curves: curves
-          });
-        },
-        err => {
-          throw err;
-        },
-        page);
+          })
+        })
+        .catch(err => {
+          console.log(err)
+        });
     };
     if(curves) {
       return (

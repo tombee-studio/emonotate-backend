@@ -1,6 +1,6 @@
 
 export default class CurvesListAPI {
-  call(success, failed, page) {
+  get(success, failed, page) {
     if(page) {
       fetch(`/api/curves/?format=json&page=${page}`)
         .then(res => {
@@ -13,6 +13,14 @@ export default class CurvesListAPI {
       .then(res => res.json())
       .then(success)
       .catch(failed);
+    }
+  }
+
+  history(page) {
+    if(page) {
+      return fetch(`/history/curves/?format=json&page=${page}`)
+    } else {
+      return fetch('/history/curves/?format=json')
     }
   }
 };

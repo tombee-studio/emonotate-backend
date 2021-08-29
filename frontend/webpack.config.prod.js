@@ -19,7 +19,7 @@ module.exports = {
         modulesDirectories: ["src", "node_modules"]
     },
     output: {
-        path: path.join(__dirname, "dist"),
+        path: path.join(__dirname, "../backend/static"),
         filename: "js/bundle.js",
         publicPath: "/static/"
     },

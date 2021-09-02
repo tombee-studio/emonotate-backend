@@ -24,7 +24,7 @@ class MakeCurveComponent extends React.Component {
       controls: true,
       sources: [{
         src: content.url,
-        type: 'video/mp4'
+        type: content.data_type
       }]
     }
     this.state = {

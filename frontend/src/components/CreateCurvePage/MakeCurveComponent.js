@@ -6,14 +6,14 @@ import UserAPI from "../../helper/UserAPI";
 import videojs from 'video.js';
 import "video.js/dist/video-js.css";
 
+import EmotionalArcField from '../../helper/emotional-arc-input-field';
+
 class MakeCurveComponent extends React.Component {
   constructor(props) {
     super(props);
-
-    const { content, valueType } = this.props;
+    const { content } = this.props;
     this.api = new UserAPI();
     this.content = content;
-    this.value_type = valueType;
     this.CONSTANT = {
       video: 'video',
       chart: 'chart',
@@ -24,9 +24,12 @@ class MakeCurveComponent extends React.Component {
       controls: true,
       sources: [{
         src: content.url,
-        type: 'video/mp4'
+        type: content.data_type
       }]
     }
+    this.state = {
+      dataset: []
+    };
   }
 
   createEmotionalArcInputField() {
@@ -46,64 +49,51 @@ class MakeCurveComponent extends React.Component {
       };
     }
     axis.title = value_type.title;
+    while (this.chartNode.lastChild) {
+      this.chartNode.removeChild(this.chartNode.lastChild);
+    }
     this.inputField = new EmotionalArcField(this.chartNode, this.videoNode, axis, { 
         'r': 12,
         'color': 'black',
     });
     this.inputField.onVideoLoaded = () => {
-      const dataset = [
-        {
-          id: 0,
-          x: 0.0,
-          y: 0.0,
-          axis: 'v',
-          type: 'fixed',
-          text:   "",
-          reason: "",
-        }, {
-          id: 1,
-          x: this.inputField.duration,
-          y: 0.0,
-          axis: 'v',
-          type: 'fixed',
-          text:   "",
-          reason: "",
-      }];
-      if(this.inputField) {
-        this.inputField.load(dataset);
-      }
-    };
+      console.log("ACHIEVE");
+    }
+    this.inputField.OnInit();
+    const dataset = [
+      {
+        id: 0,
+        x: 0.0,
+        y: 0.0,
+        axis: 'v',
+        type: 'fixed',
+        text:   "",
+        reason: "",
+      }, {
+        id: 1,
+        x: this.inputField.duration,
+        y: 0.0,
+        axis: 'v',
+        type: 'fixed',
+        text:   "",
+        reason: "",
+    }];
+    console.log(dataset);
+    this.inputField.load(dataset);
   }
 
   componentDidMount() {
     this.player = videojs(this.videoNode, this.videoJsOptions);
-
-    this.player.on('loadedmetadata', () => {
-      this.createEmotionalArcInputField();
-    });
   }
 
   render() {
-    const columns = [
-      {
-        field: 'id',
-        headerName: '通し番号',
-        width: 30
-      }, 
-      {
-        field: 'x',
-        headerName: '時間',
-        width: 30
-      }, {
-        field: 'y',
-        headerName: '値',
-        width: 30
-      }, {
-        field: 'text',
-        headerName: '説明',
-        width: 200
-      }
-    ];
+    const { valueType } = this.props;
+    if(valueType) {
+      this.value_type = valueType;
+      setTimeout(() => {
+        this.createEmotionalArcInputField();
+      }, 5000)
+    }
     const { user } = window.django;
     return (
       <div>
@@ -113,7 +103,7 @@ class MakeCurveComponent extends React.Component {
           <script src="/static/users/d3/d3.min.js" />
         </Helmet>
         <Grid container>
-          <Grid item xs={7}>
+          <Grid item xs={5}>
             <div data-vjs-player>
               <video
                 id={ this.CONSTANT.video }

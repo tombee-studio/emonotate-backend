@@ -3,7 +3,7 @@ import { Pagination } from '@material-ui/lab';
 import { Card, Divider, Grid, ImageListItem } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Box, ImageList, ImageListItemBar } from '@material-ui/core';
-import ContentsListAPI from '../../helper/dashboard/ContentsListAPI';
+import ContentsListAPI from '../../helper/ContentsListAPI';
 
 const styles = (theme) => ({
   root: {
@@ -24,7 +24,7 @@ class UsersList extends React.Component {
   }
 
   componentDidMount() {
-    this.api.call(
+    this.api.get(
       contents => {
         this.setState({
           contents: contents
@@ -39,7 +39,7 @@ class UsersList extends React.Component {
     const { classes } = this.props;
     const { contents } = this.state;
     const handlePaginate = (e, page) => {
-      this.api.call(
+      this.api.get(
         contents => {
           this.setState({
             contents: contents

@@ -1,19 +1,20 @@
 import os
-
 from .common import *
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '46!g%w_ntu+30stszjgam2s-o@)1=+@&^f9*e4(+@x5@wym#z+'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'USER': 'postgres',
-        'NAME': 'emonotateV2',
-        'PASSWORD': '0000'
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv('DATABASE_NAME'),
+        'USER': os.getenv('DATABASE_USERNAME'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+        'HOST': os.getenv('DATABASE_HOST'),
+        'PORT': os.getenv('DATABASE_PORT'),
     }
 }
 
@@ -23,6 +24,7 @@ INSTALLED_APPS += (
     'autofixture',
 )
 
-STATICFILES_DIRS.append(
+STATICFILES_DIRS = [
     os.path.join(BASE_DIR, os.pardir, 'frontend', 'build'),
-)
+    os.path.join(BASE_DIR, "static"),
+]

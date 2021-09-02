@@ -5,6 +5,7 @@ from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
 
 import random
 import string
@@ -16,7 +17,7 @@ def randomname(n):
 
 
 class EmailUserManager(BaseUserManager):
-    def _create_user(self, email, password, is_staff, is_superuser,
+    def _create_user(self, username, email, password, is_staff, is_superuser,
                      **extra_fields):
         now = timezone.now()
 
@@ -27,6 +28,7 @@ class EmailUserManager(BaseUserManager):
         is_active = extra_fields.pop("is_active", True)
 
         user = self.model(
+            username=username,
             email=email,
             is_staff=is_staff,
             is_active=is_active,
@@ -38,13 +40,13 @@ class EmailUserManager(BaseUserManager):
 
         user.set_password(password)
         user.save(using=self._db)
-
         return user
 
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, username, email, password=None, **extra_fields):
         is_staff = extra_fields.pop("is_staff", False)
 
         return self._create_user(
+            username,
             email,
             password,
             is_staff,
@@ -52,8 +54,9 @@ class EmailUserManager(BaseUserManager):
             **extra_fields
         )
 
-    def create_superuser(self, email, password, **extra_fields):
+    def create_superuser(self, username, email, password, **extra_fields):
         return self._create_user(
+            username,
             email, password,
             True,
             True,
@@ -97,6 +100,11 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
 
 class ValueType(models.Model):
+    class Meta:
+        permissions = (
+            ('view_valuetype', 'Can view value type'),
+        )
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
     axis_type = models.IntegerField(choices=(
         (1, '平常状態を含んで上と下がある値'),
@@ -107,7 +115,11 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
-    user = models.ForeignKey(EmailUser, default=101, on_delete=models.CASCADE)
+    class Meta:
+        permissions = (
+            ('view_content', 'Can view content'),
+        )
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
     data_type = models.CharField(default='video/mp4', max_length=32)
@@ -117,6 +129,10 @@ class Content(models.Model):
 
 
 class Curve(models.Model):
+    class Meta:
+        permissions = (
+            ('view_curve', 'Can view curve'),
+        )
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser,
                              default=1,

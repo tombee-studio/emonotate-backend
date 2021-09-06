@@ -84,11 +84,6 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-    class Meta:
-        permissions = (
-            ('view_emailuser', 'Can view email users'),
-        )
-
     def __unicode__(self):
         return self.email
 
@@ -100,10 +95,6 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
 
 class ValueType(models.Model):
-    class Meta:
-        permissions = (
-            ('view_valuetype', 'Can view value type'),
-        )
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
     axis_type = models.IntegerField(choices=(
@@ -115,10 +106,6 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
-    class Meta:
-        permissions = (
-            ('view_content', 'Can view content'),
-        )
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
@@ -129,10 +116,6 @@ class Content(models.Model):
 
 
 class Curve(models.Model):
-    class Meta:
-        permissions = (
-            ('view_curve', 'Can view curve'),
-        )
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser,
                              default=1,

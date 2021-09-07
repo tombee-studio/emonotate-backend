@@ -94,6 +94,7 @@ STATIC_URL = "/static/"
 
 LOGIN_REDIRECT_URL = reverse_lazy("app")
 LOGIN_URL = reverse_lazy("login")
+LOGOUT_REDIRECT_URL = reverse_lazy("login")
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": (

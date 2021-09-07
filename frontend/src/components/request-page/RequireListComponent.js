@@ -2,7 +2,7 @@ import React from 'react';
 import { List, ListItem, ListItemText, Box, Typography, Divider } from '@material-ui/core';
 import RequestListAPI from '../../helper/RequestListAPI';
 
-export default class RequestListComponent extends React.Component {
+export default class RequireListComponent extends React.Component {
     constructor(props) {
         super(props);
         this.api = new RequestListAPI();
@@ -14,7 +14,7 @@ export default class RequestListComponent extends React.Component {
     componentDidMount() {
         this.api.get({
             'format': 'json',
-            'role': 'participant',
+            'role': 'owner',
         })
         .then(json => {
             this.setState({
@@ -31,7 +31,7 @@ export default class RequestListComponent extends React.Component {
                     variant="h6"
                     color="textPrimary"
                 >
-                    あなたへの依頼
+                    あなたが設定した実験
                 </Typography>
                 <Divider />
                 <List>

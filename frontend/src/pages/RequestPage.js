@@ -1,11 +1,17 @@
 import React from 'react';
-import Box from '@material-ui/core/Box';
+import {Box, Card} from '@material-ui/core';
 import RequestListComponent from '../components/request-page/RequestListComponent';
+import RequireListComponent from '../components/request-page/RequireListComponent';
 
 export default function RequestPage(props) {
   return (
     <Box m={2}>
-      <RequestListComponent />
+        <Card m={2}>
+            <RequestListComponent />
+        </Card>
+        <Card m={2}>
+            <RequireListComponent />
+        </Card>
     </Box>
   );
 }

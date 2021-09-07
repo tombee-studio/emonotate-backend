@@ -12,7 +12,6 @@ from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
 from django.http import HttpResponse
 import json
 
-
 User = get_user_model()
 
 
@@ -33,7 +32,6 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all()
-    search_fields = 'id'
 
 
 class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -62,7 +60,6 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     search_fields = ('username', 'email')
-    filter_fields = ('id', 'username', 'email')
 
 
 def sign_s3(request):

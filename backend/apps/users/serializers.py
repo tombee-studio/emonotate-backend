@@ -8,15 +8,13 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'id', 'username', 'email', 'last_login',
-            'is_active', 'date_joined', 'last_updated'
-        )
+        fields = '__all__'
 
 
 class ValueTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ValueType
+        fields = '__all__'
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -27,6 +25,7 @@ class ValueTypeSerializer(serializers.ModelSerializer):
 class ContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Content
+        fields = '__all__'
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -37,6 +36,7 @@ class ContentSerializer(serializers.ModelSerializer):
 class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
+        fields = '__all__'
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)

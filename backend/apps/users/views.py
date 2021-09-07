@@ -5,8 +5,7 @@ from django.contrib.auth import get_user_model
 
 from .models import ValueType, Curve, Content
 
-from .serializers import UserSerializer
-from .serializers import ValueTypeSerializer, ContentSerializer, CurveSerializer
+from .serializers import *
 
 from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
 from django.http import HttpResponse
@@ -60,6 +59,20 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     search_fields = ('username', 'email')
+
+
+class RequestViewSet(viewsets.ModelViewSet):
+    serializer_class = RequestSerializer
+    queryset = Request.objects.all()
+    
+    def get_queryset(self):
+        role = self.request.GET.get('role')
+        if role == 'owner':
+            return self.queryset.filter(owner=self.request.user)
+        elif role == 'participant':
+            return self.request.user.request_set.all()
+        else:
+            return self.queryset
 
 
 def sign_s3(request):

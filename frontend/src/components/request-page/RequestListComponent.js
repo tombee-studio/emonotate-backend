@@ -1,5 +1,14 @@
 import React from 'react';
-import { List, ListItem, ListItemText, Box, Typography, Divider } from '@material-ui/core';
+import { 
+    List, 
+    ListItem, 
+    ListItemText, 
+    Box, 
+    Typography, 
+    Divider,
+    ListItemAvatar,
+    Avatar } from '@material-ui/core';
+import MailIcon from '@material-ui/icons/Mail';
 import RequestListAPI from '../../helper/RequestListAPI';
 
 export default class RequestListComponent extends React.Component {
@@ -44,18 +53,44 @@ export default class RequestListComponent extends React.Component {
                                     href={`/app/new/?content=${request.content.id}&value_type=${request.value_type.id}`}
                                     key={request.room_name}
                                     alignItems="flex-start">
+                                    <ListItemAvatar>
+                                        <Avatar>
+                                            <MailIcon />
+                                        </Avatar>
+                                    </ListItemAvatar>
                                     <ListItemText
-                                    primary={request.title}
+                                    primary={<React.Fragment>
+                                        <Typography
+                                            component="span"
+                                            color="textPrimary"
+                                        >
+                                            { 
+                                                request.title
+                                            }
+                                        </Typography>
+                                        <Typography
+                                            component="span"
+                                            variant="subtitle1"
+                                            color="textSecondary"
+                                        >
+                                            { 
+                                                ` from ${request.owner.email}`
+                                            }
+                                        </Typography>
+                                    </React.Fragment>}
                                     secondary={
                                         <React.Fragment>
                                             <Typography
                                                 component="span"
                                                 variant="body2"
-                                                color="textPrimary"
+                                                color="textSecondary"
                                             >
-                                                { request.owner.email }
-                                            </Typography> <br />
-                                            { request.description }
+                                                { 
+                                                    request.description.length > 30?
+                                                    request.description.substr(0, 30) + "...":
+                                                    request.description
+                                                }
+                                            </Typography>
                                         </React.Fragment>
                                     }
                                     />

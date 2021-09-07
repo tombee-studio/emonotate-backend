@@ -1,5 +1,18 @@
 import React from 'react';
-import { List, ListItem, ListItemText, Box, Typography, Divider } from '@material-ui/core';
+import { 
+    List, 
+    ListItem, 
+    ListItemText, 
+    ListItemSecondaryAction,
+    ListItemAvatar,
+    IconButton,
+    Avatar,
+    Box, 
+    Typography, 
+    Divider } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
+import MeetingRoomIcon from '@material-ui/icons/MeetingRoom';
+import EditIcon from '@material-ui/icons/Edit';
 import RequestListAPI from '../../helper/RequestListAPI';
 
 export default class RequireListComponent extends React.Component {
@@ -41,24 +54,46 @@ export default class RequireListComponent extends React.Component {
                                 <ListItem
                                     button
                                     component="a"
-                                    href={`/app/new/?content=${request.content.id}&value_type=${request.value_type.id}`}
-                                    key={request.room_name}
-                                    alignItems="flex-start">
+                                    href={`/app/room/?name=${request.room_name}`}
+                                    key={request.room_name}>
+                                    <ListItemAvatar>
+                                        <Avatar>
+                                            <MeetingRoomIcon />
+                                        </Avatar>
+                                    </ListItemAvatar>
                                     <ListItemText
-                                    primary={request.title}
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                component="span"
-                                                variant="body2"
-                                                color="textPrimary"
-                                            >
-                                                { request.owner.email }
-                                            </Typography> <br />
-                                            { request.description }
-                                        </React.Fragment>
-                                    }
+                                        primary={request.title}
+                                        secondary={
+                                            request.description.length > 30?
+                                            request.description.substr(0, 30) + "...":
+                                            request.description
+                                        }
                                     />
+                                    <ListItemSecondaryAction>
+                                        <IconButton 
+                                            component="a" 
+                                            href={`/app/requests/${request.id}`}
+                                            edge="end" 
+                                            aria-label="enter">
+                                            <EditIcon />
+                                        </IconButton>
+                                        <IconButton 
+                                            component="a" 
+                                            edge="end" 
+                                            aria-label="delete"
+                                            onClick={_ => {
+                                                this.api.delete(request.id, {
+                                                    'format': 'json'
+                                                })
+                                                    .then(res => {
+                                                        if(res.status == 200) {
+                                                            window.location.href = '/app/request';
+                                                        }
+                                                    });
+                                            }}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </ListItemSecondaryAction>
                                 </ListItem>
                             );
                         })

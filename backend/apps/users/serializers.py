@@ -50,3 +50,10 @@ class RequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Request
         fields = '__all__'
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
+        ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
+        ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        return ret

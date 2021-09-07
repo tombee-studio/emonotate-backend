@@ -116,7 +116,7 @@ const useStyles = makeStyles((theme) => ({
 export default function MainLayout(props) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
-  const [numRequest, setNumRequest] = React.useState('loading...');
+  const [numRequest, setNumRequest] = React.useState(undefined);
   const handleDrawerOpen = () => {
       setOpen(true);
   };

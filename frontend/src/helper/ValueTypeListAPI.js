@@ -16,6 +16,13 @@ export default class ValueTypeListAPI {
     }
   }
 
+  getItem(id) {
+    return fetch(`/api/valuetypes/${id}?format=json`)
+      .then(res => {
+        return res.json();
+      });
+  }
+
   history(success, failed, page) {
     if(page) {
       fetch(`/history/valuetypes/?format=json&page=${page}`)

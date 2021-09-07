@@ -6,6 +6,7 @@ import CreateCurvePage from './pages/CreateCurvePage';
 import HistoryPage from './pages/HistoryPage';
 import ContentListPage from './pages/ContentListPage';
 import ValueTypeListPage from './pages/ValueTypeListPage';
+import RequestPage from './pages/RequestPage';
 
 export default class App extends React.Component {
   render() {
@@ -20,7 +21,8 @@ export default class App extends React.Component {
             <Route exact path='/app/history/' component={ HistoryPage } />
             <Route exact path='/app/content/' component={ ContentListPage } />
             <Route exact path='/app/word/' component={ ValueTypeListPage } />
-            <Route exact path='/app/new/:id' component={ CreateCurvePage } />
+            <Route exact path='/app/new/' component={ CreateCurvePage } />
+            <Route exact path='/app/request/' component={ RequestPage } />
           </Switch>
         </MainLayout>
       </Router>

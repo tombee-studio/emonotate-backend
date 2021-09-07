@@ -57,26 +57,26 @@ class MakeCurveComponent extends React.Component {
         'color': 'black',
     });
     this.inputField.onVideoLoaded = () => {
-      console.log("ACHIEVE");
+        return
     }
     this.inputField.OnInit();
     const dataset = [
-      {
-        id: 0,
-        x: 0.0,
-        y: 0.0,
-        axis: 'v',
-        type: 'fixed',
-        text:   "",
-        reason: "",
-      }, {
-        id: 1,
-        x: this.inputField.duration,
-        y: 0.0,
-        axis: 'v',
-        type: 'fixed',
-        text:   "",
-        reason: "",
+        {
+            id: 0,
+            x: 0.0,
+            y: 0.0,
+            axis: 'v',
+            type: 'fixed',
+            text:   "",
+            reason: "",
+        }, {
+            id: 1,
+            x: this.inputField.duration,
+            y: 0.0,
+            axis: 'v',
+            type: 'fixed',
+            text:   "",
+            reason: "",
     }];
     console.log(dataset);
     this.inputField.load(dataset);

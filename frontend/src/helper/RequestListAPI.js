@@ -8,6 +8,15 @@ export default class RequestListAPI {
             });
     }
 
+    getItem(id, queries = {}) {
+        var query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
+        return fetch(`/api/requests/${id}?${query}`)
+            .then(res => {
+                if(res.status != 200) throw res.message;
+                return res.json();
+            });
+    }
+
     delete(id, queries = {}) {
         var query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
         return fetch(`/api/requests/${id}?${query}`,{

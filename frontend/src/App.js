@@ -7,6 +7,8 @@ import HistoryPage from './pages/HistoryPage';
 import ContentListPage from './pages/ContentListPage';
 import ValueTypeListPage from './pages/ValueTypeListPage';
 import RequestPage from './pages/RequestPage';
+import RoomPage from './pages/RoomPage';
+import RequestEditPage from './pages/RequestEditPage';
 
 export default class App extends React.Component {
   render() {
@@ -23,6 +25,8 @@ export default class App extends React.Component {
             <Route exact path='/app/word/' component={ ValueTypeListPage } />
             <Route exact path='/app/new/' component={ CreateCurvePage } />
             <Route exact path='/app/request/' component={ RequestPage } />
+            <Route exact path='/app/requests/:id' component={ RequestEditPage } />
+            <Route exact path='/app/room/:id' component={ RoomPage } />
           </Switch>
         </MainLayout>
       </Router>

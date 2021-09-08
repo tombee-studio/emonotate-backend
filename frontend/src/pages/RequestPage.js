@@ -8,8 +8,6 @@ export default function RequestPage(props) {
     <Box m={2}>
         <Card m={2}>
             <RequestListComponent />
-        </Card>
-        <Card m={2}>
             <RequireListComponent />
         </Card>
     </Box>

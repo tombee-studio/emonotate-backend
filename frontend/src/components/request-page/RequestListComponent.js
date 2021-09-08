@@ -50,7 +50,9 @@ export default class RequestListComponent extends React.Component {
                                 <ListItem
                                     button
                                     component="a"
-                                    href={`/app/new/?content=${request.content.id}&value_type=${request.value_type.id}`}
+                                    href={
+                                        `/app/new/?content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
+                                    }
                                     key={request.room_name}
                                     alignItems="flex-start">
                                     <ListItemAvatar>

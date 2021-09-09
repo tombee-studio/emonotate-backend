@@ -29,7 +29,7 @@ const RequestEditPage = props => {
                 } else if(!request.redirect) {
                     return <RequestComponent request={ request } />
                 } else {
-                    return <Redirect to="/app/request/"/>
+                    return <Redirect to="/app/requests/"/>
                 }
             } 
         }/>

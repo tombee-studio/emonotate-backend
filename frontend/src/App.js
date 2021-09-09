@@ -9,6 +9,7 @@ import ValueTypeListPage from './pages/ValueTypeListPage';
 import RequestPage from './pages/RequestPage';
 import RoomPage from './pages/RoomPage';
 import RequestEditPage from './pages/RequestEditPage';
+import CurveEditPage from './pages/CurveEditPage';
 
 export default class App extends React.Component {
   render() {
@@ -24,6 +25,9 @@ export default class App extends React.Component {
             <Route exact path='/app/content/' component={ ContentListPage } />
             <Route exact path='/app/word/' component={ ValueTypeListPage } />
             <Route exact path='/app/new/' component={ CreateCurvePage } />
+            <Route path='/app/curves/:id(\d+)' component={ props => 
+              <CurveEditPage id={props.match.params.id} /> 
+            } />
             <Route exact path='/app/requests/' component={ RequestPage } />
             <Route path='/app/requests/:id(\d+)' component={ props => 
               <RequestEditPage id={props.match.params.id} /> 

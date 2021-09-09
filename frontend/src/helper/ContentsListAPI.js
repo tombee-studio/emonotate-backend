@@ -43,4 +43,15 @@ export default class ContentsListAPI {
       body: JSON.stringify(data)
     })
   }
+
+  delete(item) {
+    return fetch(`/api/contents/${item}`, {
+      method: 'delete',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.django.csrf,
+      }
+    })
+  }
 };

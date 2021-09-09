@@ -50,4 +50,15 @@ export default class ValueTypeListAPI {
       body: JSON.stringify(data)
     })
   }
+
+  delete(item) {
+    return fetch(`/api/valuetypes/${item}`, {
+      method: 'delete',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.django.csrf,
+      }
+    })
+  }
 };

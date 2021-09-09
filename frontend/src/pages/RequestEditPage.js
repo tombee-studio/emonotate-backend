@@ -4,7 +4,7 @@ import RequestListAPI from '../helper/RequestListAPI';
 import RequestComponent from '../components/request-edit-page/RequestComponent';
 
 const RequestEditPage = props => {
-    const id = props.match.params.id;
+    const { id } = props;
     const [request, setRequest] = useState(false);
     useEffect(() => {
         const api = new RequestListAPI();

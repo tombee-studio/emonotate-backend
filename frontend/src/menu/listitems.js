@@ -36,7 +36,7 @@ export const mainListItems = (numRequest) => {
         </ListItemIcon>
         <ListItemText primary="表現語" />
       </ListItem>
-      <ListItem button component="a" href="/app/request/">
+      <ListItem button component="a" href="/app/requests/">
         <ListItemIcon>
         <Badge badgeContent={numRequest} color="primary">
           <MailIcon />

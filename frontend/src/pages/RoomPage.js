@@ -5,7 +5,7 @@ import ObserverComponent from '../components/room-page/ObserverComponent';
 import RequestListAPI from '../helper/RequestListAPI';
 
 const RoomPage = props => {
-    const id = props.match.params.id;
+    const { id }  = props;
     const [request, setRequest] = useState(false);
     useEffect(() => {
         const api = new RequestListAPI();

@@ -28,8 +28,6 @@ class RequestComponent extends React.Component {
     }
 
     render() {
-        const { request } = this.props;
-        console.log(request);
         return (
             <div>
                 <Helmet>
@@ -39,14 +37,16 @@ class RequestComponent extends React.Component {
                 </Helmet>
                 <Box m={2}>
                     <Grid container>
-                        <Grid item xs={5}>
-                        <div data-vjs-player>
-                            <video
-                                id={ this.CONSTANT.video }
-                                ref={ node => this.videoNode = node }
-                                height={ 120 }
-                                className="video-js" />
-                        </div>
+                        <Grid item xs={3}>
+                            <div data-vjs-player>
+                                <video
+                                    id={ this.CONSTANT.video }
+                                    ref={ node => this.videoNode = node }
+                                    height={ 160 }
+                                    className="video-js" />
+                            </div>
+                        </Grid>
+                        <Grid item xs={9}>
                         </Grid>
                         <Grid item xs={12}>
                         </Grid>

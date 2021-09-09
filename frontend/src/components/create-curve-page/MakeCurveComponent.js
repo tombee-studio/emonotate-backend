@@ -20,7 +20,7 @@ class MakeCurveComponent extends React.Component {
     };
     this.createEmotionalArcInputField = this.createEmotionalArcInputField.bind(this);
     this.videoJsOptions = {
-      autoplay: true,
+      autoplay: false,
       controls: true,
       sources: [{
         src: content.url,
@@ -78,7 +78,6 @@ class MakeCurveComponent extends React.Component {
             text:   "",
             reason: "",
     }];
-    console.log(dataset);
     this.inputField.load(dataset);
   }
 

@@ -54,7 +54,7 @@ export default class RequireListComponent extends React.Component {
                                 <ListItem
                                     button
                                     component="a"
-                                    href={`/app/room/${request.id}`}
+                                    href={`/app/rooms/${request.id}`}
                                     key={request.room_name}>
                                     <ListItemAvatar>
                                         <Avatar>

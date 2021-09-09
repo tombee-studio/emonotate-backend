@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import MakeCurveComponent from '../components/CreateCurvePage/MakeCurveComponent';
+import MakeCurveComponent from '../components/create-curve-page/MakeCurveComponent';
 import { Box, Select, MenuItem } from '@material-ui/core';
 
 import ValueTypeListAPI from '../helper/ValueTypeListAPI';

@@ -24,9 +24,13 @@ export default class App extends React.Component {
             <Route exact path='/app/content/' component={ ContentListPage } />
             <Route exact path='/app/word/' component={ ValueTypeListPage } />
             <Route exact path='/app/new/' component={ CreateCurvePage } />
-            <Route exact path='/app/request/' component={ RequestPage } />
-            <Route exact path='/app/requests/:id' component={ RequestEditPage } />
-            <Route exact path='/app/room/:id' component={ RoomPage } />
+            <Route exact path='/app/requests/' component={ RequestPage } />
+            <Route path='/app/requests/:id(\d+)' component={ props => 
+              <RequestEditPage id={props.match.params.id} /> 
+            } />
+            <Route exact path='/app/rooms/:id(\d+)' component={ props => 
+              <RoomPage id={props.match.params.id} /> 
+            } />
           </Switch>
         </MainLayout>
       </Router>

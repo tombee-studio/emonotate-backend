@@ -10,6 +10,7 @@ import RequestPage from './pages/RequestPage';
 import RoomPage from './pages/RoomPage';
 import RequestEditPage from './pages/RequestEditPage';
 import CurveEditPage from './pages/CurveEditPage';
+import ProfilePage from './pages/ProfilePage';
 
 export default class App extends React.Component {
   render() {
@@ -35,6 +36,7 @@ export default class App extends React.Component {
             <Route exact path='/app/rooms/:id(\d+)' component={ props => 
               <RoomPage id={props.match.params.id} /> 
             } />
+            <Route exact path='/app/profile/' component={ ProfilePage } />
           </Switch>
         </MainLayout>
       </Router>

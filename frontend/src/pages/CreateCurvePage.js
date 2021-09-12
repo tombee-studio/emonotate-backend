@@ -31,7 +31,7 @@ const CreateCurvePage = (props) => {
                   value={curveType}
                   onChange={event => {
                       window.location.href = 
-                        `/app/new/?content=${query.get('content')}&value_type=${event.target.value.id}`;
+                        `/app/new/curve?content=${query.get('content')}&value_type=${event.target.value.id}`;
                   }}
                   autoWidth
               >
@@ -71,7 +71,7 @@ const CreateCurvePage = (props) => {
         value={curveType}
         onChange={event => {
           window.location.href = 
-            `/app/new/?content=${query.get('content')}&value_type=${event.target.value.id}`;
+            `/app/new/curve?content=${query.get('content')}&value_type=${event.target.value.id}`;
         }}
         autoWidth
       >

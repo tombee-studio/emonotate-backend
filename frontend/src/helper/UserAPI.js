@@ -6,4 +6,16 @@ export default class UserAPI {
       .then(success)
       .catch(failed);
   }
+
+  put(userId, data) {
+    return fetch(`/api/users/${userId}`, {
+      method: 'delete',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.django.csrf,
+      },
+      body: JSON.stringify(data),
+    });
+  }
 };

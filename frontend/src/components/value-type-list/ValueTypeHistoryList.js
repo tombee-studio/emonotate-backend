@@ -1,8 +1,11 @@
 import React from 'react';
 import { Pagination } from '@material-ui/lab';
-import { Card, List, ListItem, ListItemText } from '@material-ui/core';
+import { Avatar, Card, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
+import TextFormatIcon from '@material-ui/icons/TextFormat';
+import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
 import ValueTypeListAPI from '../../helper/ValueTypeListAPI';
 
 const styles = (theme) => ({
@@ -51,16 +54,6 @@ class UsersList extends React.Component {
         page);
     };
 
-    const generate = (data, element) => {
-      return data.map((value) =>
-        React.cloneElement(element, {
-          id: value.id,
-          primary: value.title,
-          secondary: value.title,
-        }),
-      );
-    };
-
     if(valuetypes) {
       return (
         <Box className={classes.root}>
@@ -75,12 +68,42 @@ class UsersList extends React.Component {
           <List>
             {
               valuetypes.models.map(item => (
-                <ListItem button>
+                <ListItem button component="a">
+                  <ListItemAvatar>
+                    <Avatar>
+                      <TextFormatIcon />
+                    </Avatar>
+                  </ListItemAvatar>
                   <ListItemText
                     key={item.id}
                     primary={item.title}
                     secondary={item.axis_type == 1 ? "対義語あり" :　"対義語なし"}
                   />
+                  <ListItemSecondaryAction>
+                    <IconButton 
+                      component="a" 
+                      href={`/app/valuetypes/${item.id}`}
+                      edge="end" 
+                      aria-label="enter">
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton 
+                      component="a" 
+                      edge="end" 
+                      aria-label="delete"
+                      onClick={_ => {
+                        this.api.delete(item.id, {
+                          'format': 'json'
+                        })
+                        .then(res => {
+                            if(res.status == 200) {
+                              window.location.href = '/app/word/';
+                            }
+                        });
+                      }}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
                 </ListItem>
               ))
             }

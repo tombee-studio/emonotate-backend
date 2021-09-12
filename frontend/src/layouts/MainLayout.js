@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -17,12 +17,13 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import { mainListItems } from '../menu/listitems';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import RequestListAPI from '../helper/RequestListAPI';
 
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
       {'Copyright © '}
-      <Link color="inherit" href="https://material-ui.com/">
+      <Link color="inherit" href="https://www.emonotate.com/">
         emonotate.com
       </Link>{' '}
       {new Date().getFullYear()}
@@ -115,13 +116,25 @@ const useStyles = makeStyles((theme) => ({
 export default function MainLayout(props) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
+  const [numRequest, setNumRequest] = React.useState(undefined);
   const handleDrawerOpen = () => {
-    setOpen(true);
+      setOpen(true);
   };
   const handleDrawerClose = () => {
-    setOpen(false);
+      setOpen(false);
   };
   const { children } = props;
+
+  useEffect(() => {
+      const api = new RequestListAPI();
+      api.get({
+        'format': 'json',
+        'role': 'participant',
+      })
+      .then(data => {
+          setNumRequest(data.models.length);
+      })
+  }, []);
 
   return (
     <div className={classes.root}>
@@ -163,7 +176,7 @@ export default function MainLayout(props) {
           </IconButton>
         </div>
         <Divider />
-        <List>{mainListItems}</List>
+        <List>{mainListItems(numRequest)}</List>
       </Drawer>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />

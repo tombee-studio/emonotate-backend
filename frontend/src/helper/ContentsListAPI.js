@@ -32,6 +32,17 @@ export default class ContentsListAPI {
     }
   }
 
+  getItem(id, queries={
+    'format': 'json'
+  }) {
+    const query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
+    return fetch(`/api/contents/${id}?${query}`)
+      .then(res => {
+          if(res.status != 200 && res.status != 201) throw res.message;
+          return res.json();
+      });
+  }
+
   post(data) {
     return fetch('/api/contents/?format=json', {
       method: 'post',
@@ -41,6 +52,17 @@ export default class ContentsListAPI {
         'X-CSRFToken': window.django.csrf,
       },
       body: JSON.stringify(data)
+    })
+  }
+
+  delete(item) {
+    return fetch(`/api/contents/${item}`, {
+      method: 'delete',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.django.csrf,
+      }
     })
   }
 };

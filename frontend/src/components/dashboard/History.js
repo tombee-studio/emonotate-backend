@@ -1,9 +1,12 @@
 import React from 'react';
 import { Pagination } from '@material-ui/lab';
-import { Card, Chip, Grid, List, ListItem, ListItemText, Typography } from '@material-ui/core';
+import { Avatar, Card, Chip, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
+import TimelineIcon from '@material-ui/icons/Timeline';
 import CurvesListAPI from '../../helper/CurvesListAPI';
+import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
 
 const styles = (theme) => ({
   root: {
@@ -76,11 +79,41 @@ class UsersList extends React.Component {
             <List>
               {
                 curves.models.map(curve => {
-                  return <ListItem key={curve.id} compontent="a" href={`/edit/${curve.id}`} button>
-                    <ListItemText color="primary">
-                      { curve.content.title }
-                    </ListItemText>
-                    <Chip label={ curve.value_type.title } color="primary" />
+                  return <ListItem
+                    key={curve.id}>
+                    <ListItemAvatar>
+                      <Avatar>
+                        <TimelineIcon />
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText 
+                      primary={ curve.content.title }
+                      secondary={ curve.value_type.title }
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton 
+                        component="a" 
+                        edge="end" 
+                        aria-label="delete"
+                        href={`/app/curves/${curve.id}`}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton 
+                        edge="end" 
+                        aria-label="delete"
+                        onClick={_ => {
+                          this.api.delete(curve.id, {
+                            'format': 'json'
+                          })
+                          .then(res => {
+                              if(res.status == 200) {
+                                window.location.href = '/app/dashboard/';
+                              }
+                          });
+                        }}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
                   </ListItem>;
                 })
               }

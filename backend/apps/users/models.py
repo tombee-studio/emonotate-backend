@@ -11,7 +11,7 @@ import random
 import string
 
 
-def randomname(n):
+def randomname(n=6):
     randlst = [random.choice(string.ascii_letters + string.digits) for i in range(n)]
     return ''.join(randlst)
 
@@ -128,3 +128,33 @@ class Curve(models.Model):
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)
 
+
+class Request(models.Model):
+    room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=128, default="")
+    description = models.TextField(blank=False, default="")
+    owner = models.ForeignKey(EmailUser, 
+                              default=1,
+                              on_delete=models.CASCADE, 
+                              related_name='owner')
+    participants = models.ManyToManyField(EmailUser)
+    content = models.ForeignKey(
+        Content, 
+        default=1,
+        on_delete=models.CASCADE)
+    value_type = models.ForeignKey(
+        ValueType,
+        default=1,
+        on_delete=models.CASCADE
+    )
+
+    def save(self, **kwargs):
+        if not self.room_name:
+            self.room_name = randomname()
+            while Request.objects.filter(room_name=self.room_name).exists():
+                self.room_name = randomname()
+        super(Request, self).save(**kwargs)
+    
+    def __str__(self):
+        return f'{self.title}({self.room_name})'

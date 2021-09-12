@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 path.append(join(BASE_DIR, 'apps'))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 DJANGO_APPS = [
     "django.contrib.admin",
@@ -94,6 +94,7 @@ STATIC_URL = "/static/"
 
 LOGIN_REDIRECT_URL = reverse_lazy("app")
 LOGIN_URL = reverse_lazy("login")
+LOGOUT_REDIRECT_URL = reverse_lazy("login")
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": (

@@ -28,3 +28,5 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, os.pardir, 'frontend', 'build'),
     os.path.join(BASE_DIR, "static"),
 ]
+
+EMAIL_BACKEND = os.environ['DEBUG_EMAIL_BACKEND']

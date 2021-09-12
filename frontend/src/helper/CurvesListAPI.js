@@ -23,4 +23,23 @@ export default class CurvesListAPI {
       return fetch('/history/curves/?format=json')
     }
   }
+
+  getItem(item) {
+    return fetch(`/api/curves/${item}?format=json`)
+      .then(res => {
+        if(res.status == 200) return res.json();
+        else throw "NOT FIND CURVE";
+      });
+  }
+
+  delete(item) {
+    return fetch(`/api/curves/${item}`, {
+      method: 'delete',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.django.csrf,
+      }
+    })
+  }
 };

@@ -66,7 +66,7 @@ class UsersList extends React.Component {
                 <ImageListItem
                   key={content.id} 
                   component="a" 
-                  href={'/app/new/' + content.id}>
+                  href={`/app/new/curve?content=${content.id}`}>
                   <img
                     srcSet={`https://picsum.photos/640/480/?random`}
                     alt={content.title}

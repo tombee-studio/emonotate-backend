@@ -149,12 +149,12 @@ class Request(models.Model):
         on_delete=models.CASCADE
     )
 
-    def save(self):
+    def save(self, **kwargs):
         if not self.room_name:
             self.room_name = randomname()
             while Request.objects.filter(room_name=self.room_name).exists():
                 self.room_name = randomname()
-        super(Request, self).save()
+        super(Request, self).save(**kwargs)
     
     def __str__(self):
         return f'{self.title}({self.room_name})'

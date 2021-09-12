@@ -16,10 +16,14 @@ export default class ValueTypeListAPI {
     }
   }
 
-  getItem(id) {
-    return fetch(`/api/valuetypes/${id}?format=json`)
+  getItem(id, queries={
+    'format': 'json'
+  }) {
+    const query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
+    return fetch(`/api/valuetypes/${id}?${query}`)
       .then(res => {
-        return res.json();
+          if(res.status != 200 && res.status != 201) throw res.message;
+          return res.json();
       });
   }
 

@@ -19,24 +19,10 @@ export default class RequireListComponent extends React.Component {
     constructor(props) {
         super(props);
         this.api = new RequestListAPI();
-        this.state = {
-            requests: []
-        };
-    }
-
-    componentDidMount() {
-        this.api.get({
-            'format': 'json',
-            'role': 'owner',
-        })
-        .then(json => {
-            this.setState({
-                requests: json.models,
-            });
-        });
     }
 
     render() {
+        const { requires } = this.props;
         return (
             <Box m={2}>
                 <Typography
@@ -49,7 +35,7 @@ export default class RequireListComponent extends React.Component {
                 <Divider />
                 <List>
                     {
-                        this.state.requests.map(request => {
+                        requires.map(request => {
                             return (
                                 <ListItem
                                     button
@@ -85,11 +71,11 @@ export default class RequireListComponent extends React.Component {
                                                 this.api.delete(request.id, {
                                                     'format': 'json'
                                                 })
-                                                    .then(res => {
-                                                        if(res.status == 200) {
-                                                            window.location.href = '/app/request';
-                                                        }
-                                                    });
+                                                .then(res => {
+                                                    if(res.status == 200 || res.status == 204) {
+                                                        window.location.href = '/app/requests/';
+                                                    }
+                                                });
                                             }}>
                                             <DeleteIcon />
                                         </IconButton>

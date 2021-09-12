@@ -9,30 +9,10 @@ import {
     ListItemAvatar,
     Avatar } from '@material-ui/core';
 import MailIcon from '@material-ui/icons/Mail';
-import RequestListAPI from '../../helper/RequestListAPI';
 
 export default class RequestListComponent extends React.Component {
-    constructor(props) {
-        super(props);
-        this.api = new RequestListAPI();
-        this.state = {
-            requests: []
-        };
-    }
-
-    componentDidMount() {
-        this.api.get({
-            'format': 'json',
-            'role': 'participant',
-        })
-        .then(json => {
-            this.setState({
-                requests: json.models,
-            });
-        });
-    }
-
     render() {
+        const { requests } = this.props;
         return (
             <Box m={2}>
                 <Typography
@@ -45,7 +25,7 @@ export default class RequestListComponent extends React.Component {
                 <Divider />
                 <List>
                     {
-                        this.state.requests.map(request => {
+                        requests.map(request => {
                             return (
                                 <ListItem
                                     button

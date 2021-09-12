@@ -3,7 +3,6 @@ import Box from '@material-ui/core/Box';
 import ProfileComponent from '../components/profile-page/ProfileComponent';
 
 const ProfilePage = (props) => {
-    console.log("ACHIEVE");
     return (
         <Box m={2}>
             <Box m={1}>

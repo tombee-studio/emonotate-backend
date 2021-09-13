@@ -1,3 +1,4 @@
+import { CircularProgress } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import ObserverComponent from '../components/room-page/ObserverComponent';
@@ -26,7 +27,7 @@ const RoomPage = props => {
         <Route render={
             props => {
                 if(!request) {
-                    return <div />
+                    return <CircularProgress />
                 } else if(!request.redirect) {
                     return <ObserverComponent request={ request } />
                 } else {

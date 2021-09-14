@@ -1,6 +1,6 @@
 import React from "react";
 import { Avatar, Box, Grid, List, ListItem, ListItemAvatar, ListItemText } from "@material-ui/core";
-import { Chart } from 'react-charts';
+import { Chart } from "react-charts";
 import PersonIcon from '@material-ui/icons/Person';
 import videojs from 'video.js';
 import "video.js/dist/video-js.css";
@@ -25,41 +25,26 @@ class ObserverComponent extends React.Component {
         }
 
         this.state = {
-            data: [
-                {
-                  label: 'abcde',
-                  data: [[0, 1], [1, 2], [2, 4], [3, 2], [4, 7]]
-                },
-                {
-                  label: 'bcdef',
-                  data: [[0, 3], [1, 1], [2, 5], [3, 6], [4, 4]]
+            data: request.participants.map(user => {
+                return {
+                    'label': user.id,
+                    'data': []
                 }
-            ],
-            axes: [
-                { primary: true, type: 'linear', position: 'bottom' },
-                { type: 'linear', position: 'left' }
-            ],
-            users: [
-                {
-                    'id': 'abcde',
-                    'data': {
-                        'id': 'abcde',
-                        'email': 'abc@abc.xyz.com',
-                        'login': true,
-                        'state': 'watching',
-                    }
-                },
-                {
-                    'id': 'bcdef',
-                    'data': {
-                        'id': 'bcdef',
-                        'email': 'abc@abc.xyz.com',
-                        'login': true,
-                        'state': 'watching',
-                    }
+            }),
+            axes: request.participants.map((_, i) => {
+                if(i == 0) {
+                    return { primary: true, type: 'linear', position: 'bottom' };
+                } else {
+                    return { type: 'linear', position: 'left' };
                 }
-            ]
-        }
+            }),
+            users: request.participants.map(user => {
+                return {
+                    'id': user.id,
+                    'data': user,
+                };
+            })
+        };
     }
 
     componentDidMount() {

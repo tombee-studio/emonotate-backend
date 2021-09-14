@@ -75,6 +75,11 @@ class RequestViewSet(viewsets.ModelViewSet):
             return self.queryset
 
 
+class LogViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = LogSerializer
+    queryset = Request.objects.all()
+
+
 def sign_s3(request):
     file_name = request.GET['file_name']
     file_type = request.GET['file_type']

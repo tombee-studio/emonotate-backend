@@ -5,12 +5,11 @@ import videojs from 'video.js';
 import Helmet from 'react-helmet';
 import "video.js/dist/video-js.css";
 
-import io from 'socket.io-client';
-
 class ObserverComponent extends React.Component {
     constructor(props) {
         super(props);
         const { request } = this.props;
+        this.request = request;
         this.CONSTANT = {
             video: 'video',
             chart: 'chart',
@@ -64,14 +63,14 @@ class ObserverComponent extends React.Component {
     }
 
     componentDidMount() {
-        this.socket = io.connect();
-        this.socket.on('connect', function (socket) {
-            console.log('Connected!');
-        });
-        this.socket.emit('message', 'messgae', 'test msg');
-        this.socket.on('test', function (data) {
-            console.log(data);
-        })
+        console.log('Connectinng..');
+        this.socket = new WebSocket(`ws://${window.location.host}/ws/${this.request.room_name}/`);
+        this.socket.onmessage = (e) => {
+            alert(e.data);
+        }
+        this.socket.onopen = () => {
+            this.socket.send("hello world");
+        }
 
         this.player = videojs(this.videoNode, this.videoJsOptions);
 

@@ -27,6 +27,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "django_extensions",
     "rest_framework",
+    'channels',
 ]
 
 LOCAL_APPS = [
@@ -67,7 +68,13 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "backend.wsgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgiref.inmemory.ChannelLayer",
+    },
+}
+
+ASGI_APPLICATION = "backend.asgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {

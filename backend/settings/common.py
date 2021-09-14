@@ -68,12 +68,6 @@ TEMPLATES = [
     },
 ]
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "asgiref.inmemory.ChannelLayer",
-    },
-}
-
 ASGI_APPLICATION = "backend.asgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [

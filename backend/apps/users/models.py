@@ -167,4 +167,4 @@ class Log(models.Model):
     value_type = models.ForeignKey(ValueType, default=1, null=True, on_delete=models.SET_NULL)
     room = models.CharField(max_length=128, default="")
     description = models.TextField(blank=False, default="")
-    state = JSONField()
+    state = models.CharField(max_length=128, default="")

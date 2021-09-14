@@ -2,7 +2,6 @@ import React from "react";
 import { Box, Grid, List, ListItem } from "@material-ui/core";
 import { Chart } from 'react-charts';
 import videojs from 'video.js';
-import Helmet from 'react-helmet';
 import "video.js/dist/video-js.css";
 
 class ObserverComponent extends React.Component {
@@ -68,9 +67,6 @@ class ObserverComponent extends React.Component {
         this.socket.onmessage = (e) => {
             alert(e.data);
         }
-        this.socket.onopen = () => {
-            this.socket.send("hello world");
-        }
 
         this.player = videojs(this.videoNode, this.videoJsOptions);
 
@@ -104,11 +100,6 @@ class ObserverComponent extends React.Component {
     render() {
         return (
             <div>
-                <Helmet>
-                    <script src="/static/users/js/emotional-arc-input-field.js" />
-                    <link rel="stylesheet" href="/static/users/css/emotional-arc-input-field.css" />
-                    <script src="/static/users/d3/d3.min.js" />
-                </Helmet>
                 <Box m={2}>
                     <Grid container>
                         <Grid item xs={5}>

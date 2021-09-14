@@ -1,30 +1,24 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import WebsocketConsumer
 from channels.db import database_sync_to_async
 import json
 
 from users.models import Log
 
 
-class ExperimentConsumer(AsyncWebsocketConsumer):
-    def connect(self, room):
+class ExperimentConsumer(WebsocketConsumer):
+    def connect(self):
         self.accept()
-        print(room)
+        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self._save_log(room=self.room_name, 
+            description="connected", 
+            state='connected')
     
     def disconnect(self, close_code):
-        pass
+        self._save_log(room=self.room_name, 
+            description="disconnected", 
+            state='disconnected')
+        self.close()
     
-    def receive(self, text_data=None, bytes_data=None):
-        """
-        受け取ったメッセージをそのままオウム返しに戻す
-        """
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-
-        self.send(text_data=json.dumps({
-            'message': message
-        }))
-    
-    @database_sync_to_async
     def _save_log(self, room, description, state, content_id=None, value_type_id=None):
         Log.objects.create(
             content=content_id,

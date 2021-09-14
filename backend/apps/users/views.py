@@ -77,7 +77,7 @@ class RequestViewSet(viewsets.ModelViewSet):
 
 class LogViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = LogSerializer
-    queryset = Request.objects.all()
+    queryset = Log.objects.all()
 
 
 def sign_s3(request):

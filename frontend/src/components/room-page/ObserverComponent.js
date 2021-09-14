@@ -1,6 +1,7 @@
 import React from "react";
-import { Box, Grid, List, ListItem } from "@material-ui/core";
+import { Avatar, Box, Grid, List, ListItem, ListItemAvatar, ListItemText } from "@material-ui/core";
 import { Chart } from 'react-charts';
+import PersonIcon from '@material-ui/icons/Person';
 import videojs from 'video.js';
 import "video.js/dist/video-js.css";
 
@@ -69,18 +70,6 @@ class ObserverComponent extends React.Component {
         }
 
         this.player = videojs(this.videoNode, this.videoJsOptions);
-
-        setInterval(() => {
-            this.updateUserState({
-                curve: [0, 1, 2, 3, 4].map(i => [i, Math.random() * 10]),
-                user: {
-                    'id': 'abcde',
-                    'email': 'abc@abc.xyz.com',
-                    'state': 'hey!',
-                    'login': true,
-                }
-            });
-        }, 5000);
     }
 
     updateUserState(userState) {
@@ -123,7 +112,16 @@ class ObserverComponent extends React.Component {
                         <Grid item xs={12}>
                             <List>
                                 { this.state.users.map(user => {
-                                    return <ListItem key={user.id}>{ user.id }</ListItem>
+                                    return <ListItem key={user.id}>
+                                        <ListItemAvatar>
+                                            <Avatar>
+                                                <PersonIcon />
+                                            </Avatar>
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={user.data.email}
+                                        />
+                                    </ListItem>
                                 })}
                             </List>
                         </Grid>

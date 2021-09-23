@@ -73,7 +73,10 @@ class EmailUserManager(BaseUserManager):
 
 
 class EmailUser(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=32, default=randomname(8))
+    username = models.CharField(
+        unique=True, 
+        max_length=32, 
+        default=randomname(8))
 
     email = models.EmailField(
         max_length=256,
@@ -89,8 +92,8 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     last_updated = models.DateTimeField(auto_now=True)
     objects = EmailUserManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     def __unicode__(self):
         return self.email

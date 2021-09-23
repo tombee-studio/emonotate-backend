@@ -92,6 +92,9 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
     def get_full_name(self):
         return '%s(%s)' % (self.username, self.email)
+    
+    def __str__(self):
+        return f"{self.username}({self.email})"
 
 
 class ValueType(models.Model):
@@ -124,6 +127,7 @@ class Curve(models.Model):
     value_type = models.ForeignKey(ValueType, default=1, on_delete=models.CASCADE)
     values = JSONField()
     version = models.CharField(max_length=16)
+    room_name = models.CharField(max_length=32, default="")
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)

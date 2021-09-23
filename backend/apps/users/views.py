@@ -1,4 +1,5 @@
 import boto3
+from rest_framework import filters
 
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
@@ -52,7 +53,8 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all()
-    search_fields = ('id', 'user')
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=room_name']
 
 
 class UserViewSet(viewsets.ModelViewSet):

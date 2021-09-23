@@ -20,6 +20,7 @@ const CreateCurvePage = (props) => {
   const [curveType, setCurveType] = useState(0);
   const content_id = query.get('content');
   const value_type_id = query.get('value_type');
+  const room_name = query.get('room') || "";
 
   useEffect(() => {
     const apis = [];
@@ -87,7 +88,7 @@ const CreateCurvePage = (props) => {
       }
       { 
       content.url && curveType &&
-        <MakeCurveComponent content={content} valueType={curveType} />
+        <MakeCurveComponent content={content} valueType={curveType} roomName={room_name} />
       }
     </Box>
   );

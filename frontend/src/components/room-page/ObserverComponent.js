@@ -1,9 +1,18 @@
 import React from "react";
-import { Avatar, Box, Grid, List, ListItem, ListItemAvatar, ListItemText } from "@material-ui/core";
+import { 
+    Avatar, 
+    Box, 
+    Grid, 
+    List, 
+    ListItem, 
+    ListItemAvatar, 
+    ListItemText,
+    Button } from "@material-ui/core";
 import { Chart } from "react-charts";
-import PersonIcon from '@material-ui/icons/Person';
-import videojs from 'video.js';
+import PersonIcon from "@material-ui/icons/Person";
+import videojs from "video.js";
 import "video.js/dist/video-js.css";
+import CurvesListAPI from "../../helper/CurvesListAPI";
 
 class ObserverComponent extends React.Component {
     constructor(props) {
@@ -45,6 +54,18 @@ class ObserverComponent extends React.Component {
                 };
             })
         };
+    }
+
+    download(exportJson) {
+        const fileName = 'finename.json';
+        const data = new Blob([JSON.stringify(exportJson)], { type: 'text/json' });
+        const jsonURL = window.URL.createObjectURL(data);
+        const link = document.createElement('a');
+        document.body.appendChild(link);
+        link.href = jsonURL;
+        link.setAttribute('download', fileName);
+        link.click();
+        document.body.removeChild(link);
     }
 
     componentDidMount() {
@@ -109,6 +130,26 @@ class ObserverComponent extends React.Component {
                                     </ListItem>
                                 })}
                             </List>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Grid container>
+                                <Grid item xs={3}>
+                                    <Button onClick={ev => {
+                                        const api = new CurvesListAPI();
+                                        api.list({
+                                            'format': 'json',
+                                            'search': this.request.room_name,
+                                        })
+                                        .then(json => {
+                                            this.download(json);
+                                            alert("ダウンロードを終了しました");
+                                        })
+                                        .catch(err => {
+                                            alert(err);
+                                        });
+                                    }}>Download</Button>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     </Grid>
                 </Box>

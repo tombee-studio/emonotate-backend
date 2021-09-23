@@ -87,6 +87,7 @@ class MakeCurveComponent extends React.Component {
 
   render() {
     const { valueType } = this.props;
+    const { roomName } = this.props;
     if(valueType) {
       this.value_type = valueType;
       setTimeout(() => {
@@ -125,7 +126,7 @@ class MakeCurveComponent extends React.Component {
               variant="contained"
               onClick={(e) => {
               this.api.call(user.id, (user) => {
-                this.inputField.submit(user, this.content, this.value_type, '1.1');
+                this.inputField.submit(user, this.content, this.value_type, roomName, '1.1');
               }, (err) => { console.log(err.body); });
             }}>
               感情曲線を追加

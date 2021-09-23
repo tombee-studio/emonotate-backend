@@ -8,7 +8,7 @@ from .forms import SignUpForm
 User = get_user_model()
 
 default_permissions = []
-for target_name in ['curve', 'valuetype', 'content', 'emailuser']:
+for target_name in ['curve', 'valuetype', 'content', 'emailuser', 'request']:
     for do in ['add', 'change', 'delete', 'view']:
         codename = '{}_{}'.format(do, target_name)
         permission = Permission.objects.get(

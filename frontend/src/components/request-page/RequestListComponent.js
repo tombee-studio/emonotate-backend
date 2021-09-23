@@ -31,7 +31,7 @@ export default class RequestListComponent extends React.Component {
                                     button
                                     component="a"
                                     href={
-                                        `/app/new/?content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
+                                        `/app/new/curve?content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
                                     }
                                     key={request.room_name}
                                     alignItems="flex-start">

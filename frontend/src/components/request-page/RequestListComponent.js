@@ -17,6 +17,7 @@ import NoteIcon from '@material-ui/icons/Note';
 export default class RequestListComponent extends React.Component {
     render() {
         const { requests } = this.props;
+        const counts = 30;
         return (
             <Box m={2}>
                 <Typography
@@ -35,7 +36,7 @@ export default class RequestListComponent extends React.Component {
                                     button
                                     component="a"
                                     href={
-                                        `/app/new/curve?content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
+                                        `/app/new/curve?counts=${counts}&content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
                                     }
                                     key={request.room_name}
                                     alignItems="flex-start">

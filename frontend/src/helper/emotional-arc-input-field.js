@@ -204,7 +204,7 @@ EmotionalArcField.prototype.submit = function(user, content, valueType, roomName
         'value_type': valueType.id,
         'values': this.data,
         'version': version,
-        'room_name': roomName,
+        'room_name': roomName || "",
     };
     fetch('/api/curves/?format=json', {
         method: 'POST',

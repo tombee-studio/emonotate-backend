@@ -169,6 +169,7 @@ class Request(models.Model):
     )
     questionaire = models.ForeignKey(Questionaire, 
         null=True, 
+        blank=True,
         on_delete=models.SET_NULL, 
         default=None)
 

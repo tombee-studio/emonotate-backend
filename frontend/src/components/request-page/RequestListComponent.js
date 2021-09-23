@@ -7,8 +7,12 @@ import {
     Typography, 
     Divider,
     ListItemAvatar,
-    Avatar } from '@material-ui/core';
+    Avatar, 
+    ListItemSecondaryAction,
+    IconButton
+} from '@material-ui/core';
 import MailIcon from '@material-ui/icons/Mail';
+import NoteIcon from '@material-ui/icons/Note';
 
 export default class RequestListComponent extends React.Component {
     render() {
@@ -76,6 +80,20 @@ export default class RequestListComponent extends React.Component {
                                         </React.Fragment>
                                     }
                                     />
+                                    {request.questionaire &&
+                                        <ListItemSecondaryAction>
+                                            <IconButton 
+                                                component="a" 
+                                                href={
+                                                    `${request.questionaire.url}?${request.questionaire.user_id_form}=${window.django.user.username}`
+                                                }
+                                                target="_blank"
+                                                edge="end" 
+                                                aria-label="enter">
+                                                <NoteIcon />
+                                            </IconButton>
+                                        </ListItemSecondaryAction>
+                                    }
                                 </ListItem>
                             );
                         })

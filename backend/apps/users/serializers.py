@@ -49,6 +49,12 @@ class CurveSerializer(serializers.ModelSerializer):
         return ret
 
 
+class QuestionaireSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Questionaire
+        fields = '__all__'
+
+
 class RequestSerializer(serializers.ModelSerializer):
     participants = UserSerializer(many=True)
 
@@ -61,6 +67,8 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        if ret['questionaire'] != None:
+            ret['questionaire'] = QuestionaireSerializer(Questionaire.objects.get(pk=ret['questionaire'])).data
         return ret
     
     def create(self, validated_data):

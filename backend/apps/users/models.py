@@ -6,6 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Permission, Group
 
 import random
 import string
@@ -44,8 +45,7 @@ class EmailUserManager(BaseUserManager):
 
     def create_user(self, username, email, password=None, **extra_fields):
         is_staff = extra_fields.pop("is_staff", False)
-
-        return self._create_user(
+        user = self._create_user(
             username,
             email,
             password,
@@ -53,6 +53,14 @@ class EmailUserManager(BaseUserManager):
             False,
             **extra_fields
         )
+        try:
+            group = Group.objects.get(name='General')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            print(f"{group} exists")
+            user.groups.add(group)
+        return user
 
     def create_superuser(self, username, email, password, **extra_fields):
         return self._create_user(
@@ -133,6 +141,10 @@ class Curve(models.Model):
         return '{} {}'.format(self.content.title, self.id)
 
 
+class Questionaire(models.Model):
+    url = models.URLField(default="")
+    user_id_form = models.CharField(max_length=32)
+
 class Request(models.Model):
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -152,6 +164,10 @@ class Request(models.Model):
         default=1,
         on_delete=models.CASCADE
     )
+    questionaire = models.ForeignKey(Questionaire, 
+        null=True, 
+        on_delete=models.SET_NULL, 
+        default=None)
 
     def save(self, **kwargs):
         if not self.room_name:

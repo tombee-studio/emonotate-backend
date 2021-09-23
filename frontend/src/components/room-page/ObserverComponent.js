@@ -69,12 +69,6 @@ class ObserverComponent extends React.Component {
     }
 
     componentDidMount() {
-        console.log('Connectinng..');
-        this.socket = new WebSocket(`ws://${window.location.host}/ws/${this.request.room_name}/`);
-        this.socket.onmessage = (e) => {
-            alert(e.data);
-        }
-
         this.player = videojs(this.videoNode, this.videoJsOptions);
     }
 

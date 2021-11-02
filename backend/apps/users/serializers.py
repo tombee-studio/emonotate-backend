@@ -56,8 +56,6 @@ class QuestionaireSerializer(serializers.ModelSerializer):
 
 
 class RequestSerializer(serializers.ModelSerializer):
-    participants = UserSerializer(many=True)
-
     class Meta:
         model = Request
         fields = '__all__'

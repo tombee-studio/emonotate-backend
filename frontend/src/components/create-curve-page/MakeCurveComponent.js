@@ -11,9 +11,10 @@ import EmotionalArcField from '../../helper/emotional-arc-input-field';
 class MakeCurveComponent extends React.Component {
   constructor(props) {
     super(props);
-    const { content } = this.props;
+    const { content, counts } = this.props;
     this.api = new UserAPI();
     this.content = content;
+    this.counts = counts;
     this.CONSTANT = {
       video: 'video',
       chart: 'chart',
@@ -60,24 +61,19 @@ class MakeCurveComponent extends React.Component {
         return
     }
     this.inputField.OnInit();
-    const dataset = [
-        {
-            id: 0,
-            x: 0.0,
-            y: 0.0,
-            axis: 'v',
-            type: 'fixed',
-            text:   "",
-            reason: "",
-        }, {
-            id: 1,
-            x: this.inputField.duration,
-            y: 0.0,
-            axis: 'v',
-            type: 'fixed',
-            text:   "",
-            reason: "",
-    }];
+    const counts = this.counts;
+    const dataset = Array.from(Array.from(new Array(counts + 1)).keys())
+      .map(index => {
+        return {
+          id: index,
+          x: this.inputField.duration * index / counts,
+          y: 0.0,
+          axis: 'v',
+          type: 'fixed',
+          text:   "",
+          reason: "",
+        };
+      });
     this.inputField.load(dataset);
   }
 
@@ -87,6 +83,7 @@ class MakeCurveComponent extends React.Component {
 
   render() {
     const { valueType } = this.props;
+    const { roomName } = this.props;
     if(valueType) {
       this.value_type = valueType;
       setTimeout(() => {
@@ -125,7 +122,7 @@ class MakeCurveComponent extends React.Component {
               variant="contained"
               onClick={(e) => {
               this.api.call(user.id, (user) => {
-                this.inputField.submit(user, this.content, this.value_type, '1.1');
+                this.inputField.submit(user, this.content, this.value_type, roomName, '1.1');
               }, (err) => { console.log(err.body); });
             }}>
               感情曲線を追加

@@ -6,6 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Permission, Group
 
 import random
 import string
@@ -44,8 +45,7 @@ class EmailUserManager(BaseUserManager):
 
     def create_user(self, username, email, password=None, **extra_fields):
         is_staff = extra_fields.pop("is_staff", False)
-
-        return self._create_user(
+        user = self._create_user(
             username,
             email,
             password,
@@ -53,6 +53,14 @@ class EmailUserManager(BaseUserManager):
             False,
             **extra_fields
         )
+        try:
+            group = Group.objects.get(name='General')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            print(f"{group} exists")
+            user.groups.add(group)
+        return user
 
     def create_superuser(self, username, email, password, **extra_fields):
         return self._create_user(
@@ -65,7 +73,10 @@ class EmailUserManager(BaseUserManager):
 
 
 class EmailUser(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=32, default=randomname(8))
+    username = models.CharField(
+        unique=True, 
+        max_length=32, 
+        default=randomname(8))
 
     email = models.EmailField(
         max_length=256,
@@ -81,8 +92,8 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     last_updated = models.DateTimeField(auto_now=True)
     objects = EmailUserManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     def __unicode__(self):
         return self.email
@@ -92,6 +103,9 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
     def get_full_name(self):
         return '%s(%s)' % (self.username, self.email)
+    
+    def __str__(self):
+        return f"{self.username}({self.email})"
 
 
 class ValueType(models.Model):
@@ -124,10 +138,15 @@ class Curve(models.Model):
     value_type = models.ForeignKey(ValueType, default=1, on_delete=models.CASCADE)
     values = JSONField()
     version = models.CharField(max_length=16)
+    room_name = models.CharField(max_length=32, default="")
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)
 
+
+class Questionaire(models.Model):
+    url = models.URLField(default="")
+    user_id_form = models.CharField(max_length=32)
 
 class Request(models.Model):
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
@@ -148,6 +167,11 @@ class Request(models.Model):
         default=1,
         on_delete=models.CASCADE
     )
+    questionaire = models.ForeignKey(Questionaire, 
+        null=True, 
+        blank=True,
+        on_delete=models.SET_NULL, 
+        default=None)
 
     def save(self, **kwargs):
         if not self.room_name:
@@ -158,3 +182,13 @@ class Request(models.Model):
     
     def __str__(self):
         return f'{self.title}({self.room_name})'
+
+
+class Log(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
+    content = models.ForeignKey(Content, default=1, null=True, on_delete=models.SET_NULL)
+    value_type = models.ForeignKey(ValueType, default=1, null=True, on_delete=models.SET_NULL)
+    room = models.CharField(max_length=128, default="")
+    description = models.TextField(blank=False, default="")
+    state = models.CharField(max_length=128, default="")

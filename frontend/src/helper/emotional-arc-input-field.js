@@ -197,13 +197,14 @@ EmotionalArcField.prototype.onDraggablePoint = function() {
         });
 }
 
-EmotionalArcField.prototype.submit = function(user, content, valueType, version) {
+EmotionalArcField.prototype.submit = function(user, content, valueType, roomName, version) {
     var data = {
         'user': user.id,
         'content': content.id,
         'value_type': valueType.id,
         'values': this.data,
-        'version': version
+        'version': version,
+        'room_name': roomName || "",
     };
     fetch('/api/curves/?format=json', {
         method: 'POST',

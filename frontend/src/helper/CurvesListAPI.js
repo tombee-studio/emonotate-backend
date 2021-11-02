@@ -24,6 +24,17 @@ export default class CurvesListAPI {
     }
   }
 
+  list(queries={
+    'format': 'json'
+  }) {
+    const query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
+    return fetch(`/api/curves?${query}`)
+      .then(res => {
+          if(res.status != 200 && res.status != 201) throw res.message;
+          return res.json();
+      });
+  }
+
   getItem(item) {
     return fetch(`/api/curves/${item}?format=json`)
       .then(res => {

@@ -27,10 +27,11 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "django_extensions",
     "rest_framework",
+    'channels',
 ]
 
 LOCAL_APPS = [
-    "users"
+    "users",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -67,7 +68,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "backend.wsgi.application"
+ASGI_APPLICATION = "backend.asgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {

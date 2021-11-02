@@ -7,12 +7,17 @@ import {
     Typography, 
     Divider,
     ListItemAvatar,
-    Avatar } from '@material-ui/core';
+    Avatar, 
+    ListItemSecondaryAction,
+    IconButton
+} from '@material-ui/core';
 import MailIcon from '@material-ui/icons/Mail';
+import NoteIcon from '@material-ui/icons/Note';
 
 export default class RequestListComponent extends React.Component {
     render() {
         const { requests } = this.props;
+        const counts = 30;
         return (
             <Box m={2}>
                 <Typography
@@ -31,7 +36,9 @@ export default class RequestListComponent extends React.Component {
                                     button
                                     component="a"
                                     href={
-                                        `/app/new/?content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
+                                        `/app/new/curve?counts=${
+                                            request.content.id == 48 || request.content.id == 1 ? 30 : 5
+                                        }&content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
                                     }
                                     key={request.room_name}
                                     alignItems="flex-start">
@@ -76,6 +83,20 @@ export default class RequestListComponent extends React.Component {
                                         </React.Fragment>
                                     }
                                     />
+                                    {request.questionaire &&
+                                        <ListItemSecondaryAction>
+                                            <IconButton 
+                                                component="a" 
+                                                href={
+                                                    `${request.questionaire.url}?${request.questionaire.user_id_form}=${window.django.user.username}`
+                                                }
+                                                target="_blank"
+                                                edge="end" 
+                                                aria-label="enter">
+                                                <NoteIcon />
+                                            </IconButton>
+                                        </ListItemSecondaryAction>
+                                    }
                                 </ListItem>
                             );
                         })

@@ -6,3 +6,4 @@ frontend/build/*
 venv/
 migrations/
 .env
+package-lock.json

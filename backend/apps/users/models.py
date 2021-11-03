@@ -182,13 +182,3 @@ class Request(models.Model):
     
     def __str__(self):
         return f'{self.title}({self.room_name})'
-
-
-class Log(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
-    content = models.ForeignKey(Content, default=1, null=True, on_delete=models.SET_NULL)
-    value_type = models.ForeignKey(ValueType, default=1, null=True, on_delete=models.SET_NULL)
-    room = models.CharField(max_length=128, default="")
-    description = models.TextField(blank=False, default="")
-    state = models.CharField(max_length=128, default="")

@@ -79,9 +79,3 @@ class RequestSerializer(serializers.ModelSerializer):
         )
         instance.participants.set(validated_data['participants'])
         return instance
-
-
-class LogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Log
-        fields = '__all__'

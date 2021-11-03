@@ -8,6 +8,5 @@ router.register(r'curves', CurveViewSet)
 router.register(r'contents', ContentViewSet)
 router.register(r'valuetypes', ValueTypeViewSet)
 router.register(r'requests', RequestViewSet)
-router.register(r'logs', LogViewSet)
 urlpatterns = router.urls
 urlpatterns += url(r'sign_s3/$', sign_s3),

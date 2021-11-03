@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Route } from 'react-router-dom';
-import { CircularProgress } from '@material-ui/core';
+import { CircularProgress, Box } from '@material-ui/core';
 import CurvesListAPI from '../helper/CurvesListAPI';
 import EditCurveComponent from '../components/edit-curve-page/EditCurveComponent';
 

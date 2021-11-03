@@ -26,4 +26,14 @@ class EmailUserSignUpTestCase(APITestCase):
         response = self.client.post(self.signup_url, signup_dict)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(EmailUser.objects.count(), 2)
-        
+
+    def test_if_username_already_exists_dont_signup(self):
+        # Prepare data with already saved user
+        signup_dict = {
+            'username': self.user_saved.username,
+            'password1': 'test_Pass',
+            'password2': 'test_Pass',
+            'email': self.user_saved.email,
+        }
+        response = self.client.post(self.signup_url, signup_dict)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

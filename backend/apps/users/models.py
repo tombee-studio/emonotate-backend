@@ -105,7 +105,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
         return '%s(%s)' % (self.username, self.email)
     
     def __str__(self):
-        return f"{self.username}({self.email})"
+        return f"{self.id}: {self.username}({self.email})"
 
 
 class ValueType(models.Model):

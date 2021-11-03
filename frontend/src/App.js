@@ -8,7 +8,7 @@ import ValueTypeListPage from './pages/ValueTypeListPage';
 import RequestPage from './pages/RequestPage';
 import RoomPage from './pages/RoomPage';
 import RequestEditPage from './pages/RequestEditPage';
-import CurveEditPage from './pages/CurveEditPage';
+import EditCurvePage from './pages/EditCurvePage';
 import ProfilePage from './pages/ProfilePage';
 import CreateCurvePage from './pages/CreateCurvePage';
 import CreateRequestPage from './pages/CreateRequestPage';
@@ -33,7 +33,7 @@ export default class App extends React.Component {
               else <div />;
             } } />
             <Route path='/app/curves/:id(\d+)' component={ props => 
-              <CurveEditPage id={props.match.params.id} /> 
+              <EditCurvePage id={props.match.params.id} /> 
             } />
             <Route exact path='/app/requests/' component={ RequestPage } />
             <Route path='/app/requests/:id(\d+)' component={ props => 

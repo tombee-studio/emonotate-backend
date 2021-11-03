@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Route } from 'react-router-dom';
+import { CircularProgress } from '@material-ui/core';
 import CurvesListAPI from '../helper/CurvesListAPI';
+import EditCurveComponent from '../components/edit-curve-page/EditCurveComponent';
 
-const CurveEditPage = props => {
+const EditCurvePage = props => {
     const { id } = props;
     const [ curve, setCurve ] = useState(false);
     useEffect(() => {
@@ -15,13 +17,19 @@ const CurveEditPage = props => {
     return (
         <Route render={
             props => {
-                if(!curve) return <div>{`${id}を検索しています...`}</div>;
+                if(!curve) return (<Box m={2}>
+                    <CircularProgress />
+                </Box>);
                 else if(curve.user.id == window.django.user.id)
-                    return <div>{`${id}を編集します...`}</div>;
+                    return <EditCurveComponent 
+                        content={curve.content}
+                        valueType={curve.value_type}
+                        values={curve.values}
+                    />;
                 else return <div>{`${id}を閲覧します...`}</div>;
             } 
         }/>
     );
 }
 
-export default CurveEditPage; 
+export default EditCurvePage; 

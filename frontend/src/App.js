@@ -11,6 +11,7 @@ import RequestEditPage from './pages/RequestEditPage';
 import CurveEditPage from './pages/CurveEditPage';
 import ProfilePage from './pages/ProfilePage';
 import CreateCurvePage from './pages/CreateCurvePage';
+import CreateRequestPage from './pages/CreateRequestPage';
 
 export default class App extends React.Component {
   render() {
@@ -28,6 +29,7 @@ export default class App extends React.Component {
             <Route exact path='/app/new/:name' component={ props => {
               const { name } = props.match.params;
               if(name == 'curve') return <CreateCurvePage />;
+              else if(name == 'request') return <CreateRequestPage />;
               else <div />;
             } } />
             <Route path='/app/curves/:id(\d+)' component={ props => 

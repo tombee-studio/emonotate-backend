@@ -1,12 +1,11 @@
 from faker import Faker as FakerClass
 from typing import Any, Sequence
-from factory import django, Faker, post_generation
+from factory import django, Faker, post_generation, SubFactory
 
-from users.models import EmailUser
+from users.models import *
 
 
 class EmailUserFactory(django.DjangoModelFactory):
-
     class Meta:
         model = EmailUser
     
@@ -27,3 +26,12 @@ class EmailUserFactory(django.DjangoModelFactory):
             )
         )
         self.set_password(password)
+
+
+class ContentFactory(django.DjangoModelFactory):
+    class Meta:
+        model =  Content
+    user = SubFactory(EmailUserFactory)
+    title = Faker('word')
+    url = Faker('url')
+    data_type = 'video/mp4'

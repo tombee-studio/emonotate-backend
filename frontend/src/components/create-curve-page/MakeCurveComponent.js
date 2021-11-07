@@ -67,7 +67,7 @@ class MakeCurveComponent extends React.Component {
         return {
           id: index,
           x: this.inputField.duration * index / counts,
-          y: 0.0,
+          y: Math.random() * 2 - 1.0,
           axis: 'v',
           type: 'fixed',
           text:   "",

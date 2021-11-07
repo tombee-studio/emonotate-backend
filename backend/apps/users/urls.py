@@ -4,9 +4,9 @@ from .views import *
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
-router.register(r'curves', CurveViewSet)
-router.register(r'contents', ContentViewSet)
-router.register(r'valuetypes', ValueTypeViewSet)
-router.register(r'requests', RequestViewSet)
+router.register(r'curves', CurveViewSet, basename='curves')
+router.register(r'contents', ContentViewSet, basename='contents')
+router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
+router.register(r'requests', RequestViewSet, basename='requests')
 urlpatterns = router.urls
 urlpatterns += url(r'sign_s3/$', sign_s3),

@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
-from users.test.factory import EmailUserFactory
+from users.test.factory import *
 from users.models import EmailUser
 from faker import Faker
 
@@ -36,4 +36,17 @@ class EmailUserSignUpTestCase(APITestCase):
             'email': self.user_saved.email,
         }
         response = self.client.post(self.signup_url, signup_dict)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class ContentAPITestCase(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.content_obj = ContentFactory.build()
+        cls.client = APIClient()
+        cls.url = reverse('contents')
+        cls.faker_obj = Faker()
+    
+    def test_api_is_valid(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)

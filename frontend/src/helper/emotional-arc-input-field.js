@@ -131,6 +131,8 @@ EmotionalArcField.prototype.update = function() {
         .data(this.data, d => { return d; });
     this.svg.select(".line").attr("d", this.line(this.data));
     circle.enter().append("circle")
+        .attr("fill", "white")
+        .attr("stroke", "rgb(0, 0, 0)")
         .attr("class", "graph-point")
         .attr("cx", (d) => { 
             return xScale(d.x); 
@@ -151,8 +153,19 @@ EmotionalArcField.prototype.update = function() {
                 this.data.splice(i, 1);
                 this.update();
             }
-        });
-    circle.attr("cx", (d) => { 
+        })
+        .on("mouseover", function() { 
+            d3.select(this)
+            .attr("fill", "rgb(0, 0, 0)");
+            })
+        .on("mouseout", function() { 
+            d3.select(this)
+            .attr("fill", "rgb(245, 245, 245)");
+            });
+    circle
+        .attr("stroke", "rgb(0, 0, 0)")
+        .attr("fill", "white")
+        .attr("cx", (d) => { 
             return xScale(d.x); 
         })
         .attr("cy", (d) => { 
@@ -171,7 +184,15 @@ EmotionalArcField.prototype.update = function() {
                 this.data.splice(i, 1);
                 this.update();
             }
-        });
+        })
+        .on("mouseover", function() { 
+            d3.select(this)
+            .attr("fill", "rgb(0, 0, 0)");
+            })
+        .on("mouseout", function() { 
+            d3.select(this)
+            .attr("fill", "rgb(245, 245, 245)");
+            });
     circle.exit().remove();
 }
 

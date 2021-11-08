@@ -42,6 +42,21 @@ class EmailUserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
+    
+    def create_unique_user(self, is_test=False):
+        username = randomname()
+        while True:
+            try:
+                EmailUser.objects.get(username=username)
+            except:
+                break
+            username = randomname()
+        if not is_test:
+            EmailUser.objects.create_user(
+                username=username, 
+                email=f"emonotate+{username}@gmail.com", 
+                password="password")
+        return username
 
     def create_user(self, username, email, password=None, **extra_fields):
         is_staff = extra_fields.pop("is_staff", False)
@@ -157,6 +172,7 @@ class Request(models.Model):
                               on_delete=models.CASCADE, 
                               related_name='owner')
     participants = models.ManyToManyField(EmailUser)
+    intervals = models.IntegerField(default=1)
     content = models.ForeignKey(
         Content, 
         default=1,

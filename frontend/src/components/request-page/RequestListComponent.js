@@ -36,9 +36,9 @@ export default class RequestListComponent extends React.Component {
                                     button
                                     component="a"
                                     href={
-                                        `/app/new/curve?counts=${
-                                            request.content.id == 48 || request.content.id == 1 ? 30 : 5
-                                        }&content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
+                                        `/app/new/curve?${
+                                            request.intervals != 1 ? `counts=${request.intervals}&` : ""
+                                        }content=${request.content.id}&value_type=${request.value_type.id}&room=${request.room_name}`
                                     }
                                     key={request.room_name}
                                     alignItems="flex-start">

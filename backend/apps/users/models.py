@@ -123,6 +123,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
 
 class ValueType(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
     axis_type = models.IntegerField(choices=(
@@ -134,6 +135,7 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
@@ -144,7 +146,7 @@ class Content(models.Model):
 
 
 class Curve(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser,
                              default=1,
                              on_delete=models.CASCADE)
@@ -153,6 +155,7 @@ class Curve(models.Model):
     values = JSONField()
     version = models.CharField(max_length=16)
     room_name = models.CharField(max_length=32, default="")
+    locked = models.BooleanField(default=True)
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)
@@ -164,7 +167,7 @@ class Questionaire(models.Model):
 
 class Request(models.Model):
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=128, default="")
     description = models.TextField(blank=False, default="")
     owner = models.ForeignKey(EmailUser, 

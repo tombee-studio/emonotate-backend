@@ -7,6 +7,7 @@ import TimelineIcon from '@material-ui/icons/Timeline';
 import CurvesListAPI from '../../helper/CurvesListAPI';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 
 const styles = (theme) => ({
   root: {
@@ -90,30 +91,41 @@ class UsersList extends React.Component {
                       primary={ curve.content.title }
                       secondary={ curve.value_type.title }
                     />
-                    <ListItemSecondaryAction>
-                      <IconButton 
-                        component="a" 
-                        edge="end" 
-                        aria-label="delete"
-                        href={`/app/curves/${curve.id}`}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton 
-                        edge="end" 
-                        aria-label="delete"
-                        onClick={_ => {
-                          this.api.delete(curve.id, {
-                            'format': 'json'
-                          })
-                          .then(res => {
-                              if(res.status == 200) {
-                                window.location.href = '/app/dashboard/';
-                              }
-                          });
-                        }}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
+                    { !curve.locked ?
+                      <ListItemSecondaryAction>
+                        <IconButton 
+                          component="a" 
+                          edge="end" 
+                          aria-label="delete"
+                          href={`/app/curves/${curve.id}`}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton 
+                          edge="end" 
+                          aria-label="delete"
+                          onClick={_ => {
+                            this.api.delete(curve.id, {
+                              'format': 'json'
+                            })
+                            .then(res => {
+                                if(res.status == 200) {
+                                  window.location.href = '/app/dashboard/';
+                                }
+                            });
+                          }}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </ListItemSecondaryAction> :
+                      <ListItemSecondaryAction>
+                        <IconButton 
+                          component="a" 
+                          edge="end" 
+                          aria-label="delete"
+                          href={`/app/curves/${curve.id}`}>
+                          <VisibilityIcon />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    }
                   </ListItem>;
                 })
               }

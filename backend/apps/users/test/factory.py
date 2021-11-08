@@ -31,7 +31,7 @@ class EmailUserFactory(django.DjangoModelFactory):
 class ContentFactory(django.DjangoModelFactory):
     class Meta:
         model =  Content
-    user = SubFactory(EmailUserFactory)
+    user = EmailUser.objects.get(username="tomoya").id
     title = Faker('word')
     url = Faker('url')
     data_type = 'video/mp4'

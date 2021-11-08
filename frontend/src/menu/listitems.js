@@ -33,18 +33,22 @@ export const mainListItems = (numRequest) => {
         </ListItemIcon>
         <ListItemText primary="履歴" />
       </ListItem>
-      <ListItem button component="a" href="/app/content/">
-        <ListItemIcon>
-          <MovieIcon />
-        </ListItemIcon>
-        <ListItemText primary="コンテンツ" />
-      </ListItem>
-      <ListItem button component="a" href="/app/word/">
-        <ListItemIcon>
-          <TextFormatIcon />
-        </ListItemIcon>
-        <ListItemText primary="表現語" />
-      </ListItem>
+      { window.django.user.permissions.has('users.add_content') &&
+        <div>
+          <ListItem button component="a" href="/app/content/">
+            <ListItemIcon>
+              <MovieIcon />
+            </ListItemIcon>
+            <ListItemText primary="コンテンツ" />
+          </ListItem>
+          <ListItem button component="a" href="/app/word/">
+            <ListItemIcon>
+              <TextFormatIcon />
+            </ListItemIcon>
+            <ListItemText primary="表現語" />
+          </ListItem>
+        </div>
+      }
       <ListSubheader>実験者ツール</ListSubheader>
       <ListItem button component="a" href="/app/requests/">
         <ListItemIcon>

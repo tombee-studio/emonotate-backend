@@ -58,7 +58,6 @@ class EmailUserManager(BaseUserManager):
         except Group.DoesNotExist:
             print("Does not exists")
         else:
-            print(f"{group} exists")
             user.groups.add(group)
         return user
 

@@ -3,8 +3,9 @@ import {
     Avatar, 
     FormControl,
     InputLabel,
-    Input,
+    TextField,
     Box,
+    Button,
     Grid } from "@material-ui/core";
 import PersonIcon from "@material-ui/icons/Person";
 import "video.js/dist/video-js.css";
@@ -14,7 +15,7 @@ class ObserverComponent extends React.Component {
     constructor(props) {
         super(props);
         const { request } = this.props;
-        console.log(request);
+        this.request = request;
     }
 
     download(exportJson) {
@@ -33,10 +34,34 @@ class ObserverComponent extends React.Component {
         const { request } = this.props;
         return (
             <Box m={2}>
-                <FormControl>
-                    <InputLabel htmlFor="my-input">説明</InputLabel>
-                    <Input id="my-input" aria-describedby="my-helper-text" value={request.description} />
+                <FormControl fullWidth sx={{ m: 1 }}>
+                    <TextField 
+                        id="title" 
+                        label="タイトル"
+                        margin="normal"
+                        value={request.title} />
+                    <TextField 
+                        id="description" 
+                        label="説明"
+                        multiline
+                        rows={4}
+                        margin="normal"
+                        value={request.description} />
                 </FormControl>
+                <Button variant="outlined" onClick={ev => {
+                    const api = new CurvesListAPI();
+                    api.list({
+                        'format': 'json',
+                        'search': this.request.room_name,
+                    })
+                    .then(json => {
+                        this.download(json);
+                        alert("ダウンロードを終了しました");
+                    })
+                    .catch(err => {
+                        alert(err);
+                    });
+                }}>ダウンロード</Button>
             </Box>
         );
     }

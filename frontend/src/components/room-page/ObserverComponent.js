@@ -53,7 +53,7 @@ class ObserverComponent extends React.Component {
                     api.list({
                         'format': 'json',
                         'search': this.request.room_name,
-                        'page_size': 150,
+                        'page_size': 200,
                     })
                     .then(json => {
                         this.download(json);

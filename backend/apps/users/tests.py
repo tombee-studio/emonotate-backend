@@ -52,7 +52,11 @@ class ContentAPITestCase(APITestCase):
         response = client.get(url)
         self.assertEqual(response.status_code, 200)
 
-        data = factory.build(dict, FACTORY_CLASS=ContentFactory)
-        response = client.post(url, json.dumps(data), content_type='application/json')
-        self.assertEqual(response.status_code, 201)
-        client.logout()
+
+class RequestAPITestCase(APITestCase):
+    def test_api_superuser(self):
+        client = APIClient()
+        client.login(username='tomoya', password='youluck123')
+        url = '/api/requests/'
+        response = client.get(url)
+        self.assertEqual(response.status_code, 200)

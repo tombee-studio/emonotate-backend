@@ -17,7 +17,7 @@ User = get_user_model()
 
 class ValueTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ValueTypeSerializer
-    queryset = ValueType.objects.all()
+    queryset = ValueType.objects.all().order_by('created')
     search_fields = 'id'
 
 
@@ -31,7 +31,7 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
-    queryset = Content.objects.all()
+    queryset = Content.objects.all().order_by('created')
 
 
 class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -52,7 +52,7 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
-    queryset = Curve.objects.all()
+    queryset = Curve.objects.all().order_by('created')
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
@@ -65,7 +65,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class RequestViewSet(viewsets.ModelViewSet):
     serializer_class = RequestSerializer
-    queryset = Request.objects.all()
+    queryset = Request.objects.all().order_by('created')
     
     def get_queryset(self):
         role = self.request.GET.get('role')

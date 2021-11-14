@@ -43,7 +43,7 @@ class EmailUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     
-    def create_unique_user(self, is_test=False):
+    def create_unique_user(self, email, is_test=False):
         username = randomname()
         while True:
             try:
@@ -52,11 +52,11 @@ class EmailUserManager(BaseUserManager):
                 break
             username = randomname()
         if not is_test:
-            EmailUser.objects.create_user(
+            user = EmailUser.objects.create_user(
                 username=username, 
-                email=f"emonotate+{username}@gmail.com", 
+                email=email,
                 password="password")
-        return username
+        return user
 
     def create_user(self, username, email, password=None, **extra_fields):
         is_staff = extra_fields.pop("is_staff", False)

@@ -1,4 +1,5 @@
 import boto3
+from rest_framework.response import Response
 from rest_framework import filters
 
 from rest_framework import viewsets
@@ -75,6 +76,23 @@ class RequestViewSet(viewsets.ModelViewSet):
             return self.request.user.request_set.all()
         else:
             return self.queryset
+    
+    def create(self, request, *args, **kwargs):
+        def handle(email):
+            try:
+                return EmailUser.objects.get(email=email).id
+            except:
+                user = EmailUser.objects.create_unique_user(email=email)
+                return user.id
+        if not request.user.has_perm('users.add_request'):
+            return Response("permission denied", status=403)
+        request.data['participants'] = [ handle(email)
+            for email in request.data['participants']]
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
 
 
 def sign_s3(request):

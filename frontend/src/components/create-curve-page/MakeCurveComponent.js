@@ -29,7 +29,9 @@ class MakeCurveComponent extends React.Component {
       }]
     }
     this.state = {
-      dataset: []
+      dataset: [],
+      isLoadedVideo: false,
+      isLoadedScript: false,
     };
   }
 
@@ -77,8 +79,28 @@ class MakeCurveComponent extends React.Component {
     this.inputField.load(dataset);
   }
 
+  loadedAll() {
+    if(this.state.isLoadedScript && this.state.isLoadedVideo) {
+      this.createEmotionalArcInputField();
+    }
+  }
+
   componentDidMount() {
     this.player = videojs(this.videoNode, this.videoJsOptions);
+    this.player.ready(() => {
+      this.player.on('loadedmetadata', () => {
+        this.setState({
+          isLoadedVideo: true
+        });
+        this.loadedAll();
+      });
+    });
+    EmotionalArcField.loadScript("/static/users/d3/d3.min.js", () => { 
+      this.setState({
+        isLoadedScript: true
+      });
+      this.loadedAll();
+    });
   }
 
   render() {
@@ -86,17 +108,12 @@ class MakeCurveComponent extends React.Component {
     const { roomName } = this.props;
     if(valueType) {
       this.value_type = valueType;
-      setTimeout(() => {
-        this.createEmotionalArcInputField();
-      }, 5000)
     }
     const { user } = window.django;
     return (
       <div>
         <Helmet>
-          <script src="/static/users/js/emotional-arc-input-field.js" />
           <link rel="stylesheet" href="/static/users/css/emotional-arc-input-field.css" />
-          <script src="/static/users/d3/d3.min.js" />
         </Helmet>
         <Grid container>
           <Grid item xs={5}>
@@ -125,7 +142,7 @@ class MakeCurveComponent extends React.Component {
                 this.inputField.submit(user, this.content, this.value_type, roomName, '1.1');
               }, (err) => { console.log(err.body); });
             }}>
-              感情曲線を追加
+              感情曲線を保存
             </Button>
           </Grid>
         </Grid>

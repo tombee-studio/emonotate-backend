@@ -29,8 +29,16 @@ class MakeCurveComponent extends React.Component {
       }]
     }
     this.state = {
-      dataset: []
+      dataset: [],
+      isLoadedVideo: false,
+      isLoadedScript: false,
     };
+  }
+
+  loadedAll() {
+    if(this.state.isLoadedScript && this.state.isLoadedVideo) {
+      this.createEmotionalArcInputField();
+    }
   }
 
   createEmotionalArcInputField() {
@@ -68,15 +76,26 @@ class MakeCurveComponent extends React.Component {
 
   componentDidMount() {
     this.player = videojs(this.videoNode, this.videoJsOptions);
+    this.player.ready(() => {
+      this.player.on('loadedmetadata', () => {
+        this.setState({
+          isLoadedVideo: true
+        });
+        this.loadedAll();
+      });
+    });
+    EmotionalArcField.loadScript("/static/users/d3/d3.min.js", () => { 
+      this.setState({
+        isLoadedScript: true
+      });
+      this.loadedAll();
+    });
   }
 
   render() {
     const { valueType } = this.props;
     if(valueType) {
       this.value_type = valueType;
-      setTimeout(() => {
-        this.createEmotionalArcInputField();
-      }, 5000)
     }
     const { user } = window.django;
     return (

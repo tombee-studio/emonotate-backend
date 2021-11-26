@@ -27,19 +27,19 @@ class EmailUserSignUpTestCase(APITestCase):
     def test_if_data_is_correct_then_signup(self):
         signup_dict = {
             'username': self.user_object.username,
-            'password1': 'test_Pass',
-            'password2': 'test_Pass',
+            'password1': 'password',
+            'password2': 'password',
             'email': self.user_object.email,
         }
         response = self.client.post(self.signup_url, signup_dict)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_if_username_already_exists_dont_signup(self):
         # Prepare data with already saved user
         signup_dict = {
             'username': self.user_saved.username,
-            'password1': 'test_Pass',
-            'password2': 'test_Pass',
+            'password1': 'password',
+            'password2': 'password',
             'email': self.user_saved.email,
         }
         response = self.client.post(self.signup_url, signup_dict)
@@ -112,7 +112,7 @@ class RequestAPITestCase(APITestCase):
     
     def test_api_generaluser(self):
         client = APIClient()
-        client.login(username='general', password='youluck123')
+        client.login(username='general', password='password')
         url = '/api/requests/'
         response = client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -169,7 +169,7 @@ class RequestAPITestCase(APITestCase):
     def test_api_researcher(self):
         USERNAME = "researcher"
         client = APIClient()
-        client.login(username=USERNAME, password='youluck123')
+        client.login(username=USERNAME, password='password')
         url = '/api/requests/'
         response = client.get(url)
         self.assertEqual(response.status_code, 200)

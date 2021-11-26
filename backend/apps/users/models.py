@@ -57,6 +57,24 @@ class EmailUserManager(BaseUserManager):
                 email=email,
                 password="password")
         return user
+    
+    def create_researcher(self, username, email, password=None, **extra_fields):
+        is_staff = extra_fields.pop("is_staff", False)
+        user = self._create_user(
+            username,
+            email,
+            password,
+            is_staff,
+            False,
+            **extra_fields
+        )
+        try:
+            group = Group.objects.get(name='Researchers')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            user.groups.add(group)
+        return user
 
     def create_user(self, username, email, password=None, **extra_fields):
         is_staff = extra_fields.pop("is_staff", False)

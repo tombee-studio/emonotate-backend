@@ -3,6 +3,7 @@ import json
 import random
 
 from django.urls import reverse
+from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
@@ -13,6 +14,29 @@ from django.contrib.auth.models import Group
 from rest_framework.test import APIRequestFactory
 
 from users import views
+
+
+class EmailUserTestCase(TestCase):
+    def test_create_generaluser(self):
+        faker = Faker()
+        username = faker.name()
+        email = faker.email()
+        user = EmailUser.objects.create_user(
+            username=username, email=email, password=faker.password())
+        self.assertEqual(user.username, username)
+        for perm in ['users.add_request', 'users.add_content', 'users.add_emailuser']:
+            self.assertEqual(user.has_perm(perm), False)
+    
+    def test_create_researcher(self):
+        faker = Faker()
+        username = faker.name()
+        email = faker.email()
+        user = EmailUser.objects.create_researcher(
+            username=username, email=email, password=faker.password())
+        self.assertEqual(user.username, username)
+        for perm in ['users.add_request', 'users.add_content', 'users.add_emailuser']:
+            self.assertEqual(user.has_perm(perm), True)
+        
 
 class EmailUserSignUpTestCase(APITestCase):
     @classmethod

@@ -133,6 +133,54 @@ class RequestAPITestCase(APITestCase):
             ]
         }), content_type="application/json")
         self.assertEqual(response.status_code, 201)
+
+        response = client.put(url + "103/", json.dumps({
+            "title": Faker().word(),
+            "description": Faker().sentence(),
+            "intervals": random.randint(1, 20),
+            "owner": EmailUser.objects.get(username="tomoya").id,
+            "content": 1,
+            "value_type": 1,
+            "questionaire": "",
+            "participants": [
+                EmailUserFactory.create().email,
+                EmailUserFactory.create().email,
+                EmailUserFactory.create().email
+            ]
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+
+        response = client.put(url + "103/", json.dumps({
+            "title": Faker().word(),
+            "description": Faker().sentence(),
+            "intervals": random.randint(1, 20),
+            "owner": EmailUser.objects.get(username="tomoya").id,
+            "content": 1,
+            "value_type": 1,
+            "questionaire": "",
+            "participants": [
+                Faker().email(),
+                Faker().email(),
+                Faker().email(),
+            ]
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+
+        response = client.put(url + "103/", json.dumps({
+            "title": Faker().word(),
+            "description": Faker().sentence(),
+            "intervals": random.randint(1, 20),
+            "owner": EmailUser.objects.get(username="tomoya").id,
+            "content": 1,
+            "value_type": 1,
+            "questionaire": "",
+            "participants": [
+                EmailUserFactory.create().email,
+                EmailUserFactory.create().email,
+                Faker().email(),
+            ]
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
     
     def test_api_generaluser(self):
         client = APIClient()

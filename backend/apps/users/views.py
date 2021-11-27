@@ -93,6 +93,23 @@ class RequestViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=201, headers=headers)
+    
+    def update(self, request, *args, **kwargs):
+        def handle(email):
+            try:
+                return EmailUser.objects.get(email=email).id
+            except:
+                user = EmailUser.objects.create_unique_user(email=email)
+                return user.id
+        if not request.user.has_perm('users.change_request'):
+            return Response("permission denied", status=403)
+        request.data['participants'] = [ handle(email)
+            for email in request.data['participants']]
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status=200)
 
 
 def sign_s3(request):

@@ -21,7 +21,7 @@ const CreateCurvePage = (props) => {
   const content_id = query.get('content');
   const value_type_id = query.get('value_type');
   const room_name = query.get('room') || `content=${content_id} value_type_id=${value_type_id}`;
-  const counts = query.get('counts') || 2;
+  const counts = query.get('counts') || 1;
 
   useEffect(() => {
     const apis = [];

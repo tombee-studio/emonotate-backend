@@ -110,7 +110,7 @@ class ObserverComponent extends React.Component {
                     open={this.state.useSnackbar}
                     autoHideDuration={6000}
                     onClose={handleClose}
-                    message="Note archived"
+                    message="更新しました"
                 />
             </Box>
         );

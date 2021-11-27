@@ -68,8 +68,8 @@ EmotionalArcField.prototype.onInitVideoLoaded = function() {
     this.svg.select('rect').on("click", function() {
         var coords = d3.mouse(this);
         var newData = {
-            x: xScale.invert(coords[0]),
-            y: yScale.invert(coords[1]),
+            x: Math.round(xScale.invert(coords[0]) * 100) / 100,
+            y: Math.round(yScale.invert(coords[1]) * 100) / 100,
             axis: 'hv',
             type: 'custom',
         };
@@ -186,9 +186,9 @@ EmotionalArcField.prototype.onDraggablePoint = function() {
         .on('drag', d => {
             const coords = d3.mouse(vis.node());
             this.selected.x = d.axis.includes('h') ? 
-                Math.max(0, Math.min(this.duration, xScale.invert(coords[0]))) : d.x;
+                Math.max(0, Math.min(this.duration, Math.round(xScale.invert(coords[0]) * 100) / 100)) : d.x;
                 this.selected.y = d.axis.includes('v') ? Math.max(this.axis.minValue, 
-                Math.min(this.axis.maxValue, yScale.invert(coords[1]))) : d.y;
+                Math.min(this.axis.maxValue, Math.round(yScale.invert(coords[1]) * 100) / 100)) : d.y;
             this.update();
         })
         .on('end', d => {

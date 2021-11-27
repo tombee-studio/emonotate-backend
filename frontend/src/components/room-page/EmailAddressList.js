@@ -50,7 +50,7 @@ class EmailAddressList extends React.Component {
         this.setState({
             items: items
         });
-        this.onChangeEmailList(this.state.items);
+        this.onChangeEmailList(items);
     };
 
     handlePaste = evt => {

@@ -174,13 +174,13 @@ EmotionalArcField.prototype.update = function() {
                 this.update();
             }
         })
-        .on("mouseover", function() { 
-            d3.select(this)
-            .attr("fill", "rgb(0, 0, 0)");
+        .on("mouseover", (d) => {
+            this.tooltip
+                .style("visibility", "visible")
+                .html("x : " + d.x + "<br>y : " + d.y);
             })
-        .on("mouseout", function() { 
-            d3.select(this)
-            .attr("fill", "rgb(245, 245, 245)");
+        .on("mouseout", (d) => { 
+            this.tooltip.style("visibility", "hidden");
             });
     circle
         .attr("stroke", "rgb(0, 0, 0)")
@@ -205,13 +205,13 @@ EmotionalArcField.prototype.update = function() {
                 this.update();
             }
         })
-        .on("mouseover", function() { 
-            d3.select(this)
-            .attr("fill", "rgb(0, 0, 0)");
+        .on("mouseover", (d) => { 
+            this.tooltip
+                .style("visibility", "visible")
+                .html("x : " + d.x + "<br>y : " + d.y);
             })
-        .on("mouseout", function() { 
-            d3.select(this)
-            .attr("fill", "rgb(245, 245, 245)");
+        .on("mouseout", () => { 
+                this.tooltip.style("visibility", "hidden");
             });
     circle.exit().remove();
 }

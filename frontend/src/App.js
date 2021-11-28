@@ -36,8 +36,8 @@ export default class App extends React.Component {
               <EditCurvePage id={props.match.params.id} /> 
             } />
             <Route exact path='/app/requests/' component={ RequestPage } />
-            <Route path='/app/requests/:id(\d+)' component={ props => 
-              <RequestEditPage id={props.match.params.id} /> 
+            <Route exact path='/app/rooms/' component={ _ => 
+              <RoomPage />
             } />
             <Route exact path='/app/rooms/:id(\d+)' component={ props => 
               <RoomPage id={props.match.params.id} /> 

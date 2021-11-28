@@ -16,6 +16,22 @@ export default class RequestListAPI {
             });
     }
 
+    create(data = {}, queries = {format: 'json'}) {
+        var query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
+        return fetch(`/api/requests/?${query}`, {
+                method: 'post',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': window.django.csrf,
+                },
+                body: JSON.stringify(data) })
+            .then(res => {
+                if(res.status != 200 && res.status != 201) throw res.message;
+                return res.json();
+            });
+    }
+
     update(id, data = {}, queries = {format: 'json'}) {
         var query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
         return fetch(`/api/requests/${id}/?${query}`, {

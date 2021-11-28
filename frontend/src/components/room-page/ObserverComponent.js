@@ -6,10 +6,7 @@ import {
     TextField,
     Box,
     Button,
-    Snackbar,
-    Stack,
-    Grid } from "@material-ui/core";
-import PersonIcon from "@material-ui/icons/Person";
+    Snackbar} from "@material-ui/core";
 import "video.js/dist/video-js.css";
 import CurvesListAPI from "../../helper/CurvesListAPI";
 import RequestListAPI from "../../helper/RequestListAPI"
@@ -20,6 +17,9 @@ class ObserverComponent extends React.Component {
         super(props);
         const { request } = this.props;
         const useSnackbar = false;
+        request.content = request.content.id;
+        request.owner = request.owner.id;
+        request.value_type = request.value_type.id;
         this.state = { 
             request,
             useSnackbar
@@ -51,11 +51,11 @@ class ObserverComponent extends React.Component {
             this.setState({ useSnackbar: false });
         };
         const updateInfo = (ev) => {
-            const request = this.state.request;
+            const api = new RequestListAPI();
+            const { request } = this.state;
             request.content = request.content.id;
             request.owner = request.owner.id;
             request.value_type = request.value_type.id;
-            const api = new RequestListAPI();
             api.update(request.id, request)
                 .then(json => {
                     handleClick();
@@ -85,30 +85,46 @@ class ObserverComponent extends React.Component {
                     <FormLabel>タイトル</FormLabel>
                     <TextField 
                         id="title" 
-                        margin="normal"
                         value={request.title} />
+                    <hr />
                     <FormLabel>説明</FormLabel>
                     <TextField 
                         id="description" 
                         multiline
                         rows={4}
-                        margin="normal"
                         value={request.description} />
+                    <hr />
+                    <FormLabel>コンテンツ</FormLabel>
+                    <TextField 
+                        id="content" 
+                        value={request.content}
+                        onChange={ev => {
+                            const req = this.state.request;
+                            req.content = Number(ev.target.value);
+                            this.setState({ request: req });
+                        }} />
+                    <hr />
+                    <FormLabel>種類</FormLabel>
+                    <TextField 
+                        id="value_type" 
+                        value={request.value_type} 
+                        onChange={ev => {
+                            const req = this.state.request;
+                            req.value_type = Number(ev.target.value);
+                            this.setState({ request: req });
+                        }} />
+                    <hr />
                     <EmailAddressList 
                         participants={request.participants} 
                         onChangeEmailList={onChangeEmailList} />
                 </FormControl>
                 <ButtonGroup>
-                    <Button variant="outlined" onClick={updateInfo}>
-                        更新
-                    </Button>
-                    <Button variant="outlined" onClick={onClickDownloadButton}>
-                        ダウンロード
-                    </Button>
+                    <Button variant="outlined" onClick={updateInfo}>更新</Button>
+                    <Button variant="outlined" onClick={onClickDownloadButton}>ダウンロード</Button>
                 </ButtonGroup>
                 <Snackbar
                     open={this.state.useSnackbar}
-                    autoHideDuration={6000}
+                    autoHideDuration={3000}
                     onClose={handleClose}
                     message="更新しました"
                 />

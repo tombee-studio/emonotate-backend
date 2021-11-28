@@ -99,7 +99,7 @@ class EmailAddressList extends React.Component {
 
     render() {
         return (
-            <Box m={2}>
+            <Box>
                 <FormLabel>参加者メールリスト</FormLabel>
                 <Box m={2}>
                     {this.state.items.map(item => (

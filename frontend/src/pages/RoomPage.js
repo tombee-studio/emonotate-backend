@@ -3,10 +3,11 @@ import {
     ButtonGroup,
     Box,
     Button,
-    Snackbar
+    Snackbar,
+    Grid,
 } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { Redirect, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import ObserverComponent from '../components/room-page/ObserverComponent';
 
 import CurvesListAPI from "../helper/CurvesListAPI";
@@ -42,7 +43,10 @@ const RoomPage = props => {
                 alert(err);
             });
     };
-    const onClickDownloadButton = (ev) => {
+    const sendMails = ev => {
+
+    };
+    const download = (ev) => {
         const api = new CurvesListAPI();
         api.list({
             'format': 'json',
@@ -50,7 +54,18 @@ const RoomPage = props => {
             'page_size': 200,
         })
         .then(json => {
-            this.download(json);
+            const transport = (exportJson) => {
+                const fileName = 'finename.json';
+                const data = new Blob([JSON.stringify(exportJson)], { type: 'text/json' });
+                const jsonURL = window.URL.createObjectURL(data);
+                const link = document.createElement('a');
+                document.body.appendChild(link);
+                link.href = jsonURL;
+                link.setAttribute('download', fileName);
+                link.click();
+                document.body.removeChild(link);
+            }
+            transport(json);
             alert("ダウンロードを終了しました");
         })
         .catch(err => {
@@ -100,10 +115,19 @@ const RoomPage = props => {
                                 console.log(req);
                                 setRequest(req);
                             } } />
-                        <ButtonGroup>
-                            <Button variant="outlined" onClick={update}>更新</Button>
-                            <Button variant="outlined" onClick={onClickDownloadButton}>ダウンロード</Button>
-                        </ButtonGroup>
+                        <Grid container spacing={2}>
+                            <Grid item>
+                                <ButtonGroup>
+                                    <Button variant="outlined" onClick={update}>更新</Button>
+                                </ButtonGroup>
+                            </Grid>
+                            <Grid item>
+                                <ButtonGroup>
+                                    <Button variant="outlined" onClick={download}>ダウンロード</Button>
+                                    <Button variant="outlined" onClick={sendMails}>メール送信</Button>
+                                </ButtonGroup>
+                            </Grid>
+                        </Grid>
                         <Snackbar
                             open={useSnackbar}
                             autoHideDuration={3000}

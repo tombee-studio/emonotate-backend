@@ -23,18 +23,6 @@ class ObserverComponent extends React.Component {
         super.setState(state);
     }
 
-    download(exportJson) {
-        const fileName = 'finename.json';
-        const data = new Blob([JSON.stringify(exportJson)], { type: 'text/json' });
-        const jsonURL = window.URL.createObjectURL(data);
-        const link = document.createElement('a');
-        document.body.appendChild(link);
-        link.href = jsonURL;
-        link.setAttribute('download', fileName);
-        link.click();
-        document.body.removeChild(link);
-    }
-
     render() {
         const { request } = this.state;
         const onChangeEmailList = (participants) => {

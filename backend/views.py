@@ -1,3 +1,4 @@
+import os
 import json
 
 from django.contrib.auth.decorators import login_required
@@ -16,7 +17,8 @@ def index(request):
 @login_required
 def app(request):
     context = {
-        'permissions': json.dumps(list(request.user.get_all_permissions()))
+        'permissions': json.dumps(list(request.user.get_all_permissions())),
+        'YOUTUBE_API_KEY': os.environ.get('YOUTUBE_API_KEY')
     }
 
     template = 'backend/app.html'

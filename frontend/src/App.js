@@ -17,12 +17,12 @@ export default class App extends React.Component {
   render() {
     return (
       <Router>
-        <MainLayout>
-          <Switch>
+        <MainLayout component={keyword => {
+          return (<Switch>
             <Route exact path="/app/">
               {<Redirect to="/app/dashboard/" />}
             </Route>
-            <Route exact path='/app/dashboard/' component={ Dashboard } />
+            <Route exact path='/app/dashboard/' render={_ => <Dashboard keyword={keyword} />} />
             <Route exact path='/app/history/' component={ HistoryPage } />
             <Route exact path='/app/content/' component={ ContentListPage } />
             <Route exact path='/app/word/' component={ ValueTypeListPage } />
@@ -37,14 +37,14 @@ export default class App extends React.Component {
             } />
             <Route exact path='/app/requests/' component={ RequestPage } />
             <Route exact path='/app/rooms/' component={ _ => 
-              <RoomPage />
+              <RoomPage keyword={keyword} />
             } />
             <Route exact path='/app/rooms/:id(\d+)' component={ props => 
-              <RoomPage id={props.match.params.id} /> 
+              <RoomPage id={props.match.params.id} keyword={keyword} />
             } />
             <Route exact path='/app/profile/' component={ ProfilePage } />
-          </Switch>
-        </MainLayout>
+          </Switch>);
+        }} />
       </Router>
     );
   }

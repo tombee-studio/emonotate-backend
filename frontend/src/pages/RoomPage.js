@@ -106,7 +106,9 @@ const RoomPage = props => {
         <Route render={
             props => {
                 if(!loading) {
-                    return <CircularProgress />
+                    return <Box m={2}>
+                        <CircularProgress />
+                    </Box>
                 } else if(id) {
                     return (<Box m={2}>
                         <ObserverComponent 

@@ -43,6 +43,19 @@ class EmailUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     
+    def create_guest_user(self, is_test=False):
+        user = EmailUser.objects.create_user(
+            username='guest', 
+            email='emonotate+guest@gmail.com',
+            password="password")
+        try:
+            group = Group.objects.get(name='Guest')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            user.groups.add(group)
+        return user
+
     def create_unique_user(self, email, is_test=False):
         username = randomname()
         while True:
@@ -56,6 +69,12 @@ class EmailUserManager(BaseUserManager):
                 username=username, 
                 email=email,
                 password="password")
+            try:
+                group = Group.objects.get(name='General')
+            except Group.DoesNotExist:
+                print("Does not exists")
+            else:
+                user.groups.add(group)
         return user
     
     def create_researcher(self, username, email, password=None, **extra_fields):
@@ -86,12 +105,6 @@ class EmailUserManager(BaseUserManager):
             False,
             **extra_fields
         )
-        try:
-            group = Group.objects.get(name='General')
-        except Group.DoesNotExist:
-            print("Does not exists")
-        else:
-            user.groups.add(group)
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):
@@ -157,10 +170,14 @@ class Content(models.Model):
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
-    data_type = models.CharField(default='video/mp4', max_length=32)
-
+    
     def __str__(self):
         return self.title
+
+
+class YouTubeContent(Content):
+    video_id = models.CharField(default='', max_length=128, unique=True)
+    channel_title = models.CharField(default='', max_length=256)
 
 
 class Curve(models.Model):

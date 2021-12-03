@@ -36,6 +36,17 @@ class ContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class YouTubeContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = YouTubeContent
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
+        return ret
+
+
 class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve

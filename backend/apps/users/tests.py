@@ -78,6 +78,77 @@ class ContentAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
 
 
+class YouTubeContentAPITestCase(APITestCase):
+    def test_get_api(self):
+        client = APIClient()
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 200],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            client.login(username=username, password=password)
+            url = '/api/youtube/'
+            response = client.get(url)
+            self.assertEqual(response.status_code, status)
+    
+    def test_post_api(self):
+        client = APIClient()
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            client.login(username=username, password=password)
+            url = '/api/youtube/'
+            response = client.post(url, json.dumps({
+                "title": Faker().word(),
+                "url": Faker().url(),
+                "video_id": Faker().word(),
+                "channel_title": Faker().word(),
+                "user": EmailUser.objects.get(username=username).id
+            }), content_type="application/json")
+            self.assertEqual(response.status_code, status)
+    
+    def test_put_api(self):
+        client = APIClient()
+        video_id = Faker().word()
+        content = YouTubeContent.objects.create(
+            title=Faker().word(),
+            url=Faker().url(),
+            video_id=video_id,
+            channel_title=Faker().word(),
+            user=EmailUser.objects.get(username='tomoya')
+        )
+        content.save()
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 403],['researcher', 'password', 200]]:
+            client.login(username=username, password=password)
+            url = '/api/youtube/' + str(content.id) + '/'
+            response = client.put(url, json.dumps({
+                "id": content.id,
+                "title": Faker().word(),
+                "url": Faker().url(),
+                "video_id": video_id,
+                "channel_title": Faker().word(),
+                "user": EmailUser.objects.get(username=username).id
+            }), content_type="application/json")
+            self.assertEqual(response.status_code, status)
+
+    def test_put_api(self):
+        client = APIClient()
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 403],['researcher', 'password', 200]]:
+            content = YouTubeContent.objects.create(
+                title=Faker().word(),
+                url=Faker().url(),
+                video_id=Faker().word(),
+                channel_title=Faker().word(),
+                user=EmailUser.objects.get(username='tomoya')
+            )
+            content.save()
+            client.login(username=username, password=password)
+            url = '/api/youtube/' + str(content.id) + '/'
+            response = client.delete(url)
+            self.assertEqual(response.status_code, status)
+
 class RequestAPITestCase(APITestCase):
     def test_api_superuser(self):
         client = APIClient()

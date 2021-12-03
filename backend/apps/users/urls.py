@@ -6,6 +6,7 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'curves', CurveViewSet, basename='curves')
 router.register(r'contents', ContentViewSet, basename='contents')
+router.register(r'youtube', YouTubeContentViewSet, basename='youtube')
 router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
 router.register(r'requests', RequestViewSet, basename='requests')
 urlpatterns = router.urls

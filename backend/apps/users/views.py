@@ -5,7 +5,7 @@ from rest_framework import filters
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
 
-from .models import ValueType, Curve, Content
+from .models import *
 
 from .serializers import *
 
@@ -62,6 +62,11 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     search_fields = ('username', 'email')
+
+
+class YouTubeContentViewSet(viewsets.ModelViewSet):
+    serializer_class = YouTubeContentSerializer
+    queryset = YouTubeContent.objects.all()
 
 
 class RequestViewSet(viewsets.ModelViewSet):

@@ -1,14 +1,24 @@
 import React from 'react';
 
-import { Box, Typography } from '@material-ui/core';
+import { 
+    Box, ImageListItemBar
+} from '@material-ui/core';
 
 const SearchItem = props => {
     const { item, imgSize } = props;
     const { snippet } = item;
-    return (<Box m={2}>
-        <Typography>{snippet.title}</Typography>
-        <Typography>{snippet.channelTitle}</Typography>
-    </Box>);
+    return (
+        <Box>
+            <img
+                srcSet={snippet.thumbnails["medium"].url}
+                alt={item.title}
+                loading="lazy"
+            />
+            <ImageListItemBar
+                title={snippet.title}
+                subtitle={snippet.channelTitle}
+            />
+        </Box>);
 };
 
 export default SearchItem;

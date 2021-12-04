@@ -12,13 +12,12 @@ import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import SearchIcon from '@material-ui/icons/Search';
-import Badge from '@material-ui/core/Badge';
 import Link from '@material-ui/core/Link';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import NotificationsIcon from '@material-ui/icons/Notifications';
 import { mainListItems } from '../menu/listitems';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+
+import AuthenticateComponent from '../components/common/AuthenticateComponent';
 import RequestListAPI from '../helper/RequestListAPI';
 import _ from 'lodash';
 
@@ -225,21 +224,7 @@ export default function MainLayout(props) {
           </div>
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
-            <IconButton aria-label="show 4 new mails" color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <IconButton
-              edge="end"
-              aria-label="account of current user"
-              aria-haspopup="true"
-              color="inherit"
-              component="a" 
-              href="/auth/logout/"
-            >
-              <ExitToAppIcon />
-            </IconButton>
+            <AuthenticateComponent />
           </div>
         </Toolbar>
       </AppBar>

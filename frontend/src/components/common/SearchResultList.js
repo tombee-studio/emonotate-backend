@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import SearchItem from './SearchItem';
-import { List } from '@material-ui/core';
+import { ImageList, ImageListItem } from '@material-ui/core';
 import YouTubeDataAPI from '../../helper/YouTubeDataAPI';
 
 const SearchResultList = props => {
@@ -16,7 +16,7 @@ const SearchResultList = props => {
     
         const timeOutId = setTimeout(() => {
             api.get({ 'q': keyword, 'type': 'video', 
-            'part': 'snippet', 'key': YOUTUBE_API_KEY, 'maxResults': 10 })
+            'part': 'snippet', 'key': YOUTUBE_API_KEY, 'maxResults': 12 })
             .then(json => {
                 setItems(json.items);
                 setPageToken(json.nextPageToken);
@@ -30,11 +30,14 @@ const SearchResultList = props => {
             clearTimeout(timeOutId);
         };
       }, [keyword]);
-    return (<List m={2}>
-        {items.map(item => <SearchItem item={item} 
-            key={item.id.videoId}
-            imgSize="medium" />)}
-    </List>);
+    return (<ImageList cols={4} gap={16} style={{bgcolor: "#000"}}>
+        { items.map(item => <ImageListItem
+            key={item.id.videoId} 
+            component="a" 
+            href={'/app/curves/?videoId=' + item.id.videoId}>
+            <SearchItem item={item} key={item.id.videoId} />
+        </ImageListItem>) }
+    </ImageList>);
 };
 
 export default SearchResultList;

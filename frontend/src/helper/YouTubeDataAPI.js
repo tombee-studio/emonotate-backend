@@ -4,7 +4,7 @@ export default class YouTubeDataAPI {
         const query = Object.keys(queries).map(key => `${key}=${queries[key]}`).join('&');
         return fetch(`${this.url}?${query}`)
             .then(res => {
-                if(res.status == 201) return res.json();
+                if(res.status == 200 || res.status == 201) return res.json();
                 else throw res;
             });
     }

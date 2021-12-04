@@ -1,8 +1,8 @@
-function EmotionalArcField(chartNode, videoNode, axis, option) {
-    this.name = chartNode.name;
+function EmotionalArcField(chartId, player, axis, option) {
+    this.name = chartId;
     this.isValid = false;
-    this.chart = chartNode;
-    this.video = videoNode;
+    this.chart = document.getElementById(chartId);
+    this.video = player;
     this.axis = axis;
     this.tooltip = d3.select("body").append("div").attr("class", "tooltip");
     this.option = option;
@@ -10,38 +10,36 @@ function EmotionalArcField(chartNode, videoNode, axis, option) {
     return this;
 }
 
-EmotionalArcField.loadScript = function(src, handler){
-    var base = document.getElementsByTagName("script")[0];
-    var obj = document.createElement("script");
-    obj.async = true;
-    obj.src= src;
-    if(obj.addEventListener){
-        obj.onload = function () {
-            handler();
-        }
-    }else{
-        obj.onreadystatechange = function () {
-            if ("loaded" == obj.readyState || "complete" == obj.readyState){
-                obj.onreadystatechange = null;
-                handler();
+EmotionalArcField.loadScript = function(src) {
+    return new Promise((resolve, reject) => {
+        var base = document.getElementsByTagName("script")[0];
+        var obj = document.createElement("script");
+        obj.async = true;
+        obj.src= src;
+        if(obj.addEventListener){
+            obj.onload = function () {
+                resolve(true);
+            }
+        }else{
+            obj.onreadystatechange = function () {
+                if ("loaded" == obj.readyState || "complete" == obj.readyState){
+                    obj.onreadystatechange = null;
+                    resolve(true);
+                }
             }
         }
-    }
-    base.parentNode.insertBefore(obj,base);
+        base.parentNode.insertBefore(obj,base);
+    });
 };
 
 EmotionalArcField.prototype.OnInit = function() {
     this.isValid = true;
     this.onInitVideoLoaded();
     this.onVideoLoaded();
-
-    this.video.addEventListener('timeupdate', () => {
-        this.updateVideo();
-    });
 }
 
 EmotionalArcField.prototype.updateVideo = function() {
-    this.current = this.video.currentTime;
+    this.current = this.video.getCurrentTime();
     this.svg.select(".head-line")
         .attr("x1", this.xScale(this.current))
         .attr("x2", this.xScale(this.current));
@@ -53,7 +51,7 @@ EmotionalArcField.prototype.onInitVideoLoaded = function() {
     this.svg = d3.select('#chart');
     var margin = { top: 20, right: 20, bottom: 20, left: 40 };
     this.current = 0.0;
-    this.duration = this.video.duration;
+    this.duration = this.video.getDuration();
     this.size = {
         width: this.chart.clientWidth,
         height: this.chart.clientHeight,
@@ -126,7 +124,7 @@ EmotionalArcField.prototype.onInitVideoLoaded = function() {
 }
 
 EmotionalArcField.prototype.onVideoLoaded = function() {
-    throw 'NOT IMPLEMENTED';
+    // throw 'NOT IMPLEMENTED';
 }
 
 EmotionalArcField.prototype.load = function(data) {
@@ -234,7 +232,7 @@ EmotionalArcField.prototype.onDraggablePoint = function() {
         })
         .on('end', d => {
             this.selected = undefined;
-            this.video.currentTime = d.x;
+            this.video.seekTo(d.x);
         });
 }
 

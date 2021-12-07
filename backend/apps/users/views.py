@@ -60,13 +60,13 @@ class CurveViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('date_joined')
     search_fields = ('username', 'email')
 
 
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
-    queryset = YouTubeContent.objects.all()
+    queryset = YouTubeContent.objects.all().order_by('created')
 
 
 class RequestViewSet(viewsets.ModelViewSet):

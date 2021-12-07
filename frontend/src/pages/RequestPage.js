@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Box, Card} from '@material-ui/core';
+import {Box, Card} from '@mui/material';
 import RequestListComponent from '../components/request-page/RequestListComponent';
 import RequireListComponent from '../components/request-page/RequireListComponent';
 import RequestListAPI from '../helper/RequestListAPI';

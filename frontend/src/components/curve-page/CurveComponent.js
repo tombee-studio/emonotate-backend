@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import { Box, Grid } from "@material-ui/core";
+import { Box, Grid } from "@mui/material";
 import VideoComponent from "./VideoComponent";
 import EmotionalArcField from "../../helper/EmotionalArcField";
 

@@ -3,7 +3,7 @@ import {
     Box, 
     FormControl,
     TextField
-} from "@material-ui/core";
+} from "@mui/material";
 
 const CreateRequestPage = () => {
     return (

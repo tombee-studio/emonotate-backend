@@ -1,6 +1,6 @@
 import React from 'react';
-import Box from '@material-ui/core/Box';
-import { Divider } from '@material-ui/core';
+import Box from '@mui/material/Box';
+import { Divider } from '@mui/material';
 import ValueTypeListAPI from '../helper/ValueTypeListAPI';
 import ValueTypeHistoryList from '../components/value-type-list/ValueTypeHistoryList';
 import AddValueType from '../components/value-type-list/AddValueType';

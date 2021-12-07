@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import SearchItem from './SearchItem';
-import { ImageList, ImageListItem } from '@material-ui/core';
+import { ImageList, ImageListItem } from '@mui/material';
 import YouTubeDataAPI from '../../helper/YouTubeDataAPI';
 
 const SearchResultList = props => {

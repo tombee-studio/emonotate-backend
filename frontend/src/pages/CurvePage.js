@@ -5,7 +5,7 @@ import {
     Button,
     Snackbar,
     Grid,
-} from '@material-ui/core';
+} from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { Route } from 'react-router-dom';
 

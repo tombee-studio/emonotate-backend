@@ -1,7 +1,7 @@
 import React from 'react';
-import Box from '@material-ui/core/Box';
+import Box from '@mui/material/Box';
 import SearchResultList from '../components/common/SearchResultList';
-import { withStyles } from '@material-ui/styles';
+import { withStyles } from '@mui/styles';
 
 const styles = (theme) => ({
   root: {

@@ -3,7 +3,7 @@ import React from "react";
 import { 
     Box,
     Grid,
-} from "@material-ui/core";
+} from "@mui/material";
 
 import { useState } from "react";
 import { useLocation } from "react-router-dom";

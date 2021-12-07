@@ -10,9 +10,9 @@ import {
     Avatar, 
     ListItemSecondaryAction,
     IconButton
-} from '@material-ui/core';
-import MailIcon from '@material-ui/icons/Mail';
-import NoteIcon from '@material-ui/icons/Note';
+} from '@mui/material';
+import MailIcon from '@mui/icons-material/Mail';
+import NoteIcon from '@mui/icons-material/Note';
 
 export default class RequestListComponent extends React.Component {
     render() {
@@ -85,14 +85,15 @@ export default class RequestListComponent extends React.Component {
                                     />
                                     {request.questionaire &&
                                         <ListItemSecondaryAction>
-                                            <IconButton 
-                                                component="a" 
+                                            <IconButton
+                                                component="a"
                                                 href={
                                                     `${request.questionaire.url}?${request.questionaire.user_id_form}=${window.django.user.username}`
                                                 }
                                                 target="_blank"
-                                                edge="end" 
-                                                aria-label="enter">
+                                                edge="end"
+                                                aria-label="enter"
+                                                size="large">
                                                 <NoteIcon />
                                             </IconButton>
                                         </ListItemSecondaryAction>

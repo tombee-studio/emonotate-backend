@@ -9,10 +9,10 @@ import {
     Avatar,
     Box, 
     Typography, 
-    Divider } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
-import MeetingRoomIcon from '@material-ui/icons/MeetingRoom';
-import EditIcon from '@material-ui/icons/Edit';
+    Divider } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
+import EditIcon from '@mui/icons-material/Edit';
 import RequestListAPI from '../../helper/RequestListAPI';
 
 export default class RequireListComponent extends React.Component {
@@ -56,16 +56,17 @@ export default class RequireListComponent extends React.Component {
                                         }
                                     />
                                     <ListItemSecondaryAction>
-                                        <IconButton 
-                                            component="a" 
+                                        <IconButton
+                                            component="a"
                                             href={`/app/requests/${request.id}`}
-                                            edge="end" 
-                                            aria-label="enter">
+                                            edge="end"
+                                            aria-label="enter"
+                                            size="large">
                                             <EditIcon />
                                         </IconButton>
-                                        <IconButton 
-                                            component="a" 
-                                            edge="end" 
+                                        <IconButton
+                                            component="a"
+                                            edge="end"
                                             aria-label="delete"
                                             onClick={_ => {
                                                 this.api.delete(request.id, {
@@ -76,7 +77,8 @@ export default class RequireListComponent extends React.Component {
                                                         window.location.href = '/app/requests/';
                                                     }
                                                 });
-                                            }}>
+                                            }}
+                                            size="large">
                                             <DeleteIcon />
                                         </IconButton>
                                     </ListItemSecondaryAction>

@@ -1,11 +1,11 @@
 import React from 'react';
-import { Pagination } from '@material-ui/lab';
-import { Avatar, Card, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText } from '@material-ui/core';
-import { withStyles } from '@material-ui/core/styles';
-import { Box } from '@material-ui/core';
-import TextFormatIcon from '@material-ui/icons/TextFormat';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/Edit';
+import { Pagination } from '@mui/material';
+import { Avatar, Card, IconButton, List, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText } from '@mui/material';
+import withStyles from '@mui/styles/withStyles';
+import { Box } from '@mui/material';
+import TextFormatIcon from '@mui/icons-material/TextFormat';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import ValueTypeListAPI from '../../helper/ValueTypeListAPI';
 
 const styles = (theme) => ({
@@ -80,16 +80,17 @@ class UsersList extends React.Component {
                     secondary={item.axis_type == 1 ? "対義語あり" :　"対義語なし"}
                   />
                   <ListItemSecondaryAction>
-                    <IconButton 
-                      component="a" 
+                    <IconButton
+                      component="a"
                       href={`/app/valuetypes/${item.id}`}
-                      edge="end" 
-                      aria-label="enter">
+                      edge="end"
+                      aria-label="enter"
+                      size="large">
                       <EditIcon />
                     </IconButton>
-                    <IconButton 
-                      component="a" 
-                      edge="end" 
+                    <IconButton
+                      component="a"
+                      edge="end"
                       aria-label="delete"
                       onClick={_ => {
                         this.api.delete(item.id, {
@@ -100,7 +101,8 @@ class UsersList extends React.Component {
                               window.location.href = '/app/word/';
                             }
                         });
-                      }}>
+                      }}
+                      size="large">
                       <DeleteIcon />
                     </IconButton>
                   </ListItemSecondaryAction>
@@ -121,6 +123,6 @@ class UsersList extends React.Component {
       );
     }
   };
-};
+}
 
 export default withStyles(styles)(UsersList);

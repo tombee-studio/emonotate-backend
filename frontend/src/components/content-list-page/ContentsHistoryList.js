@@ -1,8 +1,8 @@
 import React from 'react';
-import { Pagination } from '@material-ui/lab';
-import { Card, Divider, Grid, ImageListItem } from '@material-ui/core';
-import { withStyles } from '@material-ui/core/styles';
-import { Box, ImageList, ImageListItemBar } from '@material-ui/core';
+import { Pagination } from '@mui/material';
+import { Card, Divider, Grid, ImageListItem } from '@mui/material';
+import withStyles from '@mui/styles/withStyles';
+import { Box, ImageList, ImageListItemBar } from '@mui/material';
 import ContentsListAPI from '../../helper/ContentsListAPI';
 
 const styles = (theme) => ({
@@ -91,6 +91,6 @@ class UsersList extends React.Component {
       );
     }
   };
-};
+}
 
 export default withStyles(styles)(UsersList);

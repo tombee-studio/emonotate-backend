@@ -6,7 +6,7 @@ import {
     Switch,
     FormControlLabel,
     FormLabel
-} from "@material-ui/core";
+} from "@mui/material";
 
 const VideoController = props => {
     const { config, onControllerChanged } = props;

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { 
     Box, ImageListItemBar
-} from '@material-ui/core';
+} from '@mui/material';
 
 const SearchItem = props => {
     const { item, imgSize } = props;

@@ -9,11 +9,18 @@ from rest_framework.test import APITestCase, APIClient
 
 from users.test.factory import *
 from users.models import EmailUser
+from users.views import *
 from faker import Faker
 from django.contrib.auth.models import Group
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIRequestFactory, force_authenticate
 
 from users import views
+
+
+def convert_to_dict_from(model):
+    data = { key: value if type(value) is str or type(value) is int else str(value)
+        for key, value in model.__dict__.items() if key is not '_state' and value is not None }
+    return data
 
 
 class EmailUserTestCase(TestCase):
@@ -70,12 +77,131 @@ class EmailUserSignUpTestCase(APITestCase):
 
 
 class ContentAPITestCase(APITestCase):
-    def test_api_superuser(self):
+    def test_get_api(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 200],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            request = api.get('/api/contents/', format='json')
+            force_authenticate(request, user=user)
+            view = ContentViewSet.as_view({'get': 'list'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+    
+    def test_post_api(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content_object = ContentFactory.build()
+
+            data = convert_to_dict_from(content_object)
+            request = api.post('/api/contents/', data, format='json')
+            force_authenticate(request, user=user)
+            view = ContentViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+
+    def test_put_api(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 403],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content_object = ContentFactory.create()
+
+            data = convert_to_dict_from(content_object)
+            data['title'] = Faker().word()
+            request = api.put("/api/contents/{content_object.id}/", 
+                data, format='json')
+            force_authenticate(request, user=user)
+            view = ContentViewSet.as_view({'put': 'update'})
+            response = view(request, pk=content_object.id)
+            self.assertEqual(response.status_code, status)
+
+    def test_delete_api(self):
         client = APIClient()
-        client.login(username='tomoya', password='youluck123')
-        url = '/api/contents/'
-        response = client.get(url)
-        self.assertEqual(response.status_code, 200)
+        for username, password, status in [
+            ['tomoya', 'youluck123', 204], ['guest', 'password', 403],
+            ['general', 'password', 403],['researcher', 'password', 204]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content_object = ContentFactory.create()
+
+            data = convert_to_dict_from(content_object)
+            request = api.delete("/api/contents/{content_object.id}/", format='json')
+            force_authenticate(request, user=user)
+            view = ContentViewSet.as_view({'delete': 'destroy'})
+            response = view(request, pk=content_object.id)
+            self.assertEqual(response.status_code, status)
+
+
+class ContentAPITestCase(APITestCase):
+    def test_get_api(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 200],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            request = api.get('/api/contents/', format='json')
+            force_authenticate(request, user=user)
+            view = ValueTypeViewSet.as_view({'get': 'list'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+    
+    def test_post_api(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            obj = ValueTypeFactory.build()
+
+            data = convert_to_dict_from(obj)
+            request = api.post('/api/value_type/', data, format='json')
+            force_authenticate(request, user=user)
+            view = ValueTypeViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+
+    def test_put_api(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 403],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            obj = ValueTypeFactory.create()
+
+            data = convert_to_dict_from(obj)
+            data['title'] = Faker().word()
+            request = api.put("/api/value_type/{obj.id}/", 
+                data, format='json')
+            force_authenticate(request, user=user)
+            view = ValueTypeViewSet.as_view({'put': 'update'})
+            response = view(request, pk=obj.id)
+            self.assertEqual(response.status_code, status)
+
+    def test_delete_api(self):
+        client = APIClient()
+        for username, password, status in [
+            ['tomoya', 'youluck123', 204], ['guest', 'password', 403],
+            ['general', 'password', 403],['researcher', 'password', 204]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            obj = ValueTypeFactory.create()
+
+            data = convert_to_dict_from(obj)
+            request = api.delete("/api/contents/{obj.id}/", format='json')
+            force_authenticate(request, user=user)
+            view = ValueTypeViewSet.as_view({'delete': 'destroy'})
+            response = view(request, pk=obj.id)
+            self.assertEqual(response.status_code, status)
+
+
+class CurveAPITestCase(APITestCase):
+    pass
 
 
 class YouTubeContentAPITestCase(APITestCase):
@@ -131,7 +257,7 @@ class YouTubeContentAPITestCase(APITestCase):
             }), content_type="application/json")
             self.assertEqual(response.status_code, status)
 
-    def test_put_api(self):
+    def test_delete_api(self):
         client = APIClient()
         for username, password, status in [
             ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
@@ -148,6 +274,7 @@ class YouTubeContentAPITestCase(APITestCase):
             url = '/api/youtube/' + str(content.id) + '/'
             response = client.delete(url)
             self.assertEqual(response.status_code, status)
+
 
 class RequestAPITestCase(APITestCase):
     def test_api_superuser(self):

@@ -42,6 +42,58 @@ class EmailUserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
+    
+    def create_guest_user(self, is_test=False):
+        user = EmailUser.objects.create_user(
+            username='guest', 
+            email='emonotate+guest@gmail.com',
+            password="password")
+        try:
+            group = Group.objects.get(name='Guest')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            user.groups.add(group)
+        return user
+
+    def create_unique_user(self, email, is_test=False):
+        username = randomname()
+        while True:
+            try:
+                EmailUser.objects.get(username=username)
+            except:
+                break
+            username = randomname()
+        if not is_test:
+            user = EmailUser.objects.create_user(
+                username=username, 
+                email=email,
+                password="password")
+            try:
+                group = Group.objects.get(name='General')
+            except Group.DoesNotExist:
+                print("Does not exists")
+            else:
+                user.groups.add(group)
+        return user
+    
+    def create_researcher(self, username, email, password=None, **extra_fields):
+        is_staff = extra_fields.pop("is_staff", False)
+        user = self._create_user(
+            username,
+            email,
+            password,
+            is_staff,
+            False,
+            **extra_fields
+        )
+        try:
+            group = Group.objects.get(name='Researchers')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            user.groups.add(group)
+        return user
 
     def create_user(self, username, email, password=None, **extra_fields):
         is_staff = extra_fields.pop("is_staff", False)
@@ -53,13 +105,6 @@ class EmailUserManager(BaseUserManager):
             False,
             **extra_fields
         )
-        try:
-            group = Group.objects.get(name='General')
-        except Group.DoesNotExist:
-            print("Does not exists")
-        else:
-            print(f"{group} exists")
-            user.groups.add(group)
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):
@@ -105,10 +150,11 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
         return '%s(%s)' % (self.username, self.email)
     
     def __str__(self):
-        return f"{self.username}({self.email})"
+        return f"{self.id}: {self.username}({self.email})"
 
 
 class ValueType(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
     axis_type = models.IntegerField(choices=(
@@ -120,17 +166,22 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     url = models.URLField(default='', max_length=1024)
-    data_type = models.CharField(default='video/mp4', max_length=32)
-
+    
     def __str__(self):
         return self.title
 
 
+class YouTubeContent(Content):
+    video_id = models.CharField(default='', max_length=128, unique=True)
+    channel_title = models.CharField(default='', max_length=256)
+
+
 class Curve(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser,
                              default=1,
                              on_delete=models.CASCADE)
@@ -139,6 +190,7 @@ class Curve(models.Model):
     values = JSONField()
     version = models.CharField(max_length=16)
     room_name = models.CharField(max_length=32, default="")
+    locked = models.BooleanField(default=True)
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)
@@ -150,7 +202,7 @@ class Questionaire(models.Model):
 
 class Request(models.Model):
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=128, default="")
     description = models.TextField(blank=False, default="")
     owner = models.ForeignKey(EmailUser, 
@@ -158,6 +210,7 @@ class Request(models.Model):
                               on_delete=models.CASCADE, 
                               related_name='owner')
     participants = models.ManyToManyField(EmailUser)
+    intervals = models.IntegerField(default=1)
     content = models.ForeignKey(
         Content, 
         default=1,
@@ -182,13 +235,3 @@ class Request(models.Model):
     
     def __str__(self):
         return f'{self.title}({self.room_name})'
-
-
-class Log(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
-    content = models.ForeignKey(Content, default=1, null=True, on_delete=models.SET_NULL)
-    value_type = models.ForeignKey(ValueType, default=1, null=True, on_delete=models.SET_NULL)
-    room = models.CharField(max_length=128, default="")
-    description = models.TextField(blank=False, default="")
-    state = models.CharField(max_length=128, default="")

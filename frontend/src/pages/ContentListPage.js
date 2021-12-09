@@ -1,6 +1,6 @@
 import React from 'react';
-import Box from '@material-ui/core/Box';
-import { Divider } from '@material-ui/core';
+import Box from '@mui/material/Box';
+import { Divider } from '@mui/material';
 import AddContent from '../components/content-list-page/AddContent';
 import ContentsListAPI from '../helper/ContentsListAPI';
 import ContentsHistoryList from '../components/content-list-page/ContentsHistoryList';

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Grid } from "@material-ui/core";
+import { Box, Grid } from "@mui/material";
 import videojs from 'video.js';
 import Helmet from 'react-helmet';
 import "video.js/dist/video-js.css";

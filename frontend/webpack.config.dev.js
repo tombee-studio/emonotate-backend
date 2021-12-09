@@ -1,9 +1,8 @@
-var path = require("path");
-var webpack = require("webpack");
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
-
+const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
+    mode: 'development',
     devtool: "cheap-module-eval-source-map",
     entry: {
         app: "./src/index",
@@ -15,47 +14,46 @@ module.exports = {
         ],
     },
     resolve: {
-        modulesDirectories: ["src", "node_modules"]
+        modules: ["src", "node_modules"]
     },
     output: {
-        path: path.join(__dirname, "build"),
-        filename: "js/bundle.js",
+            filename: 'bundle.js',
+            path: path.join(__dirname, 'build/js')
     },
-    plugins: [
-        new webpack.optimize.CommonsChunkPlugin("vendor", "js/vendor.bundle.js"),
-        new ExtractTextPlugin("stylesheets.css"),
-        new webpack.NoErrorsPlugin()
-    ],
+    optimization: {
+            splitChunks: {
+            name: 'vendor',
+            chunks: 'all',
+        }
+    },
     module: {
-        loaders: [
-            {
-                test: /\.js$/,
-                loaders: ["babel"],
-                include: path.join(__dirname, "src")
-            },
-            {
-                // expose immutable globally so we can use it in app.html
-                test: require.resolve("immutable"),
-                loader: "expose?immutable"
-            },
-            {
-                test: /\.less$/,
-                loader: ExtractTextPlugin.extract("css?sourceMap!less?sourceMap")
-            },
-            {
-                // move font files found within CSS to the build directory
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: "file?name=[path][name].[ext]?[hash]&context=./node_modules"
-            },
-            {
-                // move images found within CSS to the build directory
-                test: /\.(jpg|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: "file?name=[path][name].[ext]?[hash]&context=./node_modules"
-            },
-            { 
-                test: /(\.css$)/, 
-                loaders: ['style-loader', 'css-loader', 'postcss-loader'] 
+        rules: [
+        {
+            test: /\.m?(js|jsx)$/,
+            include: path.join(__dirname, "src"),
+            use: {
+            loader: 'babel-loader',
+            options: {
+                presets: ["@babel/preset-env", "@babel/preset-react"]
             }
+            }
+        },
+        {
+            test: require.resolve("immutable"),
+            loader: "expose?immutable"
+        },
+        {
+            test: /\.less$/,
+            loader: MiniCssExtractPlugin.loader
+        },
+        {
+            test: /\.(jpg|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+            loader: "file?name=[path][name].[ext]?[hash]&context=./node_modules"
+        },
+        {
+            test: /\.(sass|less|css)$/,
+            loaders: ['style-loader', 'css-loader', 'postcss-loader']
+        }
         ]
-    }
+    }  
 };

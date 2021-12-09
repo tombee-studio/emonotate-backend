@@ -36,6 +36,17 @@ class ContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class YouTubeContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = YouTubeContent
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
+        return ret
+
+
 class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
@@ -65,6 +76,7 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        ret['participants'] = [User.objects.get(pk=pk).email for pk in ret['participants']]
         if ret['questionaire'] != None:
             ret['questionaire'] = QuestionaireSerializer(Questionaire.objects.get(pk=ret['questionaire'])).data
         return ret
@@ -79,9 +91,3 @@ class RequestSerializer(serializers.ModelSerializer):
         )
         instance.participants.set(validated_data['participants'])
         return instance
-
-
-class LogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Log
-        fields = '__all__'

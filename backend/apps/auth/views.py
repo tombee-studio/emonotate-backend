@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.contrib.auth import login, authenticate, get_user_model
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -16,7 +17,7 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = User.objects.create_user(username, email, raw_password)
             user.save()
-            user = authenticate(email=email, password=raw_password)
+            user = authenticate(username=username, password=raw_password)
             if user:
                 login(request, user)
                 messages.add_message(request, messages.SUCCESS, 'ユーザー登録が完了しました！')

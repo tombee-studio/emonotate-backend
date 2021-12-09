@@ -7,3 +7,4 @@ venv/
 migrations/
 .env
 package-lock.json
+*.log

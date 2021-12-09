@@ -4,6 +4,8 @@ import IconButton from '@mui/material/IconButton';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
+import { Login, Logout } from '@mui/icons-material';
+
 import AuthenticateAPI from '../../helper/AuthenticateAPI';
 
 const AuthenticateComponent = props => {
@@ -17,7 +19,7 @@ const AuthenticateComponent = props => {
           component="a"
           href="/app/login/"
           size="large">
-          <MeetingRoomIcon />
+          <Login />
         </IconButton>
       );
     else
@@ -34,7 +36,7 @@ const AuthenticateComponent = props => {
               window.location = '/';
             });
           }}>
-          <ExitToAppIcon />
+          <Logout />
         </IconButton>
       );
 };

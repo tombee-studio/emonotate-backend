@@ -4,6 +4,8 @@ import IconButton from '@mui/material/IconButton';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
+import AuthenticateAPI from '../../helper/AuthenticateAPI';
+
 const AuthenticateComponent = props => {
     if(django.user.group == "Guest")
       return (
@@ -25,9 +27,13 @@ const AuthenticateComponent = props => {
           aria-label="account of current user"
           aria-haspopup="true"
           color="inherit"
-          component="a"
-          href="/app/logout/"
-          size="large">
+          size="large"
+          onClick={_ => {
+            const api = new AuthenticateAPI();
+            api.logout().then(_ => {
+              window.location = '/';
+            });
+          }}>
           <ExitToAppIcon />
         </IconButton>
       );

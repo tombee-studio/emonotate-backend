@@ -13,7 +13,33 @@ from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
 from django.http import HttpResponse
 import json
 
+from django.contrib.auth import authenticate, login, logout
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View
+
+from django.http import JsonResponse
+
 User = get_user_model()
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginAPIView(View):
+    def post(self, request):
+        params = json.loads(request.body)
+        username = params['username']
+        password = params['password']
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({'is_authenticated': True})
+        return JsonResponse({'is_authenticated': False}, status=403)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutAPIView(View):
+    def post(self, request):
+        logout(request)
+        return JsonResponse({'is_authenticated': False})
 
 
 class ValueTypeViewSet(viewsets.ModelViewSet):

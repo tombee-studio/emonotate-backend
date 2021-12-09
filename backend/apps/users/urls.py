@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from django.conf.urls import url, include
 from .views import *
@@ -11,3 +12,5 @@ router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
 router.register(r'requests', RequestViewSet, basename='requests')
 urlpatterns = router.urls
 urlpatterns += url(r'sign_s3/$', sign_s3),
+urlpatterns += path('login/', LoginAPIView.as_view(), name='login'),
+urlpatterns += path('logout/', LogoutAPIView.as_view(), name='logout'),

@@ -1,8 +1,6 @@
 import React from 'react';
 
 import IconButton from '@mui/material/IconButton';
-import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 import { Login, Logout } from '@mui/icons-material';
 

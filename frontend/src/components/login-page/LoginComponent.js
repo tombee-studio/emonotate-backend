@@ -75,7 +75,7 @@ const LoginComponent = props => {
                 <FormHelperText></FormHelperText>
     
                 <Button variant="contained" endIcon={<SendIcon />} onClick={loginAction}>
-                    Send
+                    LOG IN
                 </Button>
             </Stack>
         </FormGroup>

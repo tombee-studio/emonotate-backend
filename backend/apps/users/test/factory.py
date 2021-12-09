@@ -6,6 +6,7 @@ from users.models import *
 from django.utils import timezone
 
 import factory
+import json
 
 class EmailUserFactory(django.DjangoModelFactory):
     class Meta:
@@ -39,6 +40,17 @@ class ContentFactory(django.DjangoModelFactory):
     url = Faker('url')
 
 
+class YouTubeContentFactory(django.DjangoModelFactory):
+    class Meta:
+        model = YouTubeContent
+
+    user = factory.SubFactory(EmailUserFactory)
+    title = Faker('word')
+    url = Faker('url')
+    video_id = Faker('word')
+    channel_title = Faker('word')
+
+
 class ValueTypeFactory(django.DjangoModelFactory):
     class Meta:
         model = ValueType
@@ -46,3 +58,15 @@ class ValueTypeFactory(django.DjangoModelFactory):
     user = factory.SubFactory(EmailUserFactory)
     title = Faker('word')
     axis_type = 1
+
+
+class CurveFactory(django.DjangoModelFactory):
+    class Meta:
+        model = Curve
+    
+    user = factory.SubFactory(EmailUserFactory)
+    content = factory.SubFactory(ContentFactory)
+    value_type = factory.SubFactory(ValueTypeFactory)
+    values = json.dumps([])
+    version = '1.1.0'
+    room_name = ""

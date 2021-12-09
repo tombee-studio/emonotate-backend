@@ -1,16 +1,17 @@
 import os
 import json
 
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.urls import reverse
 from django.shortcuts import render, redirect
 
+User = get_user_model()
 
 def index(request):
     if not request.user.is_authenticated:
-        user = authenticate(username="guest", password="password")
+        user = User.objects.get(username="guest")
         login(request, user)
     return redirect(reverse("app"))
 

@@ -57,6 +57,12 @@ class CurveViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer

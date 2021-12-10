@@ -47,7 +47,7 @@ class YouTubeContentFactory(django.DjangoModelFactory):
     user = factory.SubFactory(EmailUserFactory)
     title = Faker('word')
     url = Faker('url')
-    video_id = Faker('word')
+    video_id = Faker('name')
     channel_title = Faker('word')
 
 

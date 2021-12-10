@@ -83,7 +83,7 @@ class CurveViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
-    def create(self, request, *args, **kwargs):
+    def preprocess(self, request):
         if type(request.data["content"]) == dict:
             serializer = YouTubeContentSerializer(data=request.data["content"])
             if serializer.is_valid():
@@ -101,9 +101,14 @@ class CurveViewSet(viewsets.ModelViewSet):
             if serializer.is_valid():
                 serializer.save()
                 request.data["value_type"] = serializer.data["id"]
+        return request
+
+    def create(self, request, *args, **kwargs):
+        request = self.preprocess(request)
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
+        request = self.preprocess(request)
         return super().update(request, *args, **kwargs)
 
 

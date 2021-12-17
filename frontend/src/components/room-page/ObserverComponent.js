@@ -26,7 +26,9 @@ class ObserverComponent extends React.Component {
     render() {
         const { request } = this.state;
         const onChangeEmailList = (participants) => {
-            this.state.request.participants = participants;
+            const request = this.state.request;
+            request.participants = participants;
+            this.setState({ request: request });
         };
         return (
             <FormControl fullWidth sx={{ m: 1 }}>

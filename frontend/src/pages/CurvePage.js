@@ -16,10 +16,22 @@ const CurvePage = props => {
     const { id, params }  = props;
     const [loading, setLoading] = useState(false);
     const [useSnackbar, setSnackbar] = useState(false);
-    const [curve, setCurveData] = useState({});
+    const [curve, setCurveData] = useState({
+        "values": null,
+        "version": "0.1.1",
+        "room_name": "",
+        "locked": false,
+        "user": django.user.id,
+        "content": null,
+        "value_type": {
+            "title": "幸福度",
+            "axis_type": 1,
+            "user": 1
+        }
+    });
     const create = ev => {
         const api = new CurvesListAPI();
-        api.create(request)
+        api.create(curve)
             .then(json => {
                 handleClick();
             })
@@ -43,6 +55,7 @@ const CurvePage = props => {
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') return;
         setSnackbar(false);
+        window.location.href = '/';
     };
     useEffect(() => {
         if(id) {
@@ -93,7 +106,9 @@ const CurvePage = props => {
                 } else {
                     return (<Box m={2}>
                         <CurveComponent curve={curve} 
-                            onChangeCurve={curve => setCurveData(curve)} />
+                            onChangeCurve={curve => {
+                                setCurveData(curve);
+                            }} />
                         <ButtonGroup>
                             <Button variant="outlined" onClick={create}>作成</Button>
                         </ButtonGroup>

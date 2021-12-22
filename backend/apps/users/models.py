@@ -177,7 +177,6 @@ class Content(models.Model):
 
 class YouTubeContent(Content):
     video_id = models.CharField(max_length=128, unique=True)
-    channel_title = models.CharField(max_length=256)
 
 
 class Curve(models.Model):

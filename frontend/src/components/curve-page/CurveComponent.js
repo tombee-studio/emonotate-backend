@@ -8,9 +8,10 @@ const CurveComponent = props => {
     CurveComponent.inputField = undefined;
     var isLoadedScript = false;
     var player = undefined;
-    const { curve, onChangedCurve } = props;
+    const { curve, onChangeCurve, videoId } = props;
     const createEmotionalArcField = (player, isLoadedScript) => {
         if(player == undefined || isLoadedScript) return;
+        console.log(curve);
         CurveComponent.inputField = new EmotionalArcField("chart", player, {
             maxValue: 1,
             minValue: -1,
@@ -20,23 +21,7 @@ const CurveComponent = props => {
             'color': 'black',
         });
         CurveComponent.inputField.OnInit();
-        const data = [{
-            id: 0,
-            x: 0,
-            y: 0,
-            axis: 'v',
-            type: 'fixed',
-            text:   "",
-            reason: "",
-        }, {
-            id: 1,
-            x: player.getDuration(),
-            y: 0,
-            axis: 'v',
-            type: 'fixed',
-            text:   "",
-            reason: "",
-        }];
+        const data = curve.values;
         CurveComponent.inputField.load(data);
 
         setInterval(() => {
@@ -53,8 +38,37 @@ const CurveComponent = props => {
 
     return (<Box>
         <Grid container spacing={2}>
-            <VideoComponent onReady={event => {
+            <VideoComponent 
+                videoId={videoId}
+                onReady={event => {
                 player = event.target;
+                const videoData = player.getVideoData();
+                const curveClone = curve;
+                curveClone.content = {
+                    'title': videoData.title,
+                    'video_id': videoData.video_id,
+                    'url': player.getVideoUrl(),
+                    'user': django.user.id
+                }
+                curveClone.values = [{
+                    id: 0,
+                    x: 0,
+                    y: 0,
+                    axis: 'v',
+                    type: 'fixed',
+                    text:   "",
+                    reason: "",
+                }, {
+                    id: 1,
+                    x: player.getDuration(),
+                    y: 0,
+                    axis: 'v',
+                    type: 'fixed',
+                    text:   "",
+                    reason: "",
+                }];
+                curveClone.room_name = `${videoData.video_id}-${1}`;
+                onChangeCurve(curveClone);
                 createEmotionalArcField(player, isLoadedScript);
             }} />
             <Grid item xs={12}>

@@ -32,6 +32,7 @@ const RoomPage = props => {
     };
     const update = ev => {
         const api = new RequestListAPI();
+        console.log(request);
         request.content = request.content.id;
         request.owner = request.owner.id;
         request.value_type = request.value_type.id;

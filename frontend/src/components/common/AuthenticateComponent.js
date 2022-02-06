@@ -1,8 +1,10 @@
 import React from 'react';
 
 import IconButton from '@mui/material/IconButton';
-import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+
+import { Login, Logout } from '@mui/icons-material';
+
+import AuthenticateAPI from '../../helper/AuthenticateAPI';
 
 const AuthenticateComponent = props => {
     if(django.user.group == "Guest")
@@ -15,7 +17,7 @@ const AuthenticateComponent = props => {
           component="a"
           href="/app/login/"
           size="large">
-          <MeetingRoomIcon />
+          <Login />
         </IconButton>
       );
     else
@@ -25,10 +27,14 @@ const AuthenticateComponent = props => {
           aria-label="account of current user"
           aria-haspopup="true"
           color="inherit"
-          component="a"
-          href="/app/logout/"
-          size="large">
-          <ExitToAppIcon />
+          size="large"
+          onClick={_ => {
+            const api = new AuthenticateAPI();
+            api.logout().then(_ => {
+              window.location = '/';
+            });
+          }}>
+          <Logout />
         </IconButton>
       );
 };

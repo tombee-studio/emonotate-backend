@@ -13,7 +13,33 @@ from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
 from django.http import HttpResponse
 import json
 
+from django.contrib.auth import authenticate, login, logout
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View
+
+from django.http import JsonResponse
+
 User = get_user_model()
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginAPIView(View):
+    def post(self, request):
+        params = json.loads(request.body)
+        username = params['username']
+        password = params['password']
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({'is_authenticated': True})
+        return JsonResponse({'is_authenticated': False}, status=403)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutAPIView(View):
+    def post(self, request):
+        logout(request)
+        return JsonResponse({'is_authenticated': False})
 
 
 class ValueTypeViewSet(viewsets.ModelViewSet):
@@ -57,10 +83,32 @@ class CurveViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
+    def preprocess(self, request):
+        if type(request.data["content"]) == dict:
+            serializer = YouTubeContentSerializer(data=request.data["content"])
+            if serializer.is_valid():
+                serializer.save()
+                request.data["content"] = serializer.data["id"]
+            else:
+                serializer = ContentSerializer(data=request.data["content"])
+                if serializer.is_valid():
+                    serializer.save()
+                    request.data["content"] = serializer.data["id"]
+                else:
+                    exit(-1)
+        if type(request.data["value_type"]) == dict:
+            serializer = ValueTypeSerializer(data=request.data["value_type"])
+            if serializer.is_valid():
+                serializer.save()
+                request.data["value_type"] = serializer.data["id"]
+        return request
+
     def create(self, request, *args, **kwargs):
+        request = self.preprocess(request)
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
+        request = self.preprocess(request)
         return super().update(request, *args, **kwargs)
 
 

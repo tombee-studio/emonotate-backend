@@ -138,7 +138,7 @@ class ContentAPITestCase(APITestCase):
             self.assertEqual(response.status_code, status)
 
 
-class ContentAPITestCase(APITestCase):
+class YouTubeContentAPITestCase(APITestCase):
     def test_get_api(self):
         for username, password, status in [
             ['tomoya', 'youluck123', 200], ['guest', 'password', 200],
@@ -325,7 +325,63 @@ class CurveAPITestCase(APITestCase):
             value_type = ValueTypeFactory.create()
             obj = CurveFactory.build(user=user, 
                 content=content, value_type=value_type, room_name=randomname())
+            data = convert_to_dict_from(obj)
+            data['content'] = convert_to_dict_from(content)
+            data['value_type'] = data['value_type_id']
+            request = api.post('/api/curves/', data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
 
+    def test_post_curve_with_not_exist_youtube_content(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = YouTubeContentFactory.build(video_id=randomname())
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.build(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+            data = convert_to_dict_from(obj)
+            data['content'] = convert_to_dict_from(content)
+            data['value_type'] = data['value_type_id']
+            request = api.post('/api/curves/', data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+    
+    def test_post_curve_with_exist_youtube_content(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = YouTubeContentFactory.create(video_id=randomname())
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.build(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+            data = convert_to_dict_from(obj)
+            data['content'] = convert_to_dict_from(content)
+            data['value_type'] = data['value_type_id']
+            request = api.post('/api/curves/', data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+    
+    def test_post_curve_with_exist_content(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = ContentFactory.create()
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.build(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
             data = convert_to_dict_from(obj)
             data['content'] = convert_to_dict_from(content)
             data['value_type'] = data['value_type_id']
@@ -354,7 +410,166 @@ class CurveAPITestCase(APITestCase):
             view = CurveViewSet.as_view({'post': 'create'})
             response = view(request)
             self.assertEqual(response.status_code, status)
+    
+    def test_post_curve_with_not_exist_value_type(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = ContentFactory.build()
+            value_type = ValueTypeFactory.build()
+            obj = CurveFactory.build(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
 
+            data = convert_to_dict_from(obj)
+            data['value_type'] = convert_to_dict_from(value_type)
+            data['content'] = convert_to_dict_from(content)
+            request = api.post('/api/curves/', data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+    
+    def test_post_curve_with_not_exist_value_type(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = YouTubeContentFactory.build()
+            value_type = ValueTypeFactory.build()
+            obj = CurveFactory.build(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+
+            data = convert_to_dict_from(obj)
+            data['value_type'] = convert_to_dict_from(value_type)
+            data['content'] = convert_to_dict_from(content)
+            request = api.post('/api/curves/', data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+
+    def test_post_curve_with_exist_youtube_content_but_has_not_id(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 201], ['guest', 'password', 201],
+            ['general', 'password', 201],['researcher', 'password', 201]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = YouTubeContentFactory.create(video_id=randomname())
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.build(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+            data = convert_to_dict_from(obj)
+            content_json = convert_to_dict_from(content)
+            content_json["id"] = None
+            data['content'] = content_json
+            data['value_type'] = data['value_type_id']
+            request = api.post('/api/curves/', data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'post': 'create'})
+            response = view(request)
+            self.assertEqual(response.status_code, status)
+
+    def test_put_curve_with_exist_both(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = ContentFactory.create()
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.create(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+
+            data = convert_to_dict_from(obj)
+            data['content'] = data['content_id']
+            data['value_type'] = data['value_type_id']
+            request = api.put("/api/curves/{obj.id}/", data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'put': 'update'})
+            response = view(request, pk=obj.id)
+            self.assertEqual(response.status_code, status)
+
+    def test_put_curve_with_exist_both_and_youtube(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = YouTubeContentFactory.create()
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.create(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+
+            data = convert_to_dict_from(obj)
+            data['content'] = data['content_id']
+            data['value_type'] = data['value_type_id']
+            request = api.put("/api/curves/{obj.id}/", data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'put': 'update'})
+            response = view(request, pk=obj.id)
+            self.assertEqual(response.status_code, status)
+    
+    def test_put_curve_with_exist_youtube_content(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = YouTubeContentFactory.create(video_id=randomname())
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.create(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+            data = convert_to_dict_from(obj)
+            data['content'] = convert_to_dict_from(content)
+            data['value_type'] = data['value_type_id']
+            request = api.put("/api/curves/{obj.id}/", data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'put': 'update'})
+            response = view(request, pk=obj.id)
+            self.assertEqual(response.status_code, status)
+    
+    def test_put_curve_with_exist_content(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = ContentFactory.create()
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.create(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+            data = convert_to_dict_from(obj)
+            data['content'] = convert_to_dict_from(content)
+            data['value_type'] = data['value_type_id']
+            request = api.put("/api/curves/{obj.id}/", data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'put': 'update'})
+            response = view(request, pk=obj.id)
+            self.assertEqual(response.status_code, status)
+
+    def test_put_curve_with_exist_youtube_content_but_has_not_id(self):
+        for username, password, status in [
+            ['tomoya', 'youluck123', 200], ['guest', 'password', 403],
+            ['general', 'password', 200],['researcher', 'password', 200]]:
+            api = APIRequestFactory()
+            user = User.objects.get(username=username)
+            content = YouTubeContentFactory.create(video_id=randomname())
+            value_type = ValueTypeFactory.create()
+            obj = CurveFactory.create(user=user, 
+                content=content, value_type=value_type, room_name=randomname())
+            data = convert_to_dict_from(obj)
+            content_json = convert_to_dict_from(content)
+            content_json["id"] = None
+            data['content'] = content_json
+            data['value_type'] = data['value_type_id']
+            request = api.put("/api/curves/{obj.id}/", data, format='json')
+            force_authenticate(request, user=user)
+            view = CurveViewSet.as_view({'put': 'update'})
+            response = view(request, pk=obj.id)
+            self.assertEqual(response.status_code, status)
 
 class YouTubeContentAPITestCase(APITestCase):
     def test_get_api(self):
@@ -377,8 +592,7 @@ class YouTubeContentAPITestCase(APITestCase):
             response = client.post(url, json.dumps({
                 "title": Faker().word(),
                 "url": Faker().url(),
-                "video_id": Faker().word(),
-                "channel_title": Faker().word(),
+                "video_id": randomname(),
                 "user": EmailUser.objects.get(username=username).id
             }), content_type="application/json")
             self.assertEqual(response.status_code, status)
@@ -390,7 +604,6 @@ class YouTubeContentAPITestCase(APITestCase):
             title=Faker().word(),
             url=Faker().url(),
             video_id=video_id,
-            channel_title=Faker().word(),
             user=EmailUser.objects.get(username='tomoya')
         )
         content.save()
@@ -404,7 +617,6 @@ class YouTubeContentAPITestCase(APITestCase):
                 "title": Faker().word(),
                 "url": Faker().url(),
                 "video_id": video_id,
-                "channel_title": Faker().word(),
                 "user": EmailUser.objects.get(username=username).id
             }), content_type="application/json")
             self.assertEqual(response.status_code, status)
@@ -418,7 +630,6 @@ class YouTubeContentAPITestCase(APITestCase):
                 title=Faker().word(),
                 url=Faker().url(),
                 video_id=Faker().word(),
-                channel_title=Faker().word(),
                 user=EmailUser.objects.get(username='tomoya')
             )
             content.save()

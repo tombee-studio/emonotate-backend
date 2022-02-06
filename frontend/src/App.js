@@ -13,6 +13,7 @@ import RequestPage from './pages/RequestPage';
 import RoomPage from './pages/RoomPage';
 import ProfilePage from './pages/ProfilePage';
 import CurvePage from './pages/CurvePage';
+import LoginPage from './pages/LoginPage';
 
 const App = () => {
   return (
@@ -27,9 +28,7 @@ const App = () => {
           <Route exact path='/app/content/' component={ ContentListPage } />
           <Route exact path='/app/word/' component={ ValueTypeListPage } />
           <Route exact path='/app/curves/' render={ props => <CurvePage /> } />
-          <Route path='/app/curves/:id(\d+)' component={ props => 
-            <CurvePage id={props.match.params.id} /> 
-          } />
+          <Route path='/app/curves/:id(\d+)' component={ props => <CurvePage id={props.match.params.id} /> } />
           <Route exact path='/app/requests/' component={ RequestPage } />
           <Route exact path='/app/rooms/' component={ _ => 
             <RoomPage keyword={keyword} />
@@ -38,6 +37,7 @@ const App = () => {
             <RoomPage id={props.match.params.id} keyword={keyword} />
           } />
           <Route exact path='/app/profile/' component={ ProfilePage } />
+          <Route exact path='/app/login/' component={ LoginPage } />
         </Switch>);
       }} />
     </Router>

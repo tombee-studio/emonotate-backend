@@ -102,6 +102,12 @@ class EmailUserManager(BaseUserManager):
             False,
             **extra_fields
         )
+        try:
+            group = Group.objects.get(name='Guest')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            user.groups.add(group)
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):
@@ -146,7 +152,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
         return '%s(%s)' % (self.username, self.email)
     
     def __str__(self):
-        return f"{self.id}: {self.username}({self.email})"
+        return f"{self.username}"
 
     #
     # **CAUTION**

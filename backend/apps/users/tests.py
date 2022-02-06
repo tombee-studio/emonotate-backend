@@ -263,6 +263,9 @@ class ContentAPITestCase(APITestCase):
 
 
 class CurveAPITestCase(APITestCase):
+    def setUpClass(self):
+        pass
+
     def test_get_api(self):
         for username, password, status in [
             ['tomoya', 'youluck123', 200], ['guest', 'password', 200],

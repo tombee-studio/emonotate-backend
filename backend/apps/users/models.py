@@ -22,9 +22,6 @@ class EmailUserManager(BaseUserManager):
                      **extra_fields):
         now = timezone.now()
 
-        if not email:
-            raise ValueError('The given email must be set')
-
         email = self.normalize_email(email)
         is_active = extra_fields.pop("is_active", True)
 
@@ -138,7 +135,6 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
 
     def __unicode__(self):
         return self.email

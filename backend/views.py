@@ -7,12 +7,12 @@ from django.conf import settings
 from django.urls import reverse
 from django.shortcuts import render, redirect
 
+from lazysignup.decorators import allow_lazy_user
+
 User = get_user_model()
 
+@allow_lazy_user
 def index(request):
-    if not request.user.is_authenticated:
-        user = User.objects.get(username="guest")
-        login(request, user)
     return redirect(reverse("app"))
 
 

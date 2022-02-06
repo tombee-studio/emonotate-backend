@@ -126,12 +126,11 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
         max_length=32, 
         default=randomname(8))
 
+    #
+    # TODO: emailがすでに存在する場合にエラー
+    #
     email = models.EmailField(
         max_length=256,
-        # unique=True,
-        # error_messages={
-        #     'unique': 'That email address is already taken.'
-        # }
     )
 
     is_staff = models.BooleanField(default=False)
@@ -153,11 +152,6 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return f"{self.username}"
-
-    #
-    # **CAUTION**
-    # emailがすでに存在する場合にエラー
-    #
 
 
 class ValueType(models.Model):

@@ -126,9 +126,8 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
         max_length=32, 
         default=randomname(8))
 
-    #
     # TODO: emailがすでに存在する場合にエラー
-    #
+    # TODO: lazy signupの場合、データが消失する旨があることを表示
     email = models.EmailField(
         max_length=256,
     )

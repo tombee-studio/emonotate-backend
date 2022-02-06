@@ -178,6 +178,12 @@ class Content(models.Model):
 class YouTubeContent(Content):
     video_id = models.CharField(max_length=128, unique=True)
 
+    def save(self, **kwargs):
+        try:
+            youtube = YouTubeContent.objects.get(video_id=self.video_id)
+        except YouTubeContent.DoesNotExist:
+            super(YouTubeContent, self).save(**kwargs)
+
 
 class Curve(models.Model):
     created = models.DateTimeField(auto_now_add=True)

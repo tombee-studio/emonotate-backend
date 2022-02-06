@@ -8,9 +8,10 @@ const CurveComponent = props => {
     CurveComponent.inputField = undefined;
     var isLoadedScript = false;
     var player = undefined;
-    const { curve, onChangeCurve } = props;
+    const { curve, onChangeCurve, videoId } = props;
     const createEmotionalArcField = (player, isLoadedScript) => {
         if(player == undefined || isLoadedScript) return;
+        console.log(curve);
         CurveComponent.inputField = new EmotionalArcField("chart", player, {
             maxValue: 1,
             minValue: -1,
@@ -37,7 +38,9 @@ const CurveComponent = props => {
 
     return (<Box>
         <Grid container spacing={2}>
-            <VideoComponent onReady={event => {
+            <VideoComponent 
+                videoId={videoId}
+                onReady={event => {
                 player = event.target;
                 const videoData = player.getVideoData();
                 const curveClone = curve;

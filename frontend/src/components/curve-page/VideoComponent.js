@@ -1,13 +1,9 @@
 import React from "react";
-
 import { 
     Box,
     Grid,
 } from "@mui/material";
-
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
-
 import YouTube from 'react-youtube';
 
 import VideoController from './VideoController';
@@ -19,10 +15,7 @@ const VideoComponent = props => {
         disablekb: true,
         loop: false,
     });
-    const { onReady } = props;
-    const { search } = useLocation();
-    const params = new URLSearchParams(search);
-    const videoId = params.get('videoId');
+    const { onReady, videoId } = props;
     return <Box>
         <Grid container>
             <Grid item xs="auto">

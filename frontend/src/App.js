@@ -28,9 +28,7 @@ const App = () => {
           <Route exact path='/app/content/' component={ ContentListPage } />
           <Route exact path='/app/word/' component={ ValueTypeListPage } />
           <Route exact path='/app/curves/' render={ props => <CurvePage /> } />
-          <Route path='/app/curves/:id(\d+)' component={ props => 
-            <CurvePage id={props.match.params.id} /> 
-          } />
+          <Route path='/app/curves/:id(\d+)' component={ props => <CurvePage id={props.match.params.id} /> } />
           <Route exact path='/app/requests/' component={ RequestPage } />
           <Route exact path='/app/rooms/' component={ _ => 
             <RoomPage keyword={keyword} />

@@ -48,7 +48,6 @@ class YouTubeContentFactory(django.DjangoModelFactory):
     title = Faker('word')
     url = Faker('url')
     video_id = Faker('name')
-    channel_title = Faker('word')
 
 
 class ValueTypeFactory(django.DjangoModelFactory):

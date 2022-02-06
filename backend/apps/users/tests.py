@@ -593,7 +593,6 @@ class YouTubeContentAPITestCase(APITestCase):
                 "title": Faker().word(),
                 "url": Faker().url(),
                 "video_id": randomname(),
-                "channel_title": Faker().word(),
                 "user": EmailUser.objects.get(username=username).id
             }), content_type="application/json")
             self.assertEqual(response.status_code, status)
@@ -605,7 +604,6 @@ class YouTubeContentAPITestCase(APITestCase):
             title=Faker().word(),
             url=Faker().url(),
             video_id=video_id,
-            channel_title=Faker().word(),
             user=EmailUser.objects.get(username='tomoya')
         )
         content.save()
@@ -619,7 +617,6 @@ class YouTubeContentAPITestCase(APITestCase):
                 "title": Faker().word(),
                 "url": Faker().url(),
                 "video_id": video_id,
-                "channel_title": Faker().word(),
                 "user": EmailUser.objects.get(username=username).id
             }), content_type="application/json")
             self.assertEqual(response.status_code, status)
@@ -633,7 +630,6 @@ class YouTubeContentAPITestCase(APITestCase):
                 title=Faker().word(),
                 url=Faker().url(),
                 video_id=Faker().word(),
-                channel_title=Faker().word(),
                 user=EmailUser.objects.get(username='tomoya')
             )
             content.save()

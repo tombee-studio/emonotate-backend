@@ -17,6 +17,17 @@ def randomname(n=6):
     return ''.join(randlst)
 
 
+class BaseManager(models.Manager):
+   def get_or_none(self, **kwargs):
+       """
+       検索にヒットすればそのモデルを、しなければNoneを返します。
+       """
+       try:
+           return self.get_queryset().get(**kwargs)
+       except self.model.DoesNotExist:
+           return None
+
+
 class EmailUserManager(BaseUserManager):
     def _create_user(self, username, email, password, is_staff, is_superuser,
                      **extra_fields):
@@ -155,6 +166,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
 
 
 class ValueType(models.Model):
+    objects = BaseManager()
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
@@ -167,6 +179,7 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
+    objects = BaseManager()
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
@@ -177,6 +190,7 @@ class Content(models.Model):
 
 
 class YouTubeContent(Content):
+    objects = BaseManager()
     video_id = models.CharField(max_length=128, unique=True)
 
     def save(self, **kwargs):
@@ -187,6 +201,7 @@ class YouTubeContent(Content):
 
 
 class Curve(models.Model):
+    objects = BaseManager()
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser,
                              default=1,
@@ -203,10 +218,12 @@ class Curve(models.Model):
 
 
 class Questionaire(models.Model):
+    objects = BaseManager()
     url = models.URLField(default="")
     user_id_form = models.CharField(max_length=32)
 
 class Request(models.Model):
+    objects = BaseManager()
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=128, default="")

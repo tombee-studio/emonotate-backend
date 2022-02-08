@@ -69,9 +69,18 @@ class CurveWithYouTubeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
         fields = '__all__'
-    user = UserSerializer()
-    content = YouTubeContentSerializer()
-    value_type = ValueTypeSerializer()
+
+    def is_valid(self, raise_exception=False):
+        content = YouTubeContent.objects.get_or_none(
+            video_id=self.initial_data["youtube"]["video_id"])
+        if not content:
+            ser = YouTubeContentSerializer(data=self.initial_data["youtube"])
+            if ser.is_valid():
+                content = ser.save()
+            else:
+                return not bool(ser._errors)
+        self.initial_data["content"] = content.id
+        return super().is_valid(raise_exception)
 
 
 class QuestionaireSerializer(serializers.ModelSerializer):

@@ -15,7 +15,7 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': os.getenv('DATABASE_PORT'),
         'TEST': {
-            'NAME': os.getenv('DATABASE_NAME'),
+            'NAME': os.getenv('TEST_DATABASE_NAME'),
         }
     }
 }
@@ -32,3 +32,8 @@ STATICFILES_DIRS = [
 ]
 
 EMAIL_BACKEND = os.environ['DEBUG_EMAIL_BACKEND']
+
+NOSE_ARGS = [
+    '--nocapture',
+    '--nologcapture',
+]

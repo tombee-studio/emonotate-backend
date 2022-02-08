@@ -65,6 +65,15 @@ class CurveSerializer(serializers.ModelSerializer):
         return ret
 
 
+class CurveWithYouTubeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Curve
+        fields = '__all__'
+    user = UserSerializer()
+    content = YouTubeContentSerializer()
+    value_type = ValueTypeSerializer()
+
+
 class QuestionaireSerializer(serializers.ModelSerializer):
     class Meta:
         model = Questionaire

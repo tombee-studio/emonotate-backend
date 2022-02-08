@@ -53,8 +53,9 @@ class EmailUserManager(BaseUserManager):
             user.groups.add(group)
         return user
 
-    def create_unique_user(self, email, is_test=False):
-        username = randomname()
+    def create_unique_user(self, email, is_test=False, username=None):
+        if not username:
+            username = randomname()
         while True:
             try:
                 EmailUser.objects.get(username=username)

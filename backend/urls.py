@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^history/', include('users.history')),
     url(r'^app/', app, name='app'),
     url(r'^auth/', include('auth.urls')),
+    url(r'^convert/', include('lazysignup.urls')),
     url('^$', index, name='index'),
 ]
 

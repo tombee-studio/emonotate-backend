@@ -22,6 +22,7 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_filters",
+    "lazysignup",
 ]
 
 THIRD_PARTY_APPS = [
@@ -83,6 +84,11 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+AUTHENTICATION_BACKENDS = {
+    'django.contrib.auth.backends.ModelBackend',
+    'lazysignup.backends.LazySignupBackend',
+}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/Indianapolis"

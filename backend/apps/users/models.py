@@ -17,13 +17,21 @@ def randomname(n=6):
     return ''.join(randlst)
 
 
+class BaseManager(models.Manager):
+   def get_or_none(self, **kwargs):
+       """
+       検索にヒットすればそのモデルを、しなければNoneを返します。
+       """
+       try:
+           return self.get_queryset().get(**kwargs)
+       except self.model.DoesNotExist:
+           return None
+
+
 class EmailUserManager(BaseUserManager):
     def _create_user(self, username, email, password, is_staff, is_superuser,
                      **extra_fields):
         now = timezone.now()
-
-        if not email:
-            raise ValueError('The given email must be set')
 
         email = self.normalize_email(email)
         is_active = extra_fields.pop("is_active", True)
@@ -56,8 +64,9 @@ class EmailUserManager(BaseUserManager):
             user.groups.add(group)
         return user
 
-    def create_unique_user(self, email, is_test=False):
-        username = randomname()
+    def create_unique_user(self, email, is_test=False, username=None):
+        if not username:
+            username = randomname()
         while True:
             try:
                 EmailUser.objects.get(username=username)
@@ -105,6 +114,12 @@ class EmailUserManager(BaseUserManager):
             False,
             **extra_fields
         )
+        try:
+            group = Group.objects.get(name='Guest')
+        except Group.DoesNotExist:
+            print("Does not exists")
+        else:
+            user.groups.add(group)
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):
@@ -123,12 +138,10 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
         max_length=32, 
         default=randomname(8))
 
+    # TODO: emailがすでに存在する場合にエラー
+    # TODO: lazy signupの場合、データが消失する旨があることを表示
     email = models.EmailField(
         max_length=256,
-        unique=True,
-        error_messages={
-            'unique': 'That email address is already taken.'
-        }
     )
 
     is_staff = models.BooleanField(default=False)
@@ -138,7 +151,6 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
 
     def __unicode__(self):
         return self.email
@@ -150,10 +162,11 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
         return '%s(%s)' % (self.username, self.email)
     
     def __str__(self):
-        return f"{self.id}: {self.username}({self.email})"
+        return f"{self.username}"
 
 
 class ValueType(models.Model):
+    objects = BaseManager()
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
@@ -166,6 +179,7 @@ class ValueType(models.Model):
 
 
 class Content(models.Model):
+    objects = BaseManager()
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
@@ -176,6 +190,7 @@ class Content(models.Model):
 
 
 class YouTubeContent(Content):
+    objects = BaseManager()
     video_id = models.CharField(max_length=128, unique=True)
 
     def save(self, **kwargs):
@@ -186,6 +201,7 @@ class YouTubeContent(Content):
 
 
 class Curve(models.Model):
+    objects = BaseManager()
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser,
                              default=1,
@@ -202,10 +218,12 @@ class Curve(models.Model):
 
 
 class Questionaire(models.Model):
+    objects = BaseManager()
     url = models.URLField(default="")
     user_id_form = models.CharField(max_length=32)
 
 class Request(models.Model):
+    objects = BaseManager()
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=128, default="")

@@ -20,6 +20,7 @@ django-bootstrap-v5==1.0.4
 django-extensions==1.6.1
 django-filter==2.3.0
 django-heroku==0.3.1
+django-lazysignup==2.0.0
 django-s3-file-field==0.0.20
 django-storages==1.11.1
 django-utils-six==2.0

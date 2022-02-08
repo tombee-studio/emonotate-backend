@@ -10,6 +10,7 @@ router.register(r'contents', ContentViewSet, basename='contents')
 router.register(r'youtube', YouTubeContentViewSet, basename='youtube')
 router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
 router.register(r'requests', RequestViewSet, basename='requests')
+router.register(r'curves_with_youtube', CurveWithYouTubeContentViewSet, basename='curve_with_youtube')
 urlpatterns = router.urls
 urlpatterns += url(r'sign_s3/$', sign_s3),
 urlpatterns += path('login/', LoginAPIView.as_view(), name='login'),

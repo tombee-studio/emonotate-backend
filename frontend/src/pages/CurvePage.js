@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { Route, useLocation } from 'react-router-dom';
 
 import CurvesListAPI from "../helper/CurvesListAPI";
+import CurveWithYouTubeAPI from "../helper/CurveWithYouTubeAPI";
 import CurveComponent from "../components/curve-page/CurveComponent";
 
 const CurvePage = props => {
@@ -24,7 +25,7 @@ const CurvePage = props => {
         "room_name": "",
         "locked": false,
         "user": django.user.id,
-        "youtube": {
+        "content": {
             "id": 3394,
             "title": "Orangestar - DAYBREAK FRONTLINE (feat. IA) Official Video",
             "url": "https://www.youtube.com/watch?v=emrt46SRyYs",
@@ -38,7 +39,9 @@ const CurvePage = props => {
         }
     });
     const create = ev => {
-        const api = new CurvesListAPI();
+        const api = new CurveWithYouTubeAPI();
+        curve["value_type"] = 1
+        curve["youtube"] = curve["content"]
         api.create(curve)
             .then(json => {
                 handleClick();
@@ -56,18 +59,18 @@ const CurvePage = props => {
         setSnackbar(false);
         window.location.href = '/';
     };
-    // useEffect(() => {
-    //     if(id) {
-    //         const api = new CurvesListAPI();
-    //         api.getItem(id, {
-    //             'format': 'json'
-    //         }).then(curve => {
-    //             setCurveData(curve);
-    //         }).catch(message => {
-    //             alert(message);
-    //         });
-    //     }
-    // }, []);
+    useEffect(() => {
+        if(id) {
+            const api = new CurvesListAPI();
+            api.getItem(id, {
+                'format': 'json'
+            }).then(curve => {
+                setCurveData(curve);
+            }).catch(message => {
+                alert(message);
+            });
+        }
+    }, []);
     console.log(curve);
     return (
         <Route render={

@@ -77,6 +77,11 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return Curve.objects.filter(user=self.request.user)
 
 
+class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
+    serializer_class = CurveWithYouTubeSerializer
+    queryset = Curve.objects.all().order_by('created')
+
+
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all().order_by('created')

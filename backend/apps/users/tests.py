@@ -83,7 +83,11 @@ class CurveWithYouTubeSerializerTest(TestCase):
                 "url": "https://www.youtube.com/watch?v=QOpl7cI8ubU",
                 "video_id": "QOpl7cI8ubU"
             },
-            "value_type": 1
+            "value_type": {
+                "user": 1,
+                "title": "面白さ",
+                "axis_type": 1
+            }
         })
         self.assertEqual(s.is_valid(), True)
 

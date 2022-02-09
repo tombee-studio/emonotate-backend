@@ -9,11 +9,21 @@ from django.shortcuts import render, redirect
 
 from lazysignup.decorators import allow_lazy_user
 
+from django.http import JsonResponse
+
 User = get_user_model()
 
 @allow_lazy_user
 def index(request):
-    return redirect(reverse("app"))
+    content = ""
+    return JsonResponse({
+        "user": {
+            "user_id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+        },
+        "message": "Hello, World!"
+    }, status=200)
 
 
 @login_required

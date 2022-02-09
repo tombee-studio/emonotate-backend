@@ -1,29 +1,20 @@
-# A Django & React Template
-A collection of Django and React modules that will help bootstrap your next Django web
-application.
+# emonotate API
 
-## Motivation
-Getting a new project up and running can be time consuming and demotivating when
-what you really want is to just work on your idea. It can take hours/days to get
-through all the boilerplate before you can get to any actual work.
+## 概要
+本APIは主観曲線収集データセットを収集、取得するためのAPIです
 
-The goal of this project is to give you a strong, modern project with just a few
-commands so you can begin writing your application from the start and not worry about
-boilerplate.
+## 開発者の方へ
+本アプリケーションはAPIとして構成されており、本APIを使用することで主観曲線に関するデータを収集、取得することができます。
 
-## Installation
-```
-export project_name={{ project_name }}
-mkvirtualenv $project_name
-pip install django
-django-admin.py startproject --template=https://github.com/scottwoodall/django-react-template/archive/master.zip $project_name
-cd $project_name
-```
-1. Follow [backend/README.md](backend/README.md)
-1. Follow [frontend/README.md](frontend/README.md)
+ユーザは以下のような種別で分類されます。
+|種別名|主観曲線の入力|主観曲線の保存|リクエスト機能|
+|-----|-----|-----|-----|
+|Guest|○|○||
+|General|○|○||
+|Researcher|○|○|○|
 
-## TODO
-1. Build production configs
-
-## Screenshot
-![screenshot](screenshot.png)
+本APIの使用は以下のようなフローを踏む必要があります。
+1. 臨時ユーザによるログイン
+> `https://www.emonotate/` にアクセスすることで臨時ユーザを生成します
+>
+> 臨時ユーザが生成された場合、`HTTP 200 OK`を返答します

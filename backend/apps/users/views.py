@@ -20,6 +20,8 @@ from django.views.generic import View
 
 from django.http import JsonResponse
 
+from lazysignup.decorators import allow_lazy_user
+
 User = get_user_model()
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -42,6 +44,7 @@ class LogoutAPIView(View):
         return JsonResponse({'is_authenticated': False})
 
 
+@method_decorator(allow_lazy_user, name='dispatch')
 class ValueTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ValueTypeSerializer
     queryset = ValueType.objects.all().order_by('created')
@@ -56,6 +59,7 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return ValueType.objects.filter(user=self.request.user)
 
 
+@method_decorator(allow_lazy_user, name='dispatch')
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all().order_by('created')
@@ -77,11 +81,13 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return Curve.objects.filter(user=self.request.user)
 
 
+@method_decorator(allow_lazy_user, name='dispatch')
 class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = CurveWithYouTubeSerializer
     queryset = Curve.objects.all().order_by('created')
 
 
+@method_decorator(allow_lazy_user, name='dispatch')
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all().order_by('created')
@@ -123,11 +129,13 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username', 'email')
 
 
+@method_decorator(allow_lazy_user, name='dispatch')
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
     queryset = YouTubeContent.objects.all().order_by('created')
 
 
+@method_decorator(allow_lazy_user, name='dispatch')
 class RequestViewSet(viewsets.ModelViewSet):
     serializer_class = RequestSerializer
     queryset = Request.objects.all().order_by('created')

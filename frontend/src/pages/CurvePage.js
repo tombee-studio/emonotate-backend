@@ -40,7 +40,6 @@ const CurvePage = props => {
     });
     const create = ev => {
         const api = new CurveWithYouTubeAPI();
-        curve["value_type"] = 1
         curve["youtube"] = curve["content"]
         api.create(curve)
             .then(json => {

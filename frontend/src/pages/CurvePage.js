@@ -14,9 +14,10 @@ import CurveWithYouTubeAPI from "../helper/CurveWithYouTubeAPI";
 import CurveComponent from "../components/curve-page/CurveComponent";
 
 const CurvePage = props => {
-    // const { search } = useLocation();
-    // const params = new URLSearchParams(search);
-    // const videoId = params.get('videoId');
+    const { search } = useLocation();
+    const params = new URLSearchParams(search);
+    const videoId = params.get('videoId');
+    const title = params.get('title');
     const { id }  = props;
     const [useSnackbar, setSnackbar] = useState(false);
     const [curve, setCurveData] = useState({
@@ -26,11 +27,10 @@ const CurvePage = props => {
         "locked": false,
         "user": django.user.id,
         "content": {
-            "id": 3394,
-            "title": "Orangestar - DAYBREAK FRONTLINE (feat. IA) Official Video",
-            "url": "https://www.youtube.com/watch?v=emrt46SRyYs",
-            "video_id": "emrt46SRyYs",
-            "user": 1
+            "title": title,
+            "url": `https://www.youtube.com/watch?v=${videoId}`,
+            "video_id": videoId,
+            "user": django.user.id
         },
         "value_type": {
             "title": "幸福度",

@@ -34,7 +34,9 @@ const SearchResultList = props => {
         { items.map(item => <ImageListItem
             key={item.id.videoId} 
             component="a" 
-            href={'/app/curves/?videoId=' + item.id.videoId}>
+            href={
+                `/app/curves/?videoId=${item.id.videoId}&title=${item.snippet.title}`
+            }>
             <SearchItem item={item} key={item.id.videoId} />
         </ImageListItem>) }
     </ImageList>);

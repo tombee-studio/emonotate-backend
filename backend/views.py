@@ -16,14 +16,22 @@ User = get_user_model()
 @allow_lazy_user
 def index(request):
     content = ""
-    return JsonResponse({
-        "user": {
-            "user_id": request.user.id,
-            "username": request.user.username,
-            "email": request.user.email,
-        },
-        "message": "Hello, World!"
-    }, status=200)
+    # --------
+    # * APIとして利用する際には上側を使用
+    # --------
+    # return JsonResponse({
+    #     "user": {
+    #         "user_id": request.user.id,
+    #         "username": request.user.username,
+    #         "email": request.user.email,
+    #     },
+    #     "message": "Hello, World!"
+    # }, status=200)
+
+    # --------
+    # frontend として使用する際には下側を使用
+    # --------
+    return redirect(reverse("app"))
 
 
 @login_required

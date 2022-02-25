@@ -30,14 +30,15 @@ class BaseManager(models.Manager):
 
 
 class EmailUserManager(BaseUserManager):
-    def _create_user(self, username, password, is_staff, is_superuser,
+    def _create_user(self, username, email, password, is_staff, is_superuser,
                      **extra_fields):
         now = timezone.now()
-
+        email = self.normalize_email(email)
         is_active = extra_fields.pop("is_active", True)
 
         user = self.model(
             username=username,
+            email=email,
             is_staff=is_staff,
             is_active=is_active,
             is_superuser=is_superuser,
@@ -121,13 +122,14 @@ class EmailUserManager(BaseUserManager):
             user.groups.add(group)
         return user
 
-    def create_superuser(self, username, password, **extra_fields):
+    def create_superuser(self, username, email, password, **extra_fields):
         try:
             Group.objects.get(name='Guest')
         except:
             self.create_groups()
         return self._create_user(
             username,
+            email,
             password,
             True,
             True,
@@ -197,17 +199,22 @@ class ValueType(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
-    hash_title = models.CharField(default='', max_length=256, unique=True, blank=True)
+    hash_title = models.CharField(
+        default='', max_length=256, unique=True, blank=True)
     axis_type = models.IntegerField(choices=(
         (1, '平常状態を含んで上と下がある値'),
         (2, '平常状態から上にしか上がらない値')), default=1)
 
+    @staticmethod
+    def hash_from(text, encoding='utf-8'):
+        return hashlib.sha256(text.encode(encoding)).hexdigest()
+
     def __str__(self):
         return self.title
     
-    def save(self):
-        self.hash_title = hashlib.sha256(self.title.encode('utf-8')).hexdigest()
-        super().save()
+    def save(self, *args, **kwargs):
+        self.hash_title = ValueType.hash_from(self.title)
+        super().save(*args, **kwargs)
 
 
 class Content(models.Model):

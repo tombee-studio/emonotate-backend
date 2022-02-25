@@ -89,7 +89,31 @@ class CurveWithYouTubeSerializerTest(TestCase):
                 "axis_type": 1
             }
         })
+        s2 = CurveWithYouTubeSerializer(data={
+            "values": [],
+            "version": "1.0.1",
+            "room_name": "aaaaaaa",
+            "locked": False,
+            "user": 1,
+            "youtube": {
+                "user": 1,
+                "title": "Hello, World!",
+                "url": "https://www.youtube.com/watch?v=QOpl7cI8uba",
+                "video_id": "QOpl7cI8uba"
+            },
+            "value_type": {
+                "user": 1,
+                "title": "面白さ",
+                "axis_type": 1
+            }
+        })
         self.assertEqual(s.is_valid(), True)
+        self.assertEqual(s2.is_valid(), True)
+        s.save()
+        s2.save()
+        self.assertEqual(len(Curve.objects.all()), 2)
+        self.assertEqual(len(YouTubeContent.objects.all()), 3)
+        self.assertEqual(len(ValueType.objects.all()), 3)
 
 
 class EmailUserTestCase(TestCase):

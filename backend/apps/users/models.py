@@ -10,6 +10,7 @@ from django.contrib.auth.models import Permission, Group
 
 import random
 import string
+import hashlib
 
 
 def randomname(n=6):
@@ -29,16 +30,14 @@ class BaseManager(models.Manager):
 
 
 class EmailUserManager(BaseUserManager):
-    def _create_user(self, username, email, password, is_staff, is_superuser,
+    def _create_user(self, username, password, is_staff, is_superuser,
                      **extra_fields):
         now = timezone.now()
 
-        email = self.normalize_email(email)
         is_active = extra_fields.pop("is_active", True)
 
         user = self.model(
             username=username,
-            email=email,
             is_staff=is_staff,
             is_active=is_active,
             is_superuser=is_superuser,
@@ -122,14 +121,42 @@ class EmailUserManager(BaseUserManager):
             user.groups.add(group)
         return user
 
-    def create_superuser(self, username, email, password, **extra_fields):
+    def create_superuser(self, username, password, **extra_fields):
+        try:
+            Group.objects.get(name='Guest')
+        except:
+            self.create_groups()
         return self._create_user(
             username,
-            email, password,
+            password,
             True,
             True,
             **extra_fields
         )
+
+    def create_groups(self):
+        for name, perms in [
+            ('Guest', 
+            ['view_request', 'view_content', 'view_valuetype', 
+            'add_youtubecontent', 'view_youtubecontent', 
+            'view_emailuser', 'view_curve', 'add_curve']), 
+            ('General', 
+            ['view_request',       'add_request',      'change_request', 'delete_request', 
+            'view_content',       'add_content',      'change_content', 'delete_content',
+            'view_valuetype',     'add_valuetype',    'change_valuetype', 'delete_valuetype',
+            'view_youtubecontent','add_youtubecontent', 'change_youtubecontent', 'delete_youtubecontent',
+            'view_emailuser',     'add_emailuser',    'change_emailuser', 'delete_emailuser',
+            'view_curve',         'add_curve',    'change_curve', 'delete_curve']),
+            ('Researchers', 
+            ['view_request',       'add_request',      'change_request', 'delete_request', 
+            'view_content',       'add_content',      'change_content', 'delete_content',
+            'view_valuetype',     'add_valuetype',    'change_valuetype', 'delete_valuetype',
+            'view_youtubecontent','add_youtubecontent', 'change_youtubecontent', 'delete_youtubecontent',
+            'view_emailuser',     'add_emailuser',    'change_emailuser', 'delete_emailuser',
+            'view_curve',         'add_curve',    'change_curve', 'delete_curve'])]:
+            group = Group.objects.create(name=name)
+            for perm in perms:
+                group.permissions.add(Permission.objects.get(codename=perm))
 
 
 class EmailUser(AbstractBaseUser, PermissionsMixin):
@@ -170,12 +197,17 @@ class ValueType(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=256)
+    hash_title = models.CharField(default='', max_length=256, unique=True, blank=True)
     axis_type = models.IntegerField(choices=(
         (1, '平常状態を含んで上と下がある値'),
         (2, '平常状態から上にしか上がらない値')), default=1)
 
     def __str__(self):
         return self.title
+    
+    def save(self):
+        self.hash_title = hashlib.sha256(self.title.encode('utf-8')).hexdigest()
+        super().save()
 
 
 class Content(models.Model):

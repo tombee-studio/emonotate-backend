@@ -80,7 +80,9 @@ const CurvePage = props => {
                     </Box>
                 } else if(id) {
                     return (<Box m={2}>
-                        <CurveComponent curve={curve} videoId={curve.content.video_id}
+                        <CurveComponent 
+                            curve={curve} 
+                            videoId={curve.content.video_id}
                             onChangeCurve={curve => {
                                 console.log(curve);
                                 setCurveData(curve);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { 
     Box,
@@ -7,15 +7,33 @@ import {
     FormControlLabel,
     FormLabel,
     TextField,
-    Divider
+    Divider,
+    CircularProgress
 } from "@mui/material";
+
+import ValueTypeListAPI from "../../helper/ValueTypeListAPI";
 
 const VideoController = props => {
     const { config, onControllerChanged, value_type } = props;
     const [valueType, setValueType] = useState(value_type);
+    const [loading, setLoading] = useState(true);
     const handleChange = (event) => {
         onControllerChanged({ ...config, [event.target.name]: event.target.checked });
     };
+    const api = new ValueTypeListAPI();
+    const title = valueType.title;
+    useEffect(() => {
+        api.get({
+            "search": valueType.title
+        }).then(json => {
+            if(json.models.length > 0) {
+                // TODO: チェックアイコンを表示
+                setLoading(false);
+            } else {
+                // TODO: 新規作成アイコンを表示
+            }
+        });
+    }, []);
     return <Box m={2}>
         <FormLabel component="legend">Play Video Config</FormLabel>
         <FormGroup row>
@@ -35,8 +53,10 @@ const VideoController = props => {
                     axisType: valueType.axisType
                 };
                 setValueType(tmp);
-            }}></TextField>
+            }}>
+            </TextField>
         </FormGroup>
+        {loading && <CircularProgress /> }
     </Box>;
 };
 

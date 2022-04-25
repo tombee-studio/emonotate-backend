@@ -37,3 +37,5 @@ NOSE_ARGS = [
     '--nocapture',
     '--nologcapture',
 ]
+
+APPLICATION_URL = 'http://127.0.0.1:3000/'

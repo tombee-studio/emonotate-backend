@@ -35,4 +35,4 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_PORT = os.environ['EMAIL_PORT']
 
-APPLICATION_URL = 'http://127.0.0.1:3000/'
+APPLICATION_URL = 'https://vast-scrubland-26728.herokuapp.com/'

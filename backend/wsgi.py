@@ -11,6 +11,11 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+try:
+    basestring
+except NameError:
+    basestring = str
+
 from django.core.wsgi import get_wsgi_application
 
 STAGE = os.environ["STAGE"]

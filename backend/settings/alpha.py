@@ -35,4 +35,4 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_PORT = os.environ['EMAIL_PORT']
 
-APPLICATION_URL = 'https://loquacious-marigold-6bc542.netlify.app/'
+APPLICATION_URL = 'https://vast-scrubland-26728.herokuapp.com/'

@@ -37,6 +37,7 @@ EMAIL_PORT = os.environ['EMAIL_PORT']
 
 APPLICATION_BASE = "vast-scrubland-26728.herokuapp.com"
 APPLICATION_URL = f"https://{APPLICATION_BASE}/"
-CSRF_TRUSTED_ORIGINS = [ f"https://*.herokuapp.com" ]
+CSRF_TRUSTED_ORIGINS = [ f"https://{APPLICATION_BASE}" ]
 
 CORS_ORIGIN_ALLOW_ALL = True
+CSRF_COOKIE_DOMAIN = "herokuapp.com"

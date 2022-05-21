@@ -34,6 +34,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 APPLICATION_BASE = "app.emonotate.com"
 APPLICATION_URL = f"https://{APPLICATION_BASE}/"
-CSRF_TRUSTED_ORIGINS = [ f"https://*.emonotate.com" ]
+CSRF_TRUSTED_ORIGINS = [ f"https://{APPLICATION_BASE}" ]
 
 CORS_ORIGIN_ALLOW_ALL = True
+CSRF_COOKIE_DOMAIN = "emonotate.com"

@@ -14,6 +14,11 @@ path.append(join(BASE_DIR, 'apps'))
 
 ALLOWED_HOSTS = ['*']
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_REPLACE_HTTPS_REFERER = True
+
 DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

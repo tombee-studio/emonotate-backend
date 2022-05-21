@@ -38,4 +38,7 @@ NOSE_ARGS = [
     '--nologcapture',
 ]
 
-APPLICATION_URL = 'http://127.0.0.1:3000/'
+APPLICATION_BASE = "127.0.0.1:3000"
+APPLICATION_URL = f"http://{APPLICATION_BASE}/"
+
+CORS_ORIGIN_ALLOW_ALL = True

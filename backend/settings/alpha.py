@@ -35,4 +35,7 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_PORT = os.environ['EMAIL_PORT']
 
-APPLICATION_URL = 'https://vast-scrubland-26728.herokuapp.com/'
+APPLICATION_BASE = "vast-scrubland-26728.herokuapp.com"
+APPLICATION_URL = f"https://{APPLICATION_BASE}/"
+
+CORS_ORIGIN_ALLOW_ALL = True

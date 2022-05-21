@@ -32,4 +32,7 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-APPLICATION_URL = 'https://app.emonotate.com/'
+APPLICATION_BASE = "app.emonotate.com"
+APPLICATION_URL = f"https://{APPLICATION_BASE}/"
+
+CORS_ORIGIN_ALLOW_ALL = True

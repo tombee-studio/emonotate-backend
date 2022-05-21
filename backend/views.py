@@ -23,17 +23,18 @@ def index(request):
     #--------
     # * APIとして利用する際には上側を使用
     #--------
-    # return JsonResponse(UserSerializer().data, status=200)
+    # return JsonResponse(UserSerializer(request.user).data, status=200)
 
     #--------
     # frontend として使用する際には下側を使用
     #--------
+    # ROOT_DOMAIN = "herokuapp.com" if os.environ.get("STAGE") == "alpha" else "emonotate.com"
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
     response = redirect(module.APPLICATION_URL)
-    response.set_cookie("username", request.user.username)
-    response.set_cookie("userid", request.user.id)
-    response.set_cookie("groups", ','.join(
-        list(map(lambda obj: obj.name, request.user.groups.all()))))
+    # response.set_cookie("username", request.user.username, domain=ROOT_DOMAIN)
+    # response.set_cookie("userid", request.user.id, domain=ROOT_DOMAIN)
+    # response.set_cookie("groups", ','.join(
+    #    list(map(lambda obj: obj.name, request.user.groups.all()))), domain=ROOT_DOMAIN)
     return response
 
 

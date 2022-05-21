@@ -24,6 +24,13 @@ from lazysignup.decorators import allow_lazy_user
 
 User = get_user_model()
 
+
+@method_decorator(allow_lazy_user, name='dispatch')
+class Me(View):
+    def get(self, request):
+        return JsonResponse(UserSerializer(request.user).data, status=200)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(View):
     def post(self, request):
@@ -94,32 +101,10 @@ class CurveViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
-    def preprocess(self, request):
-        if type(request.data["content"]) == dict:
-            serializer = YouTubeContentSerializer(data=request.data["content"])
-            if serializer.is_valid():
-                serializer.save()
-                request.data["content"] = serializer.data["id"]
-            else:
-                serializer = ContentSerializer(data=request.data["content"])
-                if serializer.is_valid():
-                    serializer.save()
-                    request.data["content"] = serializer.data["id"]
-                else:
-                    exit(-1)
-        if type(request.data["value_type"]) == dict:
-            serializer = ValueTypeSerializer(data=request.data["value_type"])
-            if serializer.is_valid():
-                serializer.save()
-                request.data["value_type"] = serializer.data["id"]
-        return request
-
     def create(self, request, *args, **kwargs):
-        request = self.preprocess(request)
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        request = self.preprocess(request)
         return super().update(request, *args, **kwargs)
 
 

@@ -32,9 +32,13 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+API_BASE = "www.emonotate.com"
 APPLICATION_BASE = "app.emonotate.com"
 APPLICATION_URL = f"https://{APPLICATION_BASE}/"
-CSRF_TRUSTED_ORIGINS = [ f"https://{APPLICATION_BASE}" ]
+CSRF_TRUSTED_ORIGINS = [ 
+    f"https://{APPLICATION_BASE}",
+    f"https://{API_BASE}"
+]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CSRF_COOKIE_DOMAIN = "emonotate.com"

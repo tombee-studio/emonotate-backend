@@ -12,6 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
     
     def to_internal_value(self, address):
         return User.objects.get(email=address)
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["groups"] = [group.name for group in instance.groups.all()]
+        return ret
 
 
 class ValueTypeSerializer(serializers.ModelSerializer):

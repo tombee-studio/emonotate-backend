@@ -142,6 +142,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     # TODO: lazy signupの場合、データが消失する旨があることを表示
     email = models.EmailField(
         max_length=256,
+        blank=True
     )
 
     is_staff = models.BooleanField(default=False)

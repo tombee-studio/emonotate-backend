@@ -45,7 +45,9 @@ CORS_REPLACE_HTTPS_REFERER = True
 
 CSRF_TRUSTED_ORIGINS = [ 
     f"{APPLICATION_BASE}", 
-    f"{API_BASE}" 
+    f"{API_BASE}",
+    f"https://{APPLICATION_BASE}", 
+    f"https://{API_BASE}" 
 ]
 
 CORS_ORIGIN_WHITELIST = [ 

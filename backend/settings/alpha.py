@@ -38,13 +38,19 @@ EMAIL_PORT = os.environ['EMAIL_PORT']
 API_BASE = "enigmatic-thicket-08912.herokuapp.com"
 APPLICATION_BASE = "vast-scrubland-26728.herokuapp.com"
 APPLICATION_URL = f"https://{APPLICATION_BASE}/"
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_REPLACE_HTTPS_REFERER = True
+
 CSRF_TRUSTED_ORIGINS = [ 
     f"https://{APPLICATION_BASE}", 
     f"https://{API_BASE}" 
 ]
 
-CORS_ORIGIN_WHITELIST += f"https://{APPLICATION_BASE}"
-CORS_ORIGIN_WHITELIST += f"https://{API_BASE}"
+CORS_ORIGIN_WHITELIST = [ 
+    f"https://{APPLICATION_BASE}",
+    f"https://{API_BASE}"
+]
 
-CORS_ORIGIN_ALLOW_ALL = True
 CSRF_COOKIE_DOMAIN = "herokuapp.com"

@@ -52,12 +52,14 @@ class LogoutAPIView(View):
 
 
 @method_decorator(allow_lazy_user, name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
 class ValueTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ValueTypeSerializer
     queryset = ValueType.objects.all().order_by('created')
     search_fields = 'id'
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ValueTypeSerializer
     queryset = ValueType.objects.all()
@@ -66,12 +68,14 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return ValueType.objects.filter(user=self.request.user)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(allow_lazy_user, name='dispatch')
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all().order_by('created')
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all()
@@ -80,6 +84,7 @@ class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return Content.objects.filter(user=self.request.user)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all()
@@ -88,12 +93,14 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return Curve.objects.filter(user=self.request.user)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(allow_lazy_user, name='dispatch')
 class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = CurveWithYouTubeSerializer
     queryset = Curve.objects.all().order_by('created')
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(allow_lazy_user, name='dispatch')
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
@@ -108,18 +115,21 @@ class CurveViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all().order_by('date_joined')
     search_fields = ('username', 'email')
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(allow_lazy_user, name='dispatch')
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
     queryset = YouTubeContent.objects.all().order_by('created')
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(allow_lazy_user, name='dispatch')
 class RequestViewSet(viewsets.ModelViewSet):
     serializer_class = RequestSerializer
@@ -169,6 +179,7 @@ class RequestViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 def sign_s3(request):
     file_name = request.GET['file_name']
     file_type = request.GET['file_type']

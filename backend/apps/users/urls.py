@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 from django.conf.urls import url, include
 from .views import *
 
+from django.views.decorators.csrf import csrf_exempt
+
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'curves', CurveViewSet, basename='curves')

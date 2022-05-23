@@ -38,6 +38,13 @@ class ContentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
+        try:
+            c = Content.objects.get(pk=instance.id)
+            youtube = YouTubeContent.objects.get(pk=c.youtubecontent)
+            ret['video_id'] = youtube.video_id
+            ret['is_youtube'] = True
+        except Content.youtubecontent.RelatedObjectDoesNotExist:
+            ret['is_youtube'] = False
         return ret
 
 
@@ -60,12 +67,7 @@ class CurveSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
-        try:
-            c = Content.objects.get(pk=ret['content'])
-            youtube = YouTubeContent.objects.get(pk=c.youtubecontent)
-            ret['content'] = YouTubeContentSerializer(youtube).data
-        except Content.youtubecontent.RelatedObjectDoesNotExist:
-            ret['content'] = ContentSerializer(c).data
+        ret['content'] = ContentSerializer(instance.content).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
         return ret
 

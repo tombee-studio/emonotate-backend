@@ -17,7 +17,6 @@ from users.serializers import UserSerializer
 
 User = get_user_model()
 
-@allow_lazy_user
 def index(request):
     content = ""
     #--------

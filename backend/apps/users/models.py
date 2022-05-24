@@ -249,7 +249,7 @@ class Request(models.Model):
         blank=True,
         on_delete=models.SET_NULL, 
         default=None)
-    values = JSONField()
+    values = JSONField(default=[], blank=True)
 
     def save(self, **kwargs):
         if not self.room_name:

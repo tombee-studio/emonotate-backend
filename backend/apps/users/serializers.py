@@ -126,6 +126,7 @@ class RequestSerializer(serializers.ModelSerializer):
             owner=validated_data['owner'],
             value_type=validated_data['value_type'],
             title=validated_data['title'],
+            values=validated_data['values'],
             description=validated_data['description']
         )
         instance.participants.set(validated_data['participants'])

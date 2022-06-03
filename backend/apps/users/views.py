@@ -56,7 +56,7 @@ class LogoutAPIView(View):
 class ValueTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ValueTypeSerializer
     queryset = ValueType.objects.all().order_by('created')
-    search_fields = 'id'
+    search_fields = ['title']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -73,6 +73,7 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all().order_by('created')
+    search_fields = ['title']
 
 
 @method_decorator(csrf_exempt, name='dispatch')

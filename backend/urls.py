@@ -1,14 +1,25 @@
+import os
 from django.conf.urls import url, include
-from django.contrib.auth.views import login, logout_then_login
+from django.conf.urls.static import static
 from django.contrib import admin
 
+from .settings.common import STATIC_URL, BASE_DIR
 from .views import app, index
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('users.urls')),
+    url(r'^history/', include('users.history')),
     url(r'^app/', app, name='app'),
-    url('^auth/login/$', login, name='login'),
-    url('^auth/logout/$', logout_then_login, name='logout'),
+    url(r'^auth/', include('auth.urls')),
+    url(r'^convert/', include('lazysignup.urls')),
     url('^$', index, name='index'),
 ]
+
+if os.environ['STAGE'] == 'DEVL':
+    urlpatterns += static(STATIC_URL)
+elif os.environ['STAGE'] == 'ALPHA':
+    urlpatterns += static(STATIC_URL, document_root=os.path.join(BASE_DIR, 'static'))
+elif os.environ['STAGE'] == 'PROD':
+    from .settings.prod import STATIC_ROOT
+    urlpatterns += static(STATIC_URL, STATIC_ROOT)

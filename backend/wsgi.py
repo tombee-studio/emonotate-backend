@@ -8,9 +8,17 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
+STAGE = os.environ["STAGE"]
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"backend.settings.{STAGE.lower()}")
 
 application = get_wsgi_application()

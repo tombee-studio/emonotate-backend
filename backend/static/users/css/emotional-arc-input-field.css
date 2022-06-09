@@ -1,0 +1,24 @@
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 5px;
+    font: 12px;
+    background: white;
+    -webkit-box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.8);
+    -moz-box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.8);
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.8);
+};
+
+circle {
+    fill: transparent;
+    stroke: #4fa8df;
+    stroke-width: 4;
+    animation: circle 1s infinite;
+};
+
+@keyframes circle {
+  0% { stroke-dasharray: 0 377; }
+  99.9%,to { stroke-dasharray: 377 377; }
+};

@@ -123,6 +123,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.SessionAuthentication",
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     "DEFAULT_PAGINATION_CLASS": "backend.pagination.StandardPagination",
     "DEFAULT_FILTER_BACKENDS": (
@@ -143,3 +144,6 @@ MEDIA_URL = S3_URL
 
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
+
+APPLICATION_BASE = ""
+APPLICATION_URL = ""

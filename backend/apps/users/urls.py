@@ -4,6 +4,7 @@ from django.conf.urls import url, include
 from .views import *
 
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -18,3 +19,4 @@ urlpatterns += url(r'sign_s3/$', sign_s3),
 urlpatterns += path('me/', Me.as_view(), name='login'),
 urlpatterns += path('login/', LoginAPIView.as_view(), name='login'),
 urlpatterns += path('logout/', LogoutAPIView.as_view(), name='logout'),
+urlpatterns += path('send/<int:pk>', send_request_mail),

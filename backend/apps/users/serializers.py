@@ -115,7 +115,7 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
-        ret['participants'] = [User.objects.get(pk=pk).email for pk in ret['participants']]
+        ret['participants'] = [UserSerializer(User.objects.get(pk=pk)).data for pk in ret['participants']]
         if ret['questionaire'] != None:
             ret['questionaire'] = QuestionaireSerializer(Questionaire.objects.get(pk=ret['questionaire'])).data
         return ret

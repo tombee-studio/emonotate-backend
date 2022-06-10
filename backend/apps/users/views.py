@@ -1,4 +1,11 @@
-import boto3
+import os
+import json
+import asyncio
+
+from asgiref.sync import sync_to_async
+import requests_async as requests
+from importlib import import_module
+
 from rest_framework.response import Response
 from rest_framework import filters
 
@@ -11,7 +18,7 @@ from .serializers import *
 
 from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
 from django.http import HttpResponse
-import json
+from django.core.mail import send_mail
 
 from django.contrib.auth import authenticate, login, logout
 from django.utils.decorators import method_decorator
@@ -21,6 +28,12 @@ from django.views.generic import View
 from django.http import JsonResponse
 
 from lazysignup.decorators import allow_lazy_user
+
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from django.shortcuts import redirect
 
 User = get_user_model()
 
@@ -33,6 +46,20 @@ class Me(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(View):
+    def get(self, request):
+        token = request.GET.get("token")
+        if token == None:
+            return HttpResponse(status=403)
+        if request.user.is_authenticated:
+            return redirect("/")
+        else:
+            auth = JWTAuthentication()
+            tokenAuth = JWTTokenUserAuthentication()
+            token_user = tokenAuth.get_user(auth.get_validated_token(token))
+            user = EmailUser.objects.get(pk=token_user.user_id)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect("/")
+
     def post(self, request):
         params = json.loads(request.body)
         username = params['username']
@@ -128,6 +155,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
     queryset = YouTubeContent.objects.all().order_by('created')
+    search_fields = ['=video_id']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -178,6 +206,42 @@ class RequestViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data, status=200)
+
+
+async def send_mail(title, description, participant):
+    async with requests.Session() as session:
+        response = await session.post(
+            f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
+            auth=("api", os.environ.get("MAILGUN_API_KEY")),
+            data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
+                "to": [participant.email],
+                "subject": title,
+                "text": description
+        })
+
+def send_mails(req):
+    module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    tasks = list()
+    for participant in req.participants.all():
+        title = f"【Request】 {req.title}"
+        description = f"You got a request from {req.owner.username}({req.owner.email})\n"
+        description += f"{'-' * 16}\n"
+        description += f"{req.description}\n\n"
+        description += f"You can click here to participate in\n"
+        description += f"{module.APPLICATION_URL}api/login/?token={RefreshToken.for_user(participant).access_token}\n"
+        description += f"{'-' * 16}\n\n"
+        description += "Have a nice emonotating!\n"
+        tasks.append(loop.create_task(send_mail(title, description, participant)))
+    loop.run_until_complete(asyncio.wait(tasks))
+    loop.close()
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+def send_request_mail(request, pk):
+    send_mails(Request.objects.get(pk=pk))
+    return HttpResponse(status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

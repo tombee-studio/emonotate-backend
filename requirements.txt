@@ -49,7 +49,7 @@ hpack==3.0.0
 http3==0.6.7
 hyperframe==5.2.0
 hyperlink==21.0.0
-idna==3.2
+idna==2.05
 importlib-metadata==3.10.0
 incremental==21.3.0
 jmespath==0.10.0

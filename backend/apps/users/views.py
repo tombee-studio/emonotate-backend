@@ -225,7 +225,7 @@ def send_mails(req):
     asyncio.set_event_loop(loop)
     tasks = list()
     for participant in req.participants.all():
-        title = f"{req.title}"
+        title = f"【Request】 {req.title}"
         description = f"You got a request from {req.owner.username}({req.owner.email})\n"
         description += f"{'-' * 16}\n"
         description += f"{req.description}\n\n"

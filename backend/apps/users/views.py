@@ -1,7 +1,9 @@
 import os
-import boto3
 import json
+import asyncio
 
+from asgiref.sync import sync_to_async
+import requests_async as requests
 from importlib import import_module
 
 from rest_framework.response import Response
@@ -206,20 +208,39 @@ class RequestViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
 
 
+async def send_mail(title, description, participant):
+    async with requests.Session() as session:
+        response = await session.post(
+            f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
+            auth=("api", os.environ.get("MAILGUN_API_KEY")),
+            data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
+                "to": [participant.email],
+                "subject": title,
+                "text": description
+        })
+
+def send_mails(req):
+    module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    tasks = list()
+    for participant in req.participants.all():
+        title = f"{req.title}"
+        description = f"You got a request from {req.owner.username}({req.owner.email})\n"
+        description += f"{'-' * 16}\n"
+        description += f"{req.description}\n\n"
+        description += f"You can click here to participate in\n"
+        description += f"{module.APPLICATION_URL}api/login/?token={RefreshToken.for_user(participant).access_token}\n"
+        description += f"{'-' * 16}\n\n"
+        description += "Have a nice emonotating!\n"
+        tasks.append(loop.create_task(send_mail(title, description, participant)))
+    loop.run_until_complete(asyncio.wait(tasks))
+    loop.close()
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 def send_request_mail(request, pk):
-    req = Request.objects.get(pk=pk)
-    module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
-    print(os.environ)
-    for participant in req.participants.all():
-        send_mail(
-            f"{req.title}",
-            f"{req.description}\n{module.APPLICATION_URL}api/login/?token={RefreshToken.for_user(participant).access_token}",
-            'sender@www.emonotate.com',
-            [participant.email],
-            fail_silently=False,
-        )
+    send_mails(Request.objects.get(pk=pk))
     return HttpResponse(status=200)
 
 

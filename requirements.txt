@@ -26,6 +26,7 @@ django-s3-file-field==0.0.20
 django-storages==1.11.1
 django-utils-six==2.0
 djangorestframework==3.12.4
+djangorestframework-simplejwt==5.2.0
 dnspython==2.1.0
 docopt==0.6.2
 eventlet==0.32.0
@@ -42,12 +43,14 @@ incremental==21.3.0
 jmespath==0.10.0
 mccabe==0.4.0
 msgpack-python==0.5.6
+passlib==1.7.4
 pep8==1.7.1
 psycopg2==2.9.3
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
 pyflakes==1.0.0
+PyJWT==2.4.0
 pyOpenSSL==20.0.1
 python-dateutil==2.8.2
 python-dotenv==0.19.0

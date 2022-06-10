@@ -128,6 +128,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
     queryset = YouTubeContent.objects.all().order_by('created')
+    search_fields = ['=video_id']
 
 
 @method_decorator(csrf_exempt, name='dispatch')

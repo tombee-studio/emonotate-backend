@@ -2,6 +2,8 @@ import os
 import json
 import asyncio
 
+from django.utils.timezone import datetime, timedelta
+
 from asgiref.sync import sync_to_async
 import requests_async as requests
 from importlib import import_module
@@ -136,12 +138,6 @@ class CurveViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UserViewSet(viewsets.ModelViewSet):
@@ -219,6 +215,7 @@ async def send_mail(title, description, participant):
                 "text": description
         })
 
+
 def send_mails(req):
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
     loop = asyncio.new_event_loop()
@@ -240,8 +237,14 @@ def send_mails(req):
 
 @method_decorator(csrf_exempt, name='dispatch')
 def send_request_mail(request, pk):
-    send_mails(Request.objects.get(pk=pk))
-    return HttpResponse(status=200)
+    request = Request.objects.get(pk=pk)
+    if datetime.now() < request.expiration_date:
+        return HttpResponse(status=403)
+    else:
+        send_mails(request)
+        request.expiration_date = datetime.now() + timedelta(minutes=5)
+        request.save()
+        return HttpResponse(status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

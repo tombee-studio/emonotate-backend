@@ -65,14 +65,15 @@ class EmailUserManager(BaseUserManager):
         return user
 
     def create_unique_user(self, email, is_test=False, username=None):
+        random_username_num = int(os.environ.get("RANDOM_USERNAME_NUM"))
         if not username:
-            username = randomname()
+            username = randomname(random_username_num)
         while True:
             try:
                 EmailUser.objects.get(username=username)
             except:
                 break
-            username = randomname()
+            username = randomname(random_username_num)
         if not is_test:
             user = EmailUser.objects.create_user(
                 username=username, 
@@ -223,6 +224,7 @@ class Questionaire(models.Model):
     url = models.URLField(default="")
     user_id_form = models.CharField(max_length=32)
 
+
 class Request(models.Model):
     objects = BaseManager()
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
@@ -250,6 +252,7 @@ class Request(models.Model):
         on_delete=models.SET_NULL, 
         default=None)
     values = JSONField(default=[], blank=True)
+    expiration_date = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
         if not self.room_name:

@@ -224,6 +224,7 @@ class Questionaire(models.Model):
     url = models.URLField(default="")
     user_id_form = models.CharField(max_length=32)
 
+
 class Request(models.Model):
     objects = BaseManager()
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
@@ -251,6 +252,7 @@ class Request(models.Model):
         on_delete=models.SET_NULL, 
         default=None)
     values = JSONField(default=[], blank=True)
+    expiration_date = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
         if not self.room_name:

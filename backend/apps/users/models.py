@@ -65,14 +65,15 @@ class EmailUserManager(BaseUserManager):
         return user
 
     def create_unique_user(self, email, is_test=False, username=None):
+        random_username_num = int(os.environ.get("RANDOM_USERNAME_NUM"))
         if not username:
-            username = randomname()
+            username = randomname(random_username_num)
         while True:
             try:
                 EmailUser.objects.get(username=username)
             except:
                 break
-            username = randomname()
+            username = randomname(random_username_num)
         if not is_test:
             user = EmailUser.objects.create_user(
                 username=username, 

@@ -4,6 +4,8 @@ from .models import *
 
 from django.utils.timezone import datetime
 
+from django.contrib.auth.models import Group
+
 User = get_user_model()
 
 
@@ -12,8 +14,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
     
-    def to_internal_value(self, address):
-        return User.objects.get(email=address)
+    def to_internal_value(self, data):
+        data['groups'] = list([Group.objects.get(name=name).id for name in data['groups']])
+        return data
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)

@@ -6,6 +6,8 @@ from django.utils.timezone import datetime
 
 from django.contrib.auth.models import Group
 
+from lazysignup.utils import is_lazy_user
+
 User = get_user_model()
 
 
@@ -21,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret["groups"] = [group.name for group in instance.groups.all()]
+        ret["is_lazy_user"] = is_lazy_user(instance)
         return ret
 
 

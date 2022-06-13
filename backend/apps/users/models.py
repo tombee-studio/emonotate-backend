@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import os
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
                                         BaseUserManager)
 from django.contrib.postgres.fields import JSONField

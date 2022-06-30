@@ -14,9 +14,12 @@ router.register(r'youtube', YouTubeContentViewSet, basename='youtube')
 router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
 router.register(r'requests', RequestViewSet, basename='requests')
 router.register(r'curves_with_youtube', CurveWithYouTubeContentViewSet, basename='curve_with_youtube')
+
 urlpatterns = router.urls
 urlpatterns += url(r'sign_s3/$', sign_s3),
 urlpatterns += path('me/', Me.as_view(), name='login'),
 urlpatterns += path('login/', LoginAPIView.as_view(), name='login'),
 urlpatterns += path('logout/', LogoutAPIView.as_view(), name='logout'),
 urlpatterns += path('send/<int:pk>', send_request_mail),
+urlpatterns += path('get_download_file_url/<int:pk>', get_download_file_url),
+urlpatterns += path('reset_email_addresses/<int:pk>', reset_email_addresses),

@@ -18,6 +18,10 @@ from users import views
 
 from rest_framework.renderers import JSONRenderer
 
+from backend.settings.common import AWS_STORAGE_BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_URL
+
+import boto3
+
 
 def convert_to_dict_from(model):
     data = { key: value if type(value) is str or type(value) is int else str(value)
@@ -54,94 +58,24 @@ def createTestData():
     User.objects.create_researcher("researcher", "researcher@example.com", "password")
     ContentFactory.create()
     ValueTypeFactory.create()
+    RequestFactory.create()
 
 
-class CurveWithYouTubeSerializerTest(TestCase):
+class DownloadEmailListAPITestCase(APITestCase):
     def setUp(self):
         createTestData()
 
-    def test_serialize_curve(self):
-        faker = Faker()
-        user = EmailUser.objects.create_user(
-            username=faker.name(), email=faker.email(), password=faker.password())
-        content = YouTubeContentFactory.create(video_id=randomname())
-        value_type = ValueTypeFactory.create()
-        obj = CurveFactory.build(
-            user=user, content=content, value_type=value_type, room_name=randomname())
-        serializer = CurveWithYouTubeSerializer(obj)
-        self.assertEqual(len(Content.objects.all()), 2)
-        self.assertEqual(len(YouTubeContent.objects.all()), 1)
-        s = CurveWithYouTubeSerializer(data={
-            "values": [],
-            "version": "1.0.1",
-            "room_name": "aaaaaaa",
-            "locked": False,
-            "user": 1,
-            "youtube": {
-                "user": 1,
-                "title": "Hello, World!",
-                "url": "https://www.youtube.com/watch?v=QOpl7cI8ubU",
-                "video_id": "QOpl7cI8ubU"
-            },
-            "value_type": {
-                "user": 1,
-                "title": "面白さ",
-                "axis_type": 1
-            }
-        })
-        self.assertEqual(s.is_valid(), True)
+    def test_is_accessible_to_download_email_list_api(self):
+        request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
+        response = self.client.get(f"/api/get_download_file_url/{request.id}")
+        self.assertTrue(response.status_code == 200)
 
 
-class EmailUserTestCase(TestCase):
+class ResetEmailAddressesFromRequest(APITestCase):
     def setUp(self):
         createTestData()
-
-    def test_create_generaluser(self):
-        faker = Faker()
-        username = faker.name()
-        email = faker.email()
-        user = EmailUser.objects.create_user(
-            username=username, email=email, password=faker.password())
-        self.assertEqual(user.username, username)
-        for perm in ['users.add_request', 'users.add_content', 'users.add_emailuser']:
-            self.assertEqual(user.has_perm(perm), False)
     
-    def test_create_researcher(self):
-        faker = Faker()
-        username = faker.name()
-        email = faker.email()
-        user = EmailUser.objects.create_researcher(
-            username=username, email=email, password=faker.password())
-        self.assertEqual(user.username, username)
-        for perm in ['users.add_request', 'users.add_content', 'users.add_emailuser']:
-            self.assertEqual(user.has_perm(perm), True)
-        
-
-class EmailUserSignUpTestCase(APITestCase):
-    def setUp(cls):
-        createTestData()
-        cls.user_object = EmailUserFactory.build()
-        cls.user_saved = EmailUserFactory.create()
-        cls.client = APIClient()
-        cls.signup_url = reverse('signup')
-        cls.faker_obj = Faker()
-
-    def test_if_data_is_correct_then_signup(self):
-        signup_dict = {
-            'username': self.user_object.username,
-            'password1': 'password',
-            'password2': 'password',
-            'email': self.user_object.email,
-        }
-        response = self.client.post(self.signup_url, signup_dict)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_if_username_already_exists_dont_signup(self):
-        # Prepare data with already saved user
-        signup_dict = {
-            'username': self.user_saved.username,
-            'password1': 'password',
-            'password2': 'password',
-            'email': self.user_saved.email,
-        }
-        response = self.client.post(self.signup_url, signup_dict)
+    def test_is_accessible_to_reset_email_addresses_api(self):
+        request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
+        response = self.client.get(f"/api/reset_email_addresses/{request.id}")
+        self.assertTrue(response.status_code == 200)

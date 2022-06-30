@@ -39,7 +39,7 @@ from django.shortcuts import redirect
 
 import boto3
 
-from .serializers import RequestSerializer
+from .serializers import *
 
 User = get_user_model()
 
@@ -292,13 +292,16 @@ def sign_s3(request):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-def get_download_file_url(request, pk):
-    file_name = "test.txt"
+def get_download_curve_data(request, pk):
     s3 = boto3.client('s3')
+    req = Request.objects.get(pk=pk)
+    file_name = f"{req.room_name}.txt"
+    curves = Curve.objects.filter(room_name=req.room_name)
+    curves_data = [CurveSerializer(curve).data for curve in curves]
     response = s3.put_object(
         Bucket=AWS_STORAGE_BUCKET_NAME,
         Key=file_name,
-        Body=b"Lorem ipsum dolor sit amet",
+        Body=json.dumps(curves_data),
         ACL="public-read")
     return JsonResponse(data={
         'url': f"{S3_URL}{file_name}"

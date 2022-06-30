@@ -67,8 +67,11 @@ class DownloadEmailListAPITestCase(APITestCase):
 
     def test_is_accessible_to_download_email_list_api(self):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
-        response = self.client.get(f"/api/get_download_file_url/{request.id}")
+        for _ in range(5):
+            CurveFactory.create(room_name=request.room_name)
+        response = self.client.get(f"/api/get_download_curve_data/{request.id}")
         self.assertTrue(response.status_code == 200)
+        self.assertTrue("url" in response.json())
 
 
 class ResetEmailAddressesFromRequest(APITestCase):

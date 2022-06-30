@@ -37,6 +37,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from django.shortcuts import redirect
 
+import boto3
+
 User = get_user_model()
 
 
@@ -248,6 +250,12 @@ def send_request_mail(request, pk):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+def get_email_list(request, pk):
+    request = Request.objects.get(pk=pk)
+    return HttpResponse(status=200)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 def sign_s3(request):
     file_name = request.GET['file_name']
     file_type = request.GET['file_type']
@@ -270,3 +278,16 @@ def sign_s3(request):
         'url': '%s%s' % (S3_URL, file_name)
     }))
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+def get_download_file_url(request, pk):
+    file_name = "test.txt"
+    s3 = boto3.client('s3')
+    response = s3.put_object(
+        Bucket=AWS_STORAGE_BUCKET_NAME,
+        Key=file_name,
+        Body=b"Lorem ipsum dolor sit amet",
+        ACL="public-read")
+    return JsonResponse(data={
+        'url': f"{S3_URL}{file_name}"
+    })

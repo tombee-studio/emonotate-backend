@@ -1,6 +1,6 @@
 from faker import Faker as FakerClass
 from typing import Any, Sequence
-from factory import django, Faker, post_generation
+from factory import django
 
 from users.models import *
 from django.utils import timezone
@@ -12,10 +12,10 @@ class EmailUserFactory(django.DjangoModelFactory):
     class Meta:
         model = EmailUser
 
-    username = Faker('user_name')
-    email = Faker('email')
+    username = factory.Faker('user_name')
+    email = factory.Faker('email')
 
-    @post_generation
+    @factory.post_generation
     def password(self, create: bool, extracted: Sequence[Any], **kwargs):
         password = (
             extracted
@@ -36,8 +36,8 @@ class ContentFactory(django.DjangoModelFactory):
         model = Content
 
     user = factory.SubFactory(EmailUserFactory)
-    title = Faker('word')
-    url = Faker('url')
+    title = factory.Faker('word')
+    url = factory.Faker('url')
 
 
 class YouTubeContentFactory(django.DjangoModelFactory):
@@ -45,9 +45,9 @@ class YouTubeContentFactory(django.DjangoModelFactory):
         model = YouTubeContent
 
     user = factory.SubFactory(EmailUserFactory)
-    title = Faker('word')
-    url = Faker('url')
-    video_id = Faker('name')
+    title = factory.Faker('word')
+    url = factory.Faker('url')
+    video_id = factory.Faker('name')
 
 
 class ValueTypeFactory(django.DjangoModelFactory):
@@ -55,7 +55,7 @@ class ValueTypeFactory(django.DjangoModelFactory):
         model = ValueType
 
     user = factory.SubFactory(EmailUserFactory)
-    title = Faker('word')
+    title = factory.Faker('word')
     axis_type = 1
 
 
@@ -69,3 +69,16 @@ class CurveFactory(django.DjangoModelFactory):
     values = json.dumps([])
     version = '1.1.0'
     room_name = ""
+
+
+class RequestFactory(django.DjangoModelFactory):
+    class Meta:
+        model = Request
+    
+    @factory.post_generation
+    def participants(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for participant in extracted:
+                self.participants.add(participant)

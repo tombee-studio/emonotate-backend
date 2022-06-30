@@ -58,3 +58,14 @@ def createTestData():
     User.objects.create_researcher("researcher", "researcher@example.com", "password")
     ContentFactory.create()
     ValueTypeFactory.create()
+    RequestFactory.create()
+
+
+class DownloadEmailListAPITestCase(APITestCase):
+    def setUp(self):
+        createTestData()
+
+    def test_is_accessible_to_download_email_list_api(self):
+        request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
+        response = self.client.get(f"/api/get_download_file_url/{request.id}")
+        self.assertTrue(response.status_code == 200)

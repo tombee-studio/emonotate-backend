@@ -65,13 +65,17 @@ class DownloadEmailListAPITestCase(APITestCase):
     def setUp(self):
         createTestData()
 
-    def test_is_accessible_to_download_email_list_api(self):
+    def test_is_accessible_to_get_download_curve_data(self):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
         for _ in range(5):
             CurveFactory.create(room_name=request.room_name)
         response = self.client.get(f"/api/get_download_curve_data/{request.id}")
         self.assertTrue(response.status_code == 200)
         self.assertTrue("url" in response.json())
+    
+    def test_is_inaccessible_to_get_download_curve_data(self):
+        response = self.client.get(f"/api/get_download_curve_data/{100}")
+        self.assertTrue(response.status_code == 404)
 
 
 class ResetEmailAddressesFromRequest(APITestCase):

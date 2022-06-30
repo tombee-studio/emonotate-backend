@@ -69,3 +69,13 @@ class DownloadEmailListAPITestCase(APITestCase):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
         response = self.client.get(f"/api/get_download_file_url/{request.id}")
         self.assertTrue(response.status_code == 200)
+
+
+class ResetEmailAddressesFromRequest(APITestCase):
+    def setUp(self):
+        createTestData()
+    
+    def test_is_accessible_to_reset_email_addresses_api(self):
+        request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
+        response = self.client.get(f"/api/reset_email_addresses/{request.id}")
+        self.assertTrue(response.status_code == 200)

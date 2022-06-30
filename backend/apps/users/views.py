@@ -39,6 +39,8 @@ from django.shortcuts import redirect
 
 import boto3
 
+from .serializers import RequestSerializer
+
 User = get_user_model()
 
 
@@ -247,6 +249,16 @@ def send_request_mail(request, pk):
         request.expiration_date = datetime.now() + timedelta(minutes=5)
         request.save()
         return HttpResponse(status=200)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+def reset_email_addresses(request, pk):
+    request = Request.objects.get(pk=pk)
+    for participant in request.participants.all():
+        participant.email = ""
+        participant.save()
+    data = RequestSerializer(request).data
+    return JsonResponse(data=data)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

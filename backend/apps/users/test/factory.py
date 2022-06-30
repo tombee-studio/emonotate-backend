@@ -75,6 +75,10 @@ class RequestFactory(django.DjangoModelFactory):
     class Meta:
         model = Request
     
+    owner = factory.SubFactory(EmailUserFactory)
+    content = factory.SubFactory(ContentFactory)
+    value_type = factory.SubFactory(ValueTypeFactory)
+    
     @factory.post_generation
     def participants(self, create, extracted, **kwargs):
         if not create:

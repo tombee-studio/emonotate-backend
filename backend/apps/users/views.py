@@ -58,14 +58,13 @@ class LoginAPIView(View):
         if token == None:
             return HttpResponse(status=403)
         if request.user.is_authenticated:
-            return redirect("/")
-        else:
-            auth = JWTAuthentication()
-            tokenAuth = JWTTokenUserAuthentication()
-            token_user = tokenAuth.get_user(auth.get_validated_token(token))
-            user = EmailUser.objects.get(pk=token_user.user_id)
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect("/")
+            logout(request.user)
+        auth = JWTAuthentication()
+        tokenAuth = JWTTokenUserAuthentication()
+        token_user = tokenAuth.get_user(auth.get_validated_token(token))
+        user = EmailUser.objects.get(pk=token_user.user_id)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return redirect("/")
 
     def post(self, request):
         params = json.loads(request.body)

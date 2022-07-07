@@ -58,7 +58,7 @@ class LoginAPIView(View):
         if token == None:
             return HttpResponse(status=403)
         if request.user.is_authenticated:
-            logout(request.user)
+            logout(request)
         auth = JWTAuthentication()
         tokenAuth = JWTTokenUserAuthentication()
         token_user = tokenAuth.get_user(auth.get_validated_token(token))

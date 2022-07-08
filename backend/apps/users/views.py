@@ -226,12 +226,14 @@ def send_mails(req):
     asyncio.set_event_loop(loop)
     tasks = list()
     for participant in req.participants.all():
+        access_token = RefreshToken.for_user(participant).access_token
+        access_token.set_exp(lifetime=timedelta(days=1))
         title = f"【Request】 {req.title}"
         description = f"You got a request from {req.owner.username}({req.owner.email})\n"
         description += f"{'-' * 16}\n"
         description += f"{req.description}\n\n"
         description += f"You can click here to participate in\n"
-        description += f"{module.APPLICATION_URL}api/login/?token={RefreshToken.for_user(participant).access_token}\n"
+        description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
         description += f"{'-' * 16}\n\n"
         description += "Have a nice emonotating!\n"
         tasks.append(loop.create_task(send_mail(title, description, participant)))

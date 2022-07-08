@@ -246,7 +246,7 @@ def send_request_mail(request, pk):
         return HttpResponse(status=403)
     else:
         send_mails(request)
-        request.expiration_date = datetime.now() + timedelta(minutes=5)
+        request.expiration_date = datetime.now() + timedelta(minutes=30)
         request.save()
         return HttpResponse(status=200)
 

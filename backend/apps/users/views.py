@@ -242,13 +242,10 @@ def send_mails(req):
 @method_decorator(csrf_exempt, name='dispatch')
 def send_request_mail(request, pk):
     request = Request.objects.get(pk=pk)
-    if datetime.now() < request.expiration_date:
-        return HttpResponse(status=403)
-    else:
-        send_mails(request)
-        request.expiration_date = datetime.now() + timedelta(minutes=30)
-        request.save()
-        return HttpResponse(status=200)
+    send_mails(request)
+    request.expiration_date = datetime.now() + timedelta(minutes=30)
+    request.save()
+    return HttpResponse(status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

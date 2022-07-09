@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import asyncio
 
@@ -220,24 +221,38 @@ async def send_mail(title, description, participant):
         })
 
 
+def split_list(array, n):
+    """
+    リストをサブリストに分割する
+    :param l: リスト
+    :param n: サブリストの要素数
+    :return: 
+    """
+    for idx in range(0, len(array), n):
+        yield array[idx:idx + n]
+
+
 def send_mails(req):
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    tasks = list()
-    for participant in req.participants.all():
-        access_token = RefreshToken.for_user(participant).access_token
-        access_token.set_exp(lifetime=timedelta(days=1))
-        title = f"【Request】 {req.title}"
-        description = f"You got a request from {req.owner.username}({req.owner.email})\n"
-        description += f"{'-' * 16}\n"
-        description += f"{req.description}\n\n"
-        description += f"You can click here to participate in\n"
-        description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
-        description += f"{'-' * 16}\n\n"
-        description += "Have a nice emonotating!\n"
-        tasks.append(loop.create_task(send_mail(title, description, participant)))
-    loop.run_until_complete(asyncio.wait(tasks))
+    participants = list(split_list(req.participants.all(), 15))
+    for clique in participants:
+        tasks = list()
+        for participant in clique:
+            access_token = RefreshToken.for_user(participant).access_token
+            access_token.set_exp(lifetime=timedelta(days=1))
+            title = f"【Request】 {req.title}"
+            description = f"You got a request from {req.owner.username}({req.owner.email})\n"
+            description += f"{'-' * 16}\n"
+            description += f"{req.description}\n\n"
+            description += f"You can click here to participate in\n"
+            description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
+            description += f"{'-' * 16}\n\n"
+            description += "Have a nice emonotating!\n"
+            tasks.append(loop.create_task(send_mail(title, description, participant)))
+        loop.run_until_complete(asyncio.wait(tasks))
+        time.sleep(2.)
     loop.close()
 
 

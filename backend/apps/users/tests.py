@@ -37,6 +37,16 @@ def createTestData():
     User.objects.create_researcher("researcher", "researcher@example.com", "password")
     
 
+class EmailUserAPITestCase(APITestCase):
+    def setUp(self):
+        createTestData()
+    
+    def test_get_emailuser(self):
+        user = EmailUserFactory.create(password="password")
+        self.assertTrue(self.client.login(username="tomoya", password="youluck123"))
+        response = self.client.get(f"/api/users/{user.id}/")
+        self.assertTrue(response.status_code == 200)
+
 
 class DownloadEmailListAPITestCase(APITestCase):
     def setUp(self):

@@ -270,6 +270,7 @@ class RelationParticipant(models.Model):
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     request = models.ForeignKey(Request, default=1, on_delete=models.CASCADE)
     sended_mail = models.BooleanField(default=False)
+    message = models.TextField(default="")
 
     class Meta:
         db_table = "users_request_participants"

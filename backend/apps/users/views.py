@@ -213,7 +213,7 @@ class RequestViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=403)
 
 
-async def send_mail(title, description, participant):
+async def send_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(
             f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
@@ -223,6 +223,8 @@ async def send_mail(title, description, participant):
                 "subject": title,
                 "text": description
         })
+        return (participant, request, response)
+        
 
 
 def split_list(array, n):
@@ -254,8 +256,14 @@ def send_mails(req):
             description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
             description += f"{'-' * 16}\n\n"
             description += "Have a nice emonotating!\n"
-            tasks.append(loop.create_task(send_mail(title, description, participant)))
-        loop.run_until_complete(asyncio.wait(tasks))
+            tasks.append(loop.create_task(send_mail(req, title, description, participant)))
+        results, *_ = loop.run_until_complete(asyncio.wait(tasks))
+        for result in results:
+            participant, request, response = result.result()
+            membership = participant.relationparticipant_set.get(request=request)
+            membership.sended_mail = response.status_code == 200
+            membership.message = response.json()["message"]
+            membership.save()
         time.sleep(2.)
     loop.close()
 

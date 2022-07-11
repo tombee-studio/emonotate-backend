@@ -129,6 +129,10 @@ class RequestSerializer(serializers.ModelSerializer):
             ret['questionaire'] = QuestionaireSerializer(Questionaire.objects.get(pk=ret['questionaire'])).data
         return ret
     
+    def validate(self, attrs):
+        attrs['participants'] = self.initial_data['participants']
+        return attrs
+    
     def create(self, validated_data):
         instance = Request.objects.create(
             content=validated_data['content'],

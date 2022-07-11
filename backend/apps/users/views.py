@@ -186,10 +186,12 @@ class RequestViewSet(viewsets.ModelViewSet):
         request.data['participants'] = [ handle(email)
             for email in request.data['participants']]
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=201, headers=headers)
+        if serializer.is_valid(raise_exception=True):
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=201, headers=headers)
+        else:
+            return Response(serializer.data, status=403)
     
     def update(self, request, *args, **kwargs):
         def handle(email):
@@ -204,9 +206,11 @@ class RequestViewSet(viewsets.ModelViewSet):
             for email in request.data['participants']]
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data, status=200)
+        if serializer.is_valid(raise_exception=True):
+            self.perform_update(serializer)
+            return Response(serializer.data, status=200)
+        else:
+            return Response(serializer.data, status=403)
 
 
 async def send_mail(title, description, participant):

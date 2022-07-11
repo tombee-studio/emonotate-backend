@@ -274,7 +274,8 @@ def send_request_mail(request, pk):
     send_mails(request)
     request.expiration_date = datetime.now() + timedelta(minutes=30)
     request.save()
-    return HttpResponse(status=200)
+    data = RequestSerializer(request).data
+    return JsonResponse(data=data, status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

@@ -242,7 +242,7 @@ def send_mails(req):
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    participants = list(split_list(req.participants.all(), 15))
+    participants = list(split_list(req.participants.all(), 5))
     for clique in participants:
         tasks = list()
         for participant in clique:

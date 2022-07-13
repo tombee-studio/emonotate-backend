@@ -224,7 +224,6 @@ async def send_mail(request, title, description, participant):
                 "text": description
         })
         return (participant, request, response)
-        
 
 
 def split_list(array, n):
@@ -238,11 +237,18 @@ def split_list(array, n):
         yield array[idx:idx + n]
 
 
-def send_mails(req):
+def send_mails(req, participants):
+    if os.environ.get("STAGE") == "DEV":
+        for clique in participants:
+            for participant in clique:
+                membership = participant.relationparticipant_set.get(request=req)
+                membership.sended_mail = True
+                membership.message = ""
+                membership.save()
+        return
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    participants = list(split_list(req.participants.all(), 5))
     for clique in participants:
         tasks = list()
         for participant in clique:
@@ -258,8 +264,8 @@ def send_mails(req):
             description += "Have a nice emonotating!\n"
             tasks.append(loop.create_task(send_mail(req, title, description, participant)))
         results, *_ = loop.run_until_complete(asyncio.wait(tasks))
-        for result in results:
-            participant, request, response = result.result()
+        for r in results:
+            participant, request, response = r.result()
             membership = participant.relationparticipant_set.get(request=request)
             membership.sended_mail = response.status_code == 200
             membership.message = response.json()["message"]
@@ -270,11 +276,18 @@ def send_mails(req):
 
 @method_decorator(csrf_exempt, name='dispatch')
 def send_request_mail(request, pk):
-    request = Request.objects.get(pk=pk)
-    send_mails(request)
-    request.expiration_date = datetime.now() + timedelta(minutes=30)
-    request.save()
-    data = RequestSerializer(request).data
+    req = Request.objects.get(pk=pk)
+    emails = request.GET.get("targets")
+    participants = []
+    if emails == None:
+        participants = req.participants.all()
+    else:
+        participants = req.participants.filter(email__in=set(emails.split(";")))
+    participants = split_list(list(participants), 5)
+    send_mails(req, participants)
+    req.expiration_date = datetime.now() + timedelta(minutes=30)
+    req.save()
+    data = RequestSerializer(req).data
     return JsonResponse(data=data, status=200)
 
 

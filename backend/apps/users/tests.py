@@ -65,6 +65,54 @@ class DownloadEmailListAPITestCase(APITestCase):
         self.assertTrue(response.status_code == 404)
 
 
+class SendMailAPITestCase(APITestCase):
+    def setUp(self):
+        createTestData()
+    
+    def test_is_access_send_all_mails_in_request(self):
+        participants = [EmailUserFactory.create() for _ in range(10)]
+        request = RequestFactory.create(participants=participants)
+        response = self.client.get(f"/api/send/{request.id}")
+        self.assertTrue(response.status_code == 200)
+
+        def handle(participant, req):
+            return participant.relationparticipant_set.get(request=req)
+
+        memberships = [handle(participant, request) for participant in participants]
+        self.assertTrue(all([membership.sended_mail for membership in memberships]))
+
+    def test_is_access_send_some_mails_in_request(self):
+        participants = [EmailUserFactory.create() for _ in range(10)]
+        NUM_SAMPLE = 5
+        targets = random.sample(participants, NUM_SAMPLE)
+        request = RequestFactory.create(participants=participants)
+        url = f"/api/send/{request.id}?targets={';'.join([target.email for target in targets])}"
+        response = self.client.get(url)
+        self.assertTrue(response.status_code == 200)
+
+        def handle(participant, req):
+            return participant.relationparticipant_set.get(request=req)
+
+        memberships = [handle(participant, request) for participant in participants]
+        self.assertTrue(sum([membership.sended_mail for membership in memberships]) == NUM_SAMPLE)
+    
+    def test_is_access_send_some_duplicate_mails_in_request(self):
+        participants = [EmailUserFactory.create() for _ in range(10)]
+        NUM_SAMPLE = 5
+        NUM_SAMPLE2 = 2
+        targets = random.sample(participants, NUM_SAMPLE)
+        targets2 = random.sample(targets, NUM_SAMPLE2)
+        targets.extend(targets2)
+        request = RequestFactory.create(participants=participants)
+        url = f"/api/send/{request.id}?targets={';'.join([target.email for target in targets])}"
+        response = self.client.get(url)
+        self.assertTrue(response.status_code == 200)
+        def handle(participant, req):
+            return participant.relationparticipant_set.get(request=req)
+        memberships = [handle(participant, request) for participant in participants]
+        self.assertTrue(sum([membership.sended_mail for membership in memberships]) == NUM_SAMPLE)
+
+
 class ResetEmailAddressesFromRequest(APITestCase):
     def setUp(self):
         createTestData()

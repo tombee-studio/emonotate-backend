@@ -86,7 +86,7 @@ class SendMailAPITestCase(APITestCase):
         NUM_SAMPLE = 5
         targets = random.sample(participants, NUM_SAMPLE)
         request = RequestFactory.create(participants=participants)
-        url = f"/api/send/{request.id}?targets={';'.join([target.email for target in targets])}"
+        url = f"/api/send/{request.id}?targets={';'.join([str(target.id) for target in targets])}"
         response = self.client.get(url)
         self.assertTrue(response.status_code == 200)
 
@@ -104,7 +104,7 @@ class SendMailAPITestCase(APITestCase):
         targets2 = random.sample(targets, NUM_SAMPLE2)
         targets.extend(targets2)
         request = RequestFactory.create(participants=participants)
-        url = f"/api/send/{request.id}?targets={';'.join([target.email for target in targets])}"
+        url = f"/api/send/{request.id}?targets={';'.join([str(target.id) for target in targets])}"
         response = self.client.get(url)
         self.assertTrue(response.status_code == 200)
         def handle(participant, req):

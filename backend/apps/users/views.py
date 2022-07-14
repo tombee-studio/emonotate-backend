@@ -282,7 +282,7 @@ def send_request_mail(request, pk):
     if emails == None:
         participants = req.participants.all()
     else:
-        participants = req.participants.filter(email__in=set(emails.split(";")))
+        participants = req.participants.filter(pk__in=set([int(i) for i in emails.split(";")]))
     participants = split_list(list(participants), 5)
     send_mails(req, participants)
     req.expiration_date = datetime.now() + timedelta(minutes=30)

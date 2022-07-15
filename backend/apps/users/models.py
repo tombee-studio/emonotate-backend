@@ -138,7 +138,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(
         unique=True, 
         max_length=32, 
-        default=randomname(8))
+        default="")
 
     # TODO: emailがすでに存在する場合にエラー
     # TODO: lazy signupの場合、データが消失する旨があることを表示
@@ -236,7 +236,7 @@ class Request(models.Model):
                               default=1,
                               on_delete=models.CASCADE, 
                               related_name='owner')
-    participants = models.ManyToManyField(EmailUser)
+    participants = models.ManyToManyField(EmailUser, through="RelationParticipant")
     intervals = models.IntegerField(default=1)
     content = models.ForeignKey(
         Content, 
@@ -264,3 +264,13 @@ class Request(models.Model):
     
     def __str__(self):
         return f'({self.id}){self.title}({self.room_name})'
+
+
+class RelationParticipant(models.Model):
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
+    request = models.ForeignKey(Request, default=1, on_delete=models.CASCADE)
+    sended_mail = models.BooleanField(default=False)
+    message = models.TextField(default="")
+
+    class Meta:
+        db_table = "users_request_participants"

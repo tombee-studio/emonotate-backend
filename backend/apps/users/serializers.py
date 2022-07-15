@@ -119,15 +119,25 @@ class RequestSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def to_representation(self, instance):
+        def generate_user_json(user, request):
+            data = UserSerializer(user).data
+            membership = user.relationparticipant_set.get(request=request)
+            data["sended_mail"] = membership.sended_mail
+            data["sended_mail_message"] = membership.message
+            return data
         ret = super().to_representation(instance)
         ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
-        ret['participants'] = [UserSerializer(User.objects.get(pk=pk)).data for pk in ret['participants']]
+        ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
         ret['is_able_to_send'] = True
         if ret['questionaire'] != None:
             ret['questionaire'] = QuestionaireSerializer(Questionaire.objects.get(pk=ret['questionaire'])).data
         return ret
+    
+    def validate(self, attrs):
+        attrs['participants'] = self.initial_data['participants']
+        return attrs
     
     def create(self, validated_data):
         instance = Request.objects.create(

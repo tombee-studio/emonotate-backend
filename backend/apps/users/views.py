@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import asyncio
 
@@ -185,10 +186,12 @@ class RequestViewSet(viewsets.ModelViewSet):
         request.data['participants'] = [ handle(email)
             for email in request.data['participants']]
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=201, headers=headers)
+        if serializer.is_valid(raise_exception=True):
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=201, headers=headers)
+        else:
+            return Response(serializer.data, status=403)
     
     def update(self, request, *args, **kwargs):
         def handle(email):
@@ -203,12 +206,14 @@ class RequestViewSet(viewsets.ModelViewSet):
             for email in request.data['participants']]
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data, status=200)
+        if serializer.is_valid(raise_exception=True):
+            self.perform_update(serializer)
+            return Response(serializer.data, status=200)
+        else:
+            return Response(serializer.data, status=403)
 
 
-async def send_mail(title, description, participant):
+async def send_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(
             f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
@@ -218,36 +223,73 @@ async def send_mail(title, description, participant):
                 "subject": title,
                 "text": description
         })
+        return (participant, request, response)
 
 
-def send_mails(req):
+def split_list(array, n):
+    """
+    リストをサブリストに分割する
+    :param l: リスト
+    :param n: サブリストの要素数
+    :return: 
+    """
+    for idx in range(0, len(array), n):
+        yield array[idx:idx + n]
+
+
+def send_mails(req, participants):
+    if os.environ.get("STAGE") == "DEV":
+        for clique in participants:
+            for participant in clique:
+                print(f"Sended {participant.email}")
+                membership = participant.relationparticipant_set.get(request=req)
+                membership.sended_mail = True
+                membership.message = ""
+                membership.save()
+        return
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    tasks = list()
-    for participant in req.participants.all():
-        access_token = RefreshToken.for_user(participant).access_token
-        access_token.set_exp(lifetime=timedelta(days=1))
-        title = f"【Request】 {req.title}"
-        description = f"You got a request from {req.owner.username}({req.owner.email})\n"
-        description += f"{'-' * 16}\n"
-        description += f"{req.description}\n\n"
-        description += f"You can click here to participate in\n"
-        description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
-        description += f"{'-' * 16}\n\n"
-        description += "Have a nice emonotating!\n"
-        tasks.append(loop.create_task(send_mail(title, description, participant)))
-    loop.run_until_complete(asyncio.wait(tasks))
+    for clique in participants:
+        tasks = list()
+        for participant in clique:
+            access_token = RefreshToken.for_user(participant).access_token
+            access_token.set_exp(lifetime=timedelta(days=1))
+            title = f"【Request】 {req.title}"
+            description = f"You got a request from {req.owner.username}({req.owner.email})\n"
+            description += f"{'-' * 16}\n"
+            description += f"{req.description}\n\n"
+            description += f"You can click here to participate in\n"
+            description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
+            description += f"{'-' * 16}\n\n"
+            description += "Have a nice emonotating!\n"
+            tasks.append(loop.create_task(send_mail(req, title, description, participant)))
+        results, *_ = loop.run_until_complete(asyncio.wait(tasks))
+        for r in results:
+            participant, request, response = r.result()
+            membership = participant.relationparticipant_set.get(request=request)
+            membership.sended_mail = response.status_code == 200
+            membership.message = response.json()["message"]
+            membership.save()
+        time.sleep(2.)
     loop.close()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 def send_request_mail(request, pk):
-    request = Request.objects.get(pk=pk)
-    send_mails(request)
-    request.expiration_date = datetime.now() + timedelta(minutes=30)
-    request.save()
-    return HttpResponse(status=200)
+    req = Request.objects.get(pk=pk)
+    emails = request.GET.get("targets")
+    participants = []
+    if emails == None:
+        participants = req.participants.all()
+    else:
+        participants = req.participants.filter(pk__in=set([int(i) for i in emails.split(";")]))
+    participants = split_list(list(participants), 5)
+    send_mails(req, participants)
+    req.expiration_date = datetime.now() + timedelta(minutes=30)
+    req.save()
+    data = RequestSerializer(req).data
+    return JsonResponse(data=data, status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

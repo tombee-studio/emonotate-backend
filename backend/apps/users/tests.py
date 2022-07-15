@@ -14,7 +14,7 @@ from faker import Faker
 from django.contrib.auth.models import Group
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from users import views
+from users import views, util
 
 from rest_framework.renderers import JSONRenderer
 
@@ -30,35 +30,22 @@ def convert_to_dict_from(model):
 
 
 def createTestData():
-    for name, perms in [
-        ('Guest', 
-         ['view_request', 'view_content', 'view_valuetype', 
-          'add_youtubecontent', 'view_youtubecontent', 
-          'view_emailuser', 'view_curve', 'add_curve']), 
-        ('General', 
-         ['view_request',       'add_request',      'change_request', 'delete_request', 
-          'view_content',       'add_content',      'change_content', 'delete_content',
-          'view_valuetype',     'add_valuetype',    'change_valuetype', 'delete_valuetype',
-          'view_youtubecontent','add_youtubecontent', 'change_youtubecontent', 'delete_youtubecontent',
-          'view_emailuser',     'add_emailuser',    'change_emailuser', 'delete_emailuser',
-          'view_curve',         'add_curve',    'change_curve', 'delete_curve']),
-        ('Researchers', 
-         ['view_request',       'add_request',      'change_request', 'delete_request', 
-          'view_content',       'add_content',      'change_content', 'delete_content',
-          'view_valuetype',     'add_valuetype',    'change_valuetype', 'delete_valuetype',
-          'view_youtubecontent','add_youtubecontent', 'change_youtubecontent', 'delete_youtubecontent',
-          'view_emailuser',     'add_emailuser',    'change_emailuser', 'delete_emailuser',
-          'view_curve',         'add_curve',    'change_curve', 'delete_curve'])]:
-        group = Group.objects.create(name=name)
-        for perm in perms:
-            group.permissions.add(Permission.objects.get(codename=perm))
+    util.prepare()
     User.objects.create_superuser("tomoya", "tomoya@example.com", "youluck123")
     User.objects.create_guest_user("guest")
     User.objects.create_unique_user("general@example.com", username="general")
     User.objects.create_researcher("researcher", "researcher@example.com", "password")
-    ContentFactory.create()
-    ValueTypeFactory.create()
-    RequestFactory.create()
+    
+
+class EmailUserAPITestCase(APITestCase):
+    def setUp(self):
+        createTestData()
+    
+    def test_get_emailuser(self):
+        user = EmailUserFactory.create(password="password")
+        self.assertTrue(self.client.login(username="tomoya", password="youluck123"))
+        response = self.client.get(f"/api/users/{user.id}/")
+        self.assertTrue(response.status_code == 200)
 
 
 class DownloadEmailListAPITestCase(APITestCase):
@@ -76,6 +63,54 @@ class DownloadEmailListAPITestCase(APITestCase):
     def test_is_inaccessible_to_get_download_curve_data(self):
         response = self.client.get(f"/api/get_download_curve_data/{100}")
         self.assertTrue(response.status_code == 404)
+
+
+class SendMailAPITestCase(APITestCase):
+    def setUp(self):
+        createTestData()
+    
+    def test_is_access_send_all_mails_in_request(self):
+        participants = [EmailUserFactory.create() for _ in range(10)]
+        request = RequestFactory.create(participants=participants)
+        response = self.client.get(f"/api/send/{request.id}")
+        self.assertTrue(response.status_code == 200)
+
+        def handle(participant, req):
+            return participant.relationparticipant_set.get(request=req)
+
+        memberships = [handle(participant, request) for participant in participants]
+        self.assertTrue(all([membership.sended_mail for membership in memberships]))
+
+    def test_is_access_send_some_mails_in_request(self):
+        participants = [EmailUserFactory.create() for _ in range(10)]
+        NUM_SAMPLE = 5
+        targets = random.sample(participants, NUM_SAMPLE)
+        request = RequestFactory.create(participants=participants)
+        url = f"/api/send/{request.id}?targets={';'.join([str(target.id) for target in targets])}"
+        response = self.client.get(url)
+        self.assertTrue(response.status_code == 200)
+
+        def handle(participant, req):
+            return participant.relationparticipant_set.get(request=req)
+
+        memberships = [handle(participant, request) for participant in participants]
+        self.assertTrue(sum([membership.sended_mail for membership in memberships]) == NUM_SAMPLE)
+    
+    def test_is_access_send_some_duplicate_mails_in_request(self):
+        participants = [EmailUserFactory.create() for _ in range(10)]
+        NUM_SAMPLE = 5
+        NUM_SAMPLE2 = 2
+        targets = random.sample(participants, NUM_SAMPLE)
+        targets2 = random.sample(targets, NUM_SAMPLE2)
+        targets.extend(targets2)
+        request = RequestFactory.create(participants=participants)
+        url = f"/api/send/{request.id}?targets={';'.join([str(target.id) for target in targets])}"
+        response = self.client.get(url)
+        self.assertTrue(response.status_code == 200)
+        def handle(participant, req):
+            return participant.relationparticipant_set.get(request=req)
+        memberships = [handle(participant, request) for participant in participants]
+        self.assertTrue(sum([membership.sended_mail for membership in memberships]) == NUM_SAMPLE)
 
 
 class ResetEmailAddressesFromRequest(APITestCase):

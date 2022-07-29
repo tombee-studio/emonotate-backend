@@ -65,6 +65,37 @@ class DownloadEmailListAPITestCase(APITestCase):
         self.assertTrue(response.status_code == 404)
 
 
+class DownloadCurveAPITestCase(APITestCase):
+    def setUp(self):
+        createTestData()
+
+    def test_is_accessible_to_get_download_curve_data(self):
+        curve_ids = []
+        for _ in range(8):
+            curve_ids.append(str(CurveFactory.create().id))
+        url = f"/api/download_curve_data/?ids={','.join(curve_ids)}"
+        user = EmailUserFactory.create()
+        user.set_password("12345")
+        user.save()
+        self.client.login(username=user.username, password="12345")
+        response = self.client.get(url)
+        self.assertTrue(response.status_code == 200)
+        self.assertTrue("url" in response.json())
+
+
+    def test_is_accessible_to_get_download_many_curve_data(self):
+        curve_ids = []
+        for _ in range(11):
+            curve_ids.append(str(CurveFactory.create().id))
+        url = f"/api/download_curve_data/?ids={','.join(curve_ids)}"
+        user = EmailUserFactory.create()
+        user.set_password("12345")
+        user.save()
+        self.client.login(username=user.username, password="12345")
+        response = self.client.get(url)
+        self.assertTrue(response.status_code == 403)
+
+
 class SendMailAPITestCase(APITestCase):
     def setUp(self):
         createTestData()

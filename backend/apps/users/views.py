@@ -351,3 +351,36 @@ def get_download_curve_data(request, pk):
         })
     except:
         return HttpResponse(status=404)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+def download_curve_data(request):
+    curve_ids = []
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'message': 'user must be authenticated'
+        }, status=403)
+    if 'ids' in request.GET:
+        curve_ids = list(map(lambda item: int(item), request.GET.get('ids').split(',')))
+        if len(curve_ids) > 10:
+            return JsonResponse({
+                'message': 'too much the number(< 10) of curves to download'
+            }, status=403)
+    else:
+        curve_ids = request.user.curve_set.all()
+    s3 = boto3.client('s3')
+    curves = Curve.objects.filter(pk__in=curve_ids)
+    try:
+        file_name = f"{request.user.username}.json"
+        curves_data = [CurveSerializer(curve).data for curve in curves]
+        response = s3.put_object(
+            Bucket=AWS_STORAGE_BUCKET_NAME,
+            Key=file_name,
+            Body=json.dumps(curves_data),
+            ACL="public-read")
+        return JsonResponse(data={
+            "url": f"{S3_URL}{file_name}",
+            "file_name": file_name
+        })
+    except:
+        return HttpResponse(status=404)

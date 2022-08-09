@@ -29,8 +29,9 @@ def index(request):
     #--------
     # ROOT_DOMAIN = "herokuapp.com" if os.environ.get("STAGE") == "alpha" else "emonotate.com"
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+    queries = [f'{query}={request.GET[query]}' for query in request.GET]
     if not request.user.is_authenticated:
-        return redirect(f"{module.APPLICATION_URL}app/login")
+        return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
     return redirect(module.APPLICATION_URL)
 
 

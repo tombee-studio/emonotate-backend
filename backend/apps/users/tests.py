@@ -1,6 +1,7 @@
 import factory
 import json
 import random
+from importlib import import_module
 
 from django.urls import reverse
 from django.test import TestCase
@@ -101,10 +102,11 @@ class LoginAPITestCase(APITestCase):
         create_test_data()
     
     def test_is_get_login_api(self):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         queries = "?key=test"
         response = self.client.get(f"/api/login/{queries}")
         self.assertTrue(response.status_code == 302)
-        self.assertTrue(response.url == f"/app/login/{queries}")
+        self.assertTrue(response.url == f"{module.APPLICATION_URL}app/login/{queries}")
 
 
 class SendMailAPITestCase(APITestCase):

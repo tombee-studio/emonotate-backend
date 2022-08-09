@@ -39,6 +39,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import redirect
 
 import boto3
+from importlib import import_module
 
 from .serializers import *
 from .models import *
@@ -64,8 +65,9 @@ class LoginAPIView(View):
             # *****
             # tokenがない場合、通常のログインプロセスへと移行
             # *****
+            module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
             queries = [f'{query}={request.GET[query]}' for query in request.GET]
-            return redirect(f"/app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
+            return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
         else:
             # *****
             # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行

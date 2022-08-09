@@ -61,15 +61,23 @@ class LoginAPIView(View):
     def get(self, request):
         token = request.GET.get("token")
         if token == None:
-            return HttpResponse(status=403)
-        if request.user.is_authenticated:
-            logout(request)
-        auth = JWTAuthentication()
-        tokenAuth = JWTTokenUserAuthentication()
-        token_user = tokenAuth.get_user(auth.get_validated_token(token))
-        user = EmailUser.objects.get(pk=token_user.user_id)
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return redirect("/")
+            # *****
+            # tokenがない場合、通常のログインプロセスへと移行
+            # *****
+            queries = [f'{query}={request.GET[query]}' for query in request.GET]
+            return redirect(f"/app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
+        else:
+            # *****
+            # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
+            # *****
+            if request.user.is_authenticated:
+                logout(request)
+            auth = JWTAuthentication()
+            tokenAuth = JWTTokenUserAuthentication()
+            token_user = tokenAuth.get_user(auth.get_validated_token(token))
+            user = EmailUser.objects.get(pk=token_user.user_id)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect("/")
 
     def post(self, request):
         params = json.loads(request.body)

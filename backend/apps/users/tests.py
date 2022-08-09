@@ -29,7 +29,7 @@ def convert_to_dict_from(model):
     return data
 
 
-def createTestData():
+def create_test_data():
     util.prepare()
     User.objects.create_superuser("tomoya", "tomoya@example.com", "youluck123")
     User.objects.create_guest_user("guest")
@@ -39,7 +39,7 @@ def createTestData():
 
 class EmailUserAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
     
     def test_get_emailuser(self):
         user = EmailUserFactory.create(password="password")
@@ -50,7 +50,7 @@ class EmailUserAPITestCase(APITestCase):
 
 class DownloadEmailListAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
 
     def test_is_accessible_to_get_download_curve_data(self):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
@@ -67,7 +67,7 @@ class DownloadEmailListAPITestCase(APITestCase):
 
 class DownloadCurveAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
 
     def test_is_accessible_to_get_download_curve_data(self):
         curve_ids = []
@@ -96,9 +96,20 @@ class DownloadCurveAPITestCase(APITestCase):
         self.assertTrue(response.status_code == 403)
 
 
+class LoginAPITestCase(APITestCase):
+    def setUp(self):
+        create_test_data()
+    
+    def test_is_get_login_api(self):
+        queries = "?key=test"
+        response = self.client.get(f"/api/login/{queries}")
+        self.assertTrue(response.status_code == 302)
+        self.assertTrue(response.url == f"/app/login/{queries}")
+
+
 class SendMailAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
     
     def test_is_access_send_all_mails_in_request(self):
         participants = [EmailUserFactory.create() for _ in range(10)]
@@ -146,7 +157,7 @@ class SendMailAPITestCase(APITestCase):
 
 class ResetEmailAddressesFromRequest(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
     
     def test_is_accessible_to_reset_email_addresses_api(self):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])

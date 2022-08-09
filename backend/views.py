@@ -29,12 +29,9 @@ def index(request):
     #--------
     # ROOT_DOMAIN = "herokuapp.com" if os.environ.get("STAGE") == "alpha" else "emonotate.com"
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
-    response = redirect(module.APPLICATION_URL)
-    # response.set_cookie("username", request.user.username, domain=ROOT_DOMAIN)
-    # response.set_cookie("userid", request.user.id, domain=ROOT_DOMAIN)
-    # response.set_cookie("groups", ','.join(
-    #    list(map(lambda obj: obj.name, request.user.groups.all()))), domain=ROOT_DOMAIN)
-    return response
+    if not request.user.is_authenticated:
+        return redirect(f"{module.APPLICATION_URL}app/login")
+    return redirect(module.APPLICATION_URL)
 
 
 @login_required

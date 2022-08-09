@@ -78,8 +78,12 @@ class LoginAPIView(View):
         user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
-            return JsonResponse({'is_authenticated': True})
-        return JsonResponse({'is_authenticated': False}, status=403)
+            return JsonResponse({
+                'is_authenticated': True
+            })
+        return JsonResponse({
+            'is_authenticated': False
+        }, status=403)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

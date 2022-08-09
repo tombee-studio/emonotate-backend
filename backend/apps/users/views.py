@@ -82,18 +82,30 @@ class LoginAPIView(View):
             return redirect("/")
 
     def post(self, request):
-        params = json.loads(request.body)
-        username = params['username']
-        password = params['password']
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            login(request, user)
+        if request.GET.get("guest"):
+            # *******
+            # ゲストユーザアカウントを作成してログイン
+            # *******
+            user = EmailUser.objects.create_unique_user()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        else:
+            # *******
+            # 既存のユーザアカウントを利用
+            # *******
+            params = json.loads(request.body)
+            username = params['username']
+            password = params['password']
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        if request.user.is_authenticated:
             return JsonResponse({
-                'is_authenticated': True
+                'message': '正常にログインしました'
             })
-        return JsonResponse({
-            'is_authenticated': False
-        }, status=403)
+        else:
+            return JsonResponse({
+                'message': 'ログインできませんでした',
+            }, status_code=403)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

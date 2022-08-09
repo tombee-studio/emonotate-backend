@@ -46,10 +46,14 @@ from .models import *
 User = get_user_model()
 
 
-@method_decorator(allow_lazy_user, name='dispatch')
 class Me(View):
     def get(self, request):
-        return JsonResponse(UserSerializer(request.user).data, status=200)
+        if request.user.is_authenticated:
+            return JsonResponse(UserSerializer(request.user).data, status=200)
+        else:
+            return JsonResponse(data={
+                "message": "not authenticated"
+            }, status=404)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -85,7 +89,6 @@ class LogoutAPIView(View):
         return JsonResponse({'is_authenticated': False})
 
 
-@method_decorator(allow_lazy_user, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
 class ValueTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ValueTypeSerializer
@@ -103,7 +106,6 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all().order_by('created')
@@ -129,14 +131,12 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = CurveWithYouTubeSerializer
     queryset = Curve.objects.all().order_by('created')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all().order_by('created')
@@ -152,7 +152,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
     queryset = YouTubeContent.objects.all().order_by('created')
@@ -160,7 +159,6 @@ class YouTubeContentViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class RequestViewSet(viewsets.ModelViewSet):
     serializer_class = RequestSerializer
     queryset = Request.objects.all().order_by('created')

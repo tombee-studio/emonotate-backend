@@ -5,10 +5,12 @@ from .models import *
 
 class RequestInline(admin.TabularInline):
     model = RelationParticipant
+    extra = 0
 
 
 class EmailUserInline(admin.TabularInline):
     model = RelationParticipant
+    extra = 0
 
 
 class RequestAdmin(admin.ModelAdmin):

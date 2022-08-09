@@ -59,6 +59,15 @@ class Me(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(View):
+    def process_passport(self, queries, user):
+        if queries.get("passport") == None:
+            return
+        passport = queries.get("passport")
+        request_ids = [int(id_str) for id_str in passport.split(',')]
+        for request in Request.objects.filter(pk__in=request_ids):
+            request.participants.add(user)
+            request.save()
+
     def get(self, request):
         token = request.GET.get("token")
         if token == None:
@@ -79,6 +88,7 @@ class LoginAPIView(View):
             token_user = tokenAuth.get_user(auth.get_validated_token(token))
             user = EmailUser.objects.get(pk=token_user.user_id)
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            self.process_passport(request.GET, user)
             return redirect("/")
 
     def post(self, request):
@@ -99,6 +109,10 @@ class LoginAPIView(View):
             if user is not None:
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         if request.user.is_authenticated:
+            try:
+                self.process_passport(request.GET, user)
+            except err:
+                pass
             return JsonResponse({
                 'message': '正常にログインしました'
             })

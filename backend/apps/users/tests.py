@@ -108,15 +108,16 @@ class LoginAPITestCase(APITestCase):
         self.assertTrue(response.status_code == 302)
         self.assertTrue(response.url == f"{module.APPLICATION_URL}app/login/{queries}")
     
-    def test_is_post_login_api_with_guest(self):
+    def test_is_post_login_api_with_guest2(self):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
-        queries = ""
+        queries = "?guest=true"
         response = self.client.post(f"/api/login/{queries}")
         self.assertTrue(response.status_code == 200)
     
-    def test_is_post_login_api_with_guest(self):
+    def test_is_post_login_api_with_guest3(self):
+        requests = [RequestFactory.create() for _ in range(5)]
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
-        queries = "?guest=true"
+        queries = f"?guest=true&passport={','.join(list(map(lambda item: str(item.id), requests)))}"
         response = self.client.post(f"/api/login/{queries}")
         self.assertTrue(response.status_code == 200)
 

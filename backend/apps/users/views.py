@@ -70,6 +70,10 @@ class LoginAPIView(View):
 
     def get(self, request):
         token = request.GET.get("token")
+        if request.user.is_authenticated:
+            self.process_passport(request.GET, user)
+            return redirect("/")
+
         if token == None:
             # *****
             # tokenがない場合、通常のログインプロセスへと移行

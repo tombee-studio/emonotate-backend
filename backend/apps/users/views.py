@@ -69,16 +69,16 @@ class LoginAPIView(View):
             request.save()
 
     def get(self, request):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         token = request.GET.get("token")
         if request.user.is_authenticated:
             self.process_passport(request.GET, request.user)
-            return redirect("/")
+            return redirect(f"{module.APPLICATION_URL}")
 
         if token == None:
             # *****
             # tokenがない場合、通常のログインプロセスへと移行
             # *****
-            module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
             queries = [f'{query}={request.GET[query]}' for query in request.GET]
             return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
         else:

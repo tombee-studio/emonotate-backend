@@ -39,6 +39,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import redirect
 
 import boto3
+from importlib import import_module
 
 from .serializers import *
 from .models import *
@@ -46,36 +47,84 @@ from .models import *
 User = get_user_model()
 
 
-@method_decorator(allow_lazy_user, name='dispatch')
 class Me(View):
     def get(self, request):
-        return JsonResponse(UserSerializer(request.user).data, status=200)
+        if request.user.is_authenticated:
+            return JsonResponse(UserSerializer(request.user).data, status=200)
+        else:
+            return JsonResponse(data={
+                "message": "not authenticated"
+            }, status=404)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(View):
+    def process_passport(self, queries, user):
+        if queries.get("passport") == None:
+            return
+        passport = queries.get("passport")
+        request_ids = [int(id_str) for id_str in passport.split(',')]
+        for request in Request.objects.filter(pk__in=request_ids):
+            request.participants.add(user)
+            request.save()
+
     def get(self, request):
         token = request.GET.get("token")
-        if token == None:
-            return HttpResponse(status=403)
         if request.user.is_authenticated:
-            logout(request)
-        auth = JWTAuthentication()
-        tokenAuth = JWTTokenUserAuthentication()
-        token_user = tokenAuth.get_user(auth.get_validated_token(token))
-        user = EmailUser.objects.get(pk=token_user.user_id)
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return redirect("/")
+            self.process_passport(request.GET, request.user)
+            return redirect("/")
+
+        if token == None:
+            # *****
+            # tokenがない場合、通常のログインプロセスへと移行
+            # *****
+            module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+            queries = [f'{query}={request.GET[query]}' for query in request.GET]
+            return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
+        else:
+            # *****
+            # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
+            # *****
+            if request.user.is_authenticated:
+                logout(request)
+            auth = JWTAuthentication()
+            tokenAuth = JWTTokenUserAuthentication()
+            token_user = tokenAuth.get_user(auth.get_validated_token(token))
+            user = EmailUser.objects.get(pk=token_user.user_id)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            self.process_passport(request.GET, user)
+            return redirect("/")
 
     def post(self, request):
-        params = json.loads(request.body)
-        username = params['username']
-        password = params['password']
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return JsonResponse({'is_authenticated': True})
-        return JsonResponse({'is_authenticated': False}, status=403)
+        if not request.user.is_authenticated:
+            if request.GET.get("guest"):
+                # *******
+                # ゲストユーザアカウントを作成してログイン
+                # *******
+                user = EmailUser.objects.create_unique_user()
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            else:
+                # *******
+                # 既存のユーザアカウントを利用
+                # *******
+                params = json.loads(request.body)
+                username = params['username']
+                password = params['password']
+                user = authenticate(username=username, password=password)
+                if user is not None:
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        if request.user.is_authenticated:
+            try:
+                self.process_passport(request.GET, user)
+            except err:
+                pass
+            return JsonResponse({
+                'message': '正常にログインしました'
+            })
+        else:
+            return JsonResponse({
+                'message': 'ログインできませんでした',
+            }, status_code=403)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -85,7 +134,6 @@ class LogoutAPIView(View):
         return JsonResponse({'is_authenticated': False})
 
 
-@method_decorator(allow_lazy_user, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
 class ValueTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ValueTypeSerializer
@@ -103,7 +151,6 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all().order_by('created')
@@ -129,14 +176,12 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = CurveWithYouTubeSerializer
     queryset = Curve.objects.all().order_by('created')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all().order_by('created')
@@ -152,7 +197,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
     queryset = YouTubeContent.objects.all().order_by('created')
@@ -160,7 +204,6 @@ class YouTubeContentViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(allow_lazy_user, name='dispatch')
 class RequestViewSet(viewsets.ModelViewSet):
     serializer_class = RequestSerializer
     queryset = Request.objects.all().order_by('created')

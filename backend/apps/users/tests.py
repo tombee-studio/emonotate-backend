@@ -1,6 +1,7 @@
 import factory
 import json
 import random
+from importlib import import_module
 
 from django.urls import reverse
 from django.test import TestCase
@@ -29,7 +30,7 @@ def convert_to_dict_from(model):
     return data
 
 
-def createTestData():
+def create_test_data():
     util.prepare()
     User.objects.create_superuser("tomoya", "tomoya@example.com", "youluck123")
     User.objects.create_guest_user("guest")
@@ -39,7 +40,7 @@ def createTestData():
 
 class EmailUserAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
     
     def test_get_emailuser(self):
         user = EmailUserFactory.create(password="password")
@@ -50,7 +51,7 @@ class EmailUserAPITestCase(APITestCase):
 
 class DownloadEmailListAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
 
     def test_is_accessible_to_get_download_curve_data(self):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
@@ -67,7 +68,7 @@ class DownloadEmailListAPITestCase(APITestCase):
 
 class DownloadCurveAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
 
     def test_is_accessible_to_get_download_curve_data(self):
         curve_ids = []
@@ -96,9 +97,34 @@ class DownloadCurveAPITestCase(APITestCase):
         self.assertTrue(response.status_code == 403)
 
 
+class LoginAPITestCase(APITestCase):
+    def setUp(self):
+        create_test_data()
+    
+    def test_is_get_login_api(self):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        queries = "?key=test"
+        response = self.client.get(f"/api/login/{queries}")
+        self.assertTrue(response.status_code == 302)
+        self.assertTrue(response.url == f"{module.APPLICATION_URL}app/login/{queries}")
+    
+    def test_is_post_login_api_with_guest2(self):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        queries = "?guest=true"
+        response = self.client.post(f"/api/login/{queries}")
+        self.assertTrue(response.status_code == 200)
+    
+    def test_is_post_login_api_with_guest3(self):
+        requests = [RequestFactory.create() for _ in range(5)]
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        queries = f"?guest=true&passport={','.join(list(map(lambda item: str(item.id), requests)))}"
+        response = self.client.post(f"/api/login/{queries}")
+        self.assertTrue(response.status_code == 200)
+
+
 class SendMailAPITestCase(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
     
     def test_is_access_send_all_mails_in_request(self):
         participants = [EmailUserFactory.create() for _ in range(10)]
@@ -146,7 +172,7 @@ class SendMailAPITestCase(APITestCase):
 
 class ResetEmailAddressesFromRequest(APITestCase):
     def setUp(self):
-        createTestData()
+        create_test_data()
     
     def test_is_accessible_to_reset_email_addresses_api(self):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])

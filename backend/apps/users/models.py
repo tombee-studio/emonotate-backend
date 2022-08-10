@@ -65,7 +65,7 @@ class EmailUserManager(BaseUserManager):
             user.groups.add(group)
         return user
 
-    def create_unique_user(self, email, is_test=False, username=None):
+    def create_unique_user(self, email=None, is_test=False, username=None):
         random_username_num = int(os.environ.get("RANDOM_USERNAME_NUM"))
         if not username:
             username = randomname(random_username_num)
@@ -78,7 +78,7 @@ class EmailUserManager(BaseUserManager):
         if not is_test:
             user = EmailUser.objects.create_user(
                 username=username, 
-                email=email,
+                email=email if email != None else f"emonotate+{username}@gmail.com",
                 password="password")
             try:
                 group = Group.objects.get(name='General')
@@ -271,6 +271,3 @@ class RelationParticipant(models.Model):
     request = models.ForeignKey(Request, default=1, on_delete=models.CASCADE)
     sended_mail = models.BooleanField(default=False)
     message = models.TextField(default="")
-
-    class Meta:
-        db_table = "users_request_participants"

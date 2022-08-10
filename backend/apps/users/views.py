@@ -71,7 +71,7 @@ class LoginAPIView(View):
     def get(self, request):
         token = request.GET.get("token")
         if request.user.is_authenticated:
-            self.process_passport(request.GET, user)
+            self.process_passport(request.GET, request.user)
             return redirect("/")
 
         if token == None:
@@ -96,22 +96,23 @@ class LoginAPIView(View):
             return redirect("/")
 
     def post(self, request):
-        if request.GET.get("guest"):
-            # *******
-            # ゲストユーザアカウントを作成してログイン
-            # *******
-            user = EmailUser.objects.create_unique_user()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        else:
-            # *******
-            # 既存のユーザアカウントを利用
-            # *******
-            params = json.loads(request.body)
-            username = params['username']
-            password = params['password']
-            user = authenticate(username=username, password=password)
-            if user is not None:
+        if not request.user.is_authenticated:
+            if request.GET.get("guest"):
+                # *******
+                # ゲストユーザアカウントを作成してログイン
+                # *******
+                user = EmailUser.objects.create_unique_user()
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            else:
+                # *******
+                # 既存のユーザアカウントを利用
+                # *******
+                params = json.loads(request.body)
+                username = params['username']
+                password = params['password']
+                user = authenticate(username=username, password=password)
+                if user is not None:
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         if request.user.is_authenticated:
             try:
                 self.process_passport(request.GET, user)

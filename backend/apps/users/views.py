@@ -128,6 +128,34 @@ class LoginAPIView(View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class SignupAPIView(View):
+    def process_passport(self, queries, user):
+        if queries.get("passport") == None:
+            return
+        passport = queries.get("passport")
+        request_ids = [int(id_str) for id_str in passport.split(',')]
+        for request in Request.objects.filter(pk__in=request_ids):
+            request.participants.add(user)
+            request.save()
+
+    def post(self, request):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        params = json.loads(request.body)
+        username = params['username']
+        email = params['email']
+        password1 = params['password1']
+        password2 = params['password2']
+        if password1 != password2:
+            return JsonResponse({
+                'message': 'パスワードが一致しません'
+            }, status=403)
+        user = EmailUser.objects.create_user(username, email, password1)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        self.process_passport(request.GET, user)
+        return JsonResponse({'is_authenticated': True}, status=201)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class LogoutAPIView(View):
     def post(self, request):
         logout(request)

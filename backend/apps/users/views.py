@@ -2,6 +2,7 @@ import os
 import time
 import json
 import asyncio
+import traceback
 
 from django.utils.timezone import datetime, timedelta
 
@@ -125,6 +126,39 @@ class LoginAPIView(View):
             return JsonResponse({
                 'message': 'ログインできませんでした',
             }, status_code=403)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SignupAPIView(View):
+    def process_passport(self, queries, user):
+        if queries.get("passport") == None:
+            return
+        passport = queries.get("passport")
+        request_ids = [int(id_str) for id_str in passport.split(',')]
+        for request in Request.objects.filter(pk__in=request_ids):
+            request.participants.add(user)
+            request.save()
+
+    def post(self, request):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        params = json.loads(request.body)
+        username = params['username']
+        email = params['email']
+        password1 = params['password1']
+        password2 = params['password2']
+        try:
+            if password1 != password2:
+                raise "パスワードが一致しません"
+            user = EmailUser.objects.create_user(username, email, password1)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            self.process_passport(request.GET, user)
+            return JsonResponse({
+                'is_authenticated': True
+            }, status=201)
+        except Exception as err:
+            return JsonResponse({
+                'message': err.__class__.__name__
+            }, status=400) 
 
 
 @method_decorator(csrf_exempt, name='dispatch')

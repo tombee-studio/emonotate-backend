@@ -2,6 +2,7 @@ import os
 import time
 import json
 import asyncio
+import traceback
 
 from django.utils.timezone import datetime, timedelta
 
@@ -145,14 +146,19 @@ class SignupAPIView(View):
         email = params['email']
         password1 = params['password1']
         password2 = params['password2']
-        if password1 != password2:
+        try:
+            if password1 != password2:
+                raise "パスワードが一致しません"
+            user = EmailUser.objects.create_user(username, email, password1)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            self.process_passport(request.GET, user)
             return JsonResponse({
-                'message': 'パスワードが一致しません'
-            }, status=403)
-        user = EmailUser.objects.create_user(username, email, password1)
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        self.process_passport(request.GET, user)
-        return JsonResponse({'is_authenticated': True}, status=201)
+                'is_authenticated': True
+            }, status=201)
+        except Exception as err:
+            return JsonResponse({
+                'message': err.__class__.__name__
+            }, status=400) 
 
 
 @method_decorator(csrf_exempt, name='dispatch')

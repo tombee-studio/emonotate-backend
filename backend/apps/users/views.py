@@ -117,7 +117,7 @@ class LoginAPIView(View):
         if request.user.is_authenticated:
             try:
                 self.process_passport(request.GET, user)
-            except Exception as err:
+            except Exception:
                 pass
             return JsonResponse({
                 'message': '正常にログインしました'

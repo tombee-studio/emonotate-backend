@@ -5,8 +5,6 @@ from .common import *
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DEBUG=True
-
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 
 DATABASES = {

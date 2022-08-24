@@ -23,7 +23,6 @@ ALLOWED_HOSTS = ['*']
 INTERNAL_IPS = ['192.168.56.1']
 
 INSTALLED_APPS += (
-    'autofixture',
 )
 
 STATICFILES_DIRS = [

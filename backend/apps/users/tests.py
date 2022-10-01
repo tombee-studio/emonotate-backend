@@ -178,3 +178,11 @@ class ResetEmailAddressesFromRequest(APITestCase):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
         response = self.client.get(f"/api/reset_email_addresses/{request.id}")
         self.assertTrue(response.status_code == 200)
+
+
+class EmailUserTest(TestCase):
+    def setUp(self):
+        pass
+    
+    def test_is_including_email_when_create_superuser(self):
+        self.assertTrue("email" in EmailUser.REQUIRED_FIELDS)

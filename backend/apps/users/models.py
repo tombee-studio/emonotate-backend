@@ -154,6 +154,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     def __unicode__(self):
         return self.email

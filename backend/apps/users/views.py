@@ -318,7 +318,6 @@ def send_mails(req, participants):
     if os.environ.get("STAGE") == "DEV":
         for clique in participants:
             for participant in clique:
-                print(f"Sended {participant.email}")
                 membership = participant.relationparticipant_set.get(request=req)
                 membership.sended_mail = True
                 membership.message = ""

@@ -102,6 +102,7 @@ class LoginAPIView(View):
             return redirect("/")
 
     def post(self, request):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         if not request.user.is_authenticated:
             if request.GET.get("guest"):
                 # *******
@@ -124,13 +125,16 @@ class LoginAPIView(View):
                 self.process_passport(request.GET, user)
             except Exception:
                 pass
-            return JsonResponse({
-                'message': '正常にログインしました'
-            })
+            if not LoginAPIView.is_invalid_emailuser(request.user.email):
+                return JsonResponse(UserSerializer(request.user).data)
+            else:
+                return JsonResponse(data={
+                    "url": f"{module.APPLICATION_URL}app/change_email/"
+                }, status=302)
         else:
             return JsonResponse({
                 'message': 'ログインできませんでした',
-            }, status_code=403)
+            }, status=403)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

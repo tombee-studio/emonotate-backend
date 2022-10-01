@@ -43,6 +43,8 @@ from django.shortcuts import redirect
 import boto3
 from importlib import import_module
 
+from django.views.decorators.http import require_http_methods
+
 from .serializers import *
 from .models import *
 
@@ -469,3 +471,21 @@ def download_curve_data(request):
         })
     except:
         return HttpResponse(status=404)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+@require_http_methods(["POST"])
+def change_email(request):
+    email = json.loads(request.body)["email"]
+    if LoginAPIView.is_invalid_emailuser(email):
+        return HttpResponse("無効なメールアドレスです", status=403)
+    try:
+        EmailUser.objects.get(email=email)
+        return HttpResponse("そのメールアドレスは既に利用されています", status=403)
+    except EmailUser.DoesNotExist:
+        user = request.user
+        user.email = email
+        user.save()
+        return JsonResponse(
+            UserSerializer(EmailUser.objects.get(pk=user.id)).data, 
+            status=202)

@@ -203,15 +203,54 @@ class ChangeEmailAPITestCase(APITestCase):
     def setUp(self):
         pass
     
-    def test_is_including_email_when_create_superuser(self):
+    def test_can_change_email_of_guest_user(self):
         user = EmailUserFactory.create()
         user.set_password("12345")
         user.save()
         self.client.login(
             username=user.username, 
-            password="12345",
-             email="emonotate+abc@gmail.com")
-        response = self.client.post(f"/api/change_email/", data={
-            'email': 'abc@abc.com'
-        })
+            password="12345")
+        response = self.client.post(
+            f"/api/change_email/", 
+            data=json.dumps({
+                "email": "abc@abc.com"
+            }), 
+            content_type="application/json")
         self.assertEqual(response.status_code, 202)
+        
+        user = EmailUser.objects.get(pk=user.id)
+        self.assertEqual(user.email, "abc@abc.com")
+    
+    def test_cant_change_email_because_of_invalid_email(self):
+        user = EmailUserFactory.create()
+        origin_email = user.email
+        user.set_password("12345")
+        user.save()
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        response = self.client.post(
+            f"/api/change_email/", 
+            data=json.dumps({
+                "email": "emonotate+def@gmail.com"
+            }),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(user.email, origin_email)
+
+    def test_cant_change_email_because_of_existing_email(self):
+        user = EmailUserFactory.create()
+        user1 = EmailUserFactory.create()
+        origin_email = user.email
+        user.set_password("12345")
+        user.save()
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        response = self.client.post(
+            f"/api/change_email/", data=json.dumps({
+                "email": user1.email
+            }),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(user.email, origin_email)

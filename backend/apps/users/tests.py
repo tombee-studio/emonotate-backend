@@ -130,7 +130,7 @@ class LoginAPITestCase(APITestCase):
         queries = "?guest=true"
         response = self.client.post(f"/api/login/{queries}")
         self.assertEqual(302, response.status_code)
-        self.assertEqual(f"{module.APPLICATION_URL}app/change_email/", response.url)
+        self.assertEqual(f"{module.APPLICATION_URL}app/change_email/", response.json()["url"])
 
 
 class SendMailAPITestCase(APITestCase):
@@ -197,3 +197,21 @@ class EmailUserTest(TestCase):
     
     def test_is_including_email_when_create_superuser(self):
         self.assertTrue("email" in EmailUser.REQUIRED_FIELDS)
+
+
+class ChangeEmailAPITestCase(APITestCase):
+    def setUp(self):
+        pass
+    
+    def test_is_including_email_when_create_superuser(self):
+        user = EmailUserFactory.create()
+        user.set_password("12345")
+        user.save()
+        self.client.login(
+            username=user.username, 
+            password="12345",
+             email="emonotate+abc@gmail.com")
+        response = self.client.post(f"/api/change_email/", data={
+            'email': 'abc@abc.com'
+        })
+        self.assertEqual(response.status_code, 202)

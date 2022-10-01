@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import json
 import asyncio
@@ -60,6 +61,10 @@ class Me(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(View):
+    @staticmethod
+    def is_invalid_emailuser(email):
+        return re.match(r"emonotate\+.+@gmail.com", email)
+
     def process_passport(self, queries, user):
         if queries.get("passport") == None:
             return

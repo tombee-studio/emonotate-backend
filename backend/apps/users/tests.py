@@ -186,3 +186,10 @@ class EmailUserTest(TestCase):
     
     def test_is_including_email_when_create_superuser(self):
         self.assertTrue("email" in EmailUser.REQUIRED_FIELDS)
+
+
+class EmailAPITestCase(APITestCase):
+    def test_is_correct_result_to_return_invalid_email(self):
+        self.assertTrue(LoginAPIView.is_invalid_emailuser("emonotate+abcdef@gmail.com"))
+        self.assertFalse(LoginAPIView.is_invalid_emailuser("abcdef@gmail.com"))
+

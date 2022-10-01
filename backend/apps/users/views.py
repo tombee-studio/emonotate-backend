@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import json
 import asyncio
@@ -42,6 +43,8 @@ from django.shortcuts import redirect
 import boto3
 from importlib import import_module
 
+from django.views.decorators.http import require_http_methods
+
 from .serializers import *
 from .models import *
 
@@ -60,6 +63,10 @@ class Me(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(View):
+    @staticmethod
+    def is_invalid_emailuser(email):
+        return re.match(r"emonotate\+.+@gmail.com", email)
+
     def process_passport(self, queries, user):
         if queries.get("passport") == None:
             return
@@ -97,6 +104,7 @@ class LoginAPIView(View):
             return redirect("/")
 
     def post(self, request):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         if not request.user.is_authenticated:
             if request.GET.get("guest"):
                 # *******
@@ -119,13 +127,16 @@ class LoginAPIView(View):
                 self.process_passport(request.GET, user)
             except Exception:
                 pass
-            return JsonResponse({
-                'message': '正常にログインしました'
-            })
+            if not LoginAPIView.is_invalid_emailuser(request.user.email):
+                return JsonResponse(UserSerializer(request.user).data)
+            else:
+                return JsonResponse(data={
+                    "url": f"{module.APPLICATION_URL}app/change_email/"
+                }, status=302)
         else:
             return JsonResponse({
                 'message': 'ログインできませんでした',
-            }, status_code=403)
+            }, status=403)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -460,3 +471,21 @@ def download_curve_data(request):
         })
     except:
         return HttpResponse(status=404)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+@require_http_methods(["POST"])
+def change_email(request):
+    email = json.loads(request.body)["email"]
+    if LoginAPIView.is_invalid_emailuser(email):
+        return HttpResponse("無効なメールアドレスです", status=403)
+    try:
+        EmailUser.objects.get(email=email)
+        return HttpResponse("そのメールアドレスは既に利用されています", status=403)
+    except EmailUser.DoesNotExist:
+        user = request.user
+        user.email = email
+        user.save()
+        return JsonResponse(
+            UserSerializer(EmailUser.objects.get(pk=user.id)).data, 
+            status=202)

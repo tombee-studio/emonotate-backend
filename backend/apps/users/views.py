@@ -252,6 +252,7 @@ class YouTubeContentViewSet(viewsets.ModelViewSet):
 class RequestViewSet(viewsets.ModelViewSet):
     serializer_class = RequestSerializer
     queryset = Request.objects.all().order_by('created')
+    search_fields = ['title']
     
     def get_queryset(self):
         role = self.request.GET.get('role')

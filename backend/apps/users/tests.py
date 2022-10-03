@@ -112,14 +112,25 @@ class LoginAPITestCase(APITestCase):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         queries = "?guest=true"
         response = self.client.post(f"/api/login/{queries}")
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(302, response.status_code)
     
     def test_is_post_login_api_with_guest3(self):
         requests = [RequestFactory.create() for _ in range(5)]
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         queries = f"?guest=true&passport={','.join(list(map(lambda item: str(item.id), requests)))}"
         response = self.client.post(f"/api/login/{queries}")
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(302, response.status_code)
+    
+    def test_is_correct_result_to_return_invalid_email(self):
+        self.assertTrue(LoginAPIView.is_invalid_emailuser("emonotate+abcdef@gmail.com"))
+        self.assertFalse(LoginAPIView.is_invalid_emailuser("abcdef@gmail.com"))
+    
+    def test_is_user_with_invalid_email(self):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        queries = "?guest=true"
+        response = self.client.post(f"/api/login/{queries}")
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(f"{module.APPLICATION_URL}app/change_email/", response.json()["url"])
 
 
 class SendMailAPITestCase(APITestCase):
@@ -178,3 +189,68 @@ class ResetEmailAddressesFromRequest(APITestCase):
         request = RequestFactory.create(participants=[EmailUserFactory.create() for _ in range(10)])
         response = self.client.get(f"/api/reset_email_addresses/{request.id}")
         self.assertTrue(response.status_code == 200)
+
+
+class EmailUserTest(TestCase):
+    def setUp(self):
+        pass
+    
+    def test_is_including_email_when_create_superuser(self):
+        self.assertTrue("email" in EmailUser.REQUIRED_FIELDS)
+
+
+class ChangeEmailAPITestCase(APITestCase):
+    def setUp(self):
+        pass
+    
+    def test_can_change_email_of_guest_user(self):
+        user = EmailUserFactory.create()
+        user.set_password("12345")
+        user.save()
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        response = self.client.post(
+            f"/api/change_email/", 
+            data=json.dumps({
+                "email": "abc@abc.com"
+            }), 
+            content_type="application/json")
+        self.assertEqual(response.status_code, 202)
+        
+        user = EmailUser.objects.get(pk=user.id)
+        self.assertEqual(user.email, "abc@abc.com")
+    
+    def test_cant_change_email_because_of_invalid_email(self):
+        user = EmailUserFactory.create()
+        origin_email = user.email
+        user.set_password("12345")
+        user.save()
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        response = self.client.post(
+            f"/api/change_email/", 
+            data=json.dumps({
+                "email": "emonotate+def@gmail.com"
+            }),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(user.email, origin_email)
+
+    def test_cant_change_email_because_of_existing_email(self):
+        user = EmailUserFactory.create()
+        user1 = EmailUserFactory.create()
+        origin_email = user.email
+        user.set_password("12345")
+        user.save()
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        response = self.client.post(
+            f"/api/change_email/", data=json.dumps({
+                "email": user1.email
+            }),
+            content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(user.email, origin_email)

@@ -254,3 +254,62 @@ class ChangeEmailAPITestCase(APITestCase):
             content_type="application/json")
         self.assertEqual(response.status_code, 403)
         self.assertEqual(user.email, origin_email)
+
+class MergeAccountAPITestCase(APITestCase):
+    def setUp(self):
+        pass
+    
+    def test_can_merge_account_of_guest_user(self):
+        user = EmailUserFactory.create()
+        user.set_password("12345")
+        user.save()
+        origin_username = user.username
+        for _ in range(8):
+            CurveFactory.create(user=user)
+        user1 = EmailUserFactory.create()
+        user1.set_password("23456")
+        user1.save()
+        for _ in range(10):
+            CurveFactory.create(user=user1)
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        response = self.client.post(
+            f"/api/merge_accounts/", 
+            data=json.dumps({
+                "from": user.username,
+                "to": user1.username,
+                "password": "23456"
+            }), 
+            content_type="application/json")
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(len(user1.curve_set.all()), 18)
+        with self.assertRaises(EmailUser.DoesNotExist):
+            EmailUser.objects.get(username=origin_username)
+    
+    def test_can_merge_account_of_guest_user(self):
+        user = EmailUserFactory.create()
+        user.set_password("12345")
+        user.save()
+        origin_username = user.username
+        for _ in range(8):
+            CurveFactory.create(user=user)
+        user1 = EmailUserFactory.create()
+        user1.set_password("23456")
+        user1.save()
+        for _ in range(10):
+            CurveFactory.create(user=user1)
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        response = self.client.post(
+            f"/api/merge_accounts/", 
+            data=json.dumps({
+                "from": user.username,
+                "to": user1.username,
+                "password": "123456"
+            }), 
+            content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(len(user1.curve_set.all()), 10)
+        self.assertNotEqual(EmailUser.objects.get(username=origin_username), None)

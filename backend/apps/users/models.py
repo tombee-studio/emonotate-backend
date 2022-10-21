@@ -221,12 +221,6 @@ class Curve(models.Model):
         return '{} {}'.format(self.content.title, self.id)
 
 
-class Questionaire(models.Model):
-    objects = BaseManager()
-    url = models.URLField(default="")
-    user_id_form = models.CharField(max_length=32)
-
-
 class Request(models.Model):
     objects = BaseManager()
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
@@ -248,11 +242,6 @@ class Request(models.Model):
         default=1,
         on_delete=models.CASCADE
     )
-    questionaire = models.ForeignKey(Questionaire, 
-        null=True, 
-        blank=True,
-        on_delete=models.SET_NULL, 
-        default=None)
     values = JSONField(default=[], blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
 

@@ -107,12 +107,6 @@ class CurveWithYouTubeSerializer(serializers.ModelSerializer):
         return super().is_valid(raise_exception)
 
 
-class QuestionaireSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Questionaire
-        fields = '__all__'
-
-
 class RequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Request

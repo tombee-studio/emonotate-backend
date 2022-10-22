@@ -203,6 +203,13 @@ class ContentViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class EnqueteViewSet(viewsets.ModelViewSet):
+    serializer_class = EnqueteSerializer
+    queryset = Enquete.objects.all().order_by('created')
+    search_fields = ['title']
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all()

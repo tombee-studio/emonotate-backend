@@ -67,16 +67,28 @@ class YouTubeContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class EnqueteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enquete
+        fields = '__all__'
+
+
 class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
         fields = '__all__'
     
     def to_representation(self, instance):
+        def generate_enquete_json(enquete, curve):
+            data = EnqueteSerializer(enquete).data
+            membership = enquete.enqueteanswer_set.get(curve=curve)
+            data["answer"] = membership.answer
+            return data
         ret = super().to_representation(instance)
         ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
         ret['content'] = ContentSerializer(instance.content).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        ret['enquete'] = [generate_enquete_json(enquete, instance) for enquete in Enquete.objects.filter(pk__in=ret['enquete'])]
         return ret
 
 
@@ -124,9 +136,7 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
         ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
-        ret['is_able_to_send'] = True
-        if ret['questionaire'] != None:
-            ret['questionaire'] = QuestionaireSerializer(Questionaire.objects.get(pk=ret['questionaire'])).data
+        ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
         return ret
     
     def validate(self, attrs):
@@ -143,4 +153,5 @@ class RequestSerializer(serializers.ModelSerializer):
             description=validated_data['description']
         )
         instance.participants.set(validated_data['participants'])
+        instance.enquetes.set(validated_data['enquetes'])
         return instance

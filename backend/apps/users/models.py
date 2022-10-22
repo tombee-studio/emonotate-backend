@@ -60,7 +60,7 @@ class EmailUserManager(BaseUserManager):
         try:
             group = Group.objects.get(name='Guest')
         except Group.DoesNotExist:
-            print("Does not exists")
+            pass
         else:
             user.groups.add(group)
         return user
@@ -83,7 +83,7 @@ class EmailUserManager(BaseUserManager):
             try:
                 group = Group.objects.get(name='General')
             except Group.DoesNotExist:
-                print("Does not exists")
+                pass
             else:
                 user.groups.add(group)
         return user
@@ -101,7 +101,7 @@ class EmailUserManager(BaseUserManager):
         try:
             group = Group.objects.get(name='Researchers')
         except Group.DoesNotExist:
-            print("Does not exists")
+            pass
         else:
             user.groups.add(group)
         return user
@@ -205,6 +205,7 @@ class YouTubeContent(Content):
 
 
 class Enquete(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(
         max_length=128,
         default=''

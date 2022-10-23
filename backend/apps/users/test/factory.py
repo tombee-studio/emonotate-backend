@@ -59,6 +59,14 @@ class ValueTypeFactory(django.DjangoModelFactory):
     axis_type = 1
 
 
+class EnqueteFactory(django.DjangoModelFactory):
+    class Meta:
+        model = Enquete
+    
+    title = factory.Faker('word')
+    description = factory.Faker('sentence')
+
+
 class CurveFactory(django.DjangoModelFactory):
     class Meta:
         model = Curve
@@ -68,7 +76,27 @@ class CurveFactory(django.DjangoModelFactory):
     value_type = factory.SubFactory(ValueTypeFactory)
     values = json.dumps([])
     version = '1.1.0'
-    room_name = ""
+    room_name = factory.Faker("word")
+
+    @factory.post_generation
+    def answers(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for [enquete, item] in extracted:
+                self.enquete.add(enquete)
+                answer = self.enqueteanswer_set.get(enquete=enquete)
+                answer.answer = item.answer
+                answer.save()
+
+
+class EnqueteAnswerFactory(django.DjangoModelFactory):
+    class Meta: 
+        model = EnqueteAnswer
+    
+    curve = factory.SubFactory(CurveFactory)
+    enquete = factory.SubFactory(EnqueteFactory)
+    answer = factory.Faker('sentence')
 
 
 class RequestFactory(django.DjangoModelFactory):
@@ -86,3 +114,11 @@ class RequestFactory(django.DjangoModelFactory):
         if extracted:
             for participant in extracted:
                 self.participants.add(participant)
+    
+    @factory.post_generation
+    def enquetes(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for enquete in extracted:
+                self.enquetes.add(enquete)

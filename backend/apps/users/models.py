@@ -207,8 +207,8 @@ class YouTubeContent(Content):
 class Enquete(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(
-        max_length=128,
-        default=''
+        unique=True, 
+        max_length=128
     )
     description = models.TextField(
         blank=True,

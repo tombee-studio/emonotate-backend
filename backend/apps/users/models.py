@@ -242,8 +242,6 @@ class EnqueteAnswer(models.Model):
     curve = models.ForeignKey(Curve, default=1, on_delete=models.CASCADE)
     enquete = models.ForeignKey(Enquete, default=1, on_delete=models.CASCADE)
     answer = models.TextField(
-        blank=True,
-        null=True,
         max_length=1000,
     )
 

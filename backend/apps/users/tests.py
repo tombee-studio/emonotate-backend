@@ -26,7 +26,7 @@ import boto3
 
 def convert_to_dict_from(model):
     data = { key: value if type(value) is str or type(value) is int else str(value)
-        for key, value in model.__dict__.items() if key is not '_state' and value is not None }
+        for key, value in model.__dict__.items() if key !='_state' and value != None }
     return data
 
 
@@ -255,6 +255,7 @@ class ChangeEmailAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(user.email, origin_email)
 
+
 class MergeAccountAPITestCase(APITestCase):
     def setUp(self):
         pass
@@ -313,3 +314,216 @@ class MergeAccountAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(len(user1.curve_set.all()), 10)
         self.assertNotEqual(EmailUser.objects.get(username=origin_username), None)
+
+
+class EnqueteTestCase(TestCase):
+    def test_is_can_serialize_enquete(self):
+        obj = EnqueteFactory.create()
+        json_data = EnqueteSerializer(obj).data
+        self.assertEqual(json_data["title"], obj.title)
+        self.assertEqual(json_data["description"], obj.description)
+    
+    def test_can_create_by_serializer(self):
+        obj = EnqueteFactory.build()
+        ser = EnqueteSerializer(data={
+            "title": obj.title, 
+            "description": obj.description
+        })
+        self.assertTrue(ser.is_valid())
+
+    def test_can_create_by_serializer_with_duplicate_title(self):
+        obj = EnqueteFactory.build()
+        ser1 = EnqueteSerializer(data={
+            "title": obj.title, 
+            "description": obj.description
+        })
+        ser1.is_valid()
+        ser1.save()
+        ser2 = EnqueteSerializer(data={
+            "title": obj.title, 
+            "description": obj.description
+        })
+        self.assertFalse(ser2.is_valid())
+    
+    def test_can_create_by_serializer_not_enough_because_of_no_description(self):
+        obj = EnqueteFactory.build()
+        ser = EnqueteSerializer(data={
+            "title": obj.title
+        })
+        self.assertTrue(ser.is_valid())
+
+    def test_can_create_by_serializer_not_enough_because_of_no_title(self):
+        obj = EnqueteFactory.build()
+        ser = EnqueteSerializer(data={
+            "description": obj.description
+        })
+        self.assertFalse(ser.is_valid())
+
+
+class EnqueteAPITestCase(APITestCase):
+    def setUp(self):
+        create_test_data()
+        self.url = "/api/enquetes/"
+
+    def test_can_get_enquetes_by_guest(self):
+        self.client.login(
+            username="guest", 
+            password="password")
+        for _ in range(0, 100):
+            EnqueteFactory.create()
+        response = self.client.get(f"{self.url}?format=json",
+            content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["models"]), 10)
+
+    def test_can_get_enquetes_by_researcher(self):
+        user_data = EmailUserFactory.build()
+        user = EmailUser.objects.create_researcher(
+            username=user_data.username, 
+            email=user_data.email, 
+            password="12345",
+        )
+        user.save()
+        self.client.login(
+            username=user.username, 
+            password="12345")
+        for _ in range(0, 100):
+            EnqueteFactory.create()
+        response = self.client.get(
+            f"{self.url}?format=json",
+            content_type="application/json")
+        self.assertEqual(len(response.json()["models"]), 10)
+
+
+class CurveTestCase(TestCase):
+    def setUp(self):
+        create_test_data()
+
+    def test_can_create_curve_data_with_no_enquete(self):
+        curve = CurveFactory.create()
+        self.assertEqual(0, len(curve.enquete.all()))
+    
+    def test_can_create_curve_data_with_enquete(self):
+        enquetes = [EnqueteFactory.create() for _ in range(10)]
+        relationship = [EnqueteAnswerFactory.build() for _ in range(10)]
+        answers = zip(enquetes, relationship)
+        curve = CurveFactory.create(answers=answers)
+        self.assertEqual(10, len(curve.enquete.all()))
+
+
+class CurveAPITestCase(APITestCase):
+    def setUp(self):
+        create_test_data()
+    
+    def test_can_create_curve_with_guest(self):
+        user = EmailUserFactory.create()
+        content = ContentFactory.create()
+        value_type = ValueTypeFactory.create()
+        curve = CurveFactory.build(
+            user=user,
+            content=content,
+            value_type=value_type
+        )
+        json_data = CurveSerializer(curve).data
+        json_data["user"] = user.id
+        json_data["content"] = content.id
+        json_data["value_type"] = value_type.id
+        json_data = {k: v for k, v in json_data.items() if v is not None}
+        self.client.login(
+            username="guest", 
+            password="password")
+        response = self.client.post(
+            f"/api/curves/?format=json", 
+            data=json.dumps(json_data), 
+            content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+    
+    def test_can_create_curve_with_general(self):
+        user = EmailUserFactory.create()
+        content = ContentFactory.create()
+        value_type = ValueTypeFactory.create()
+        curve = CurveFactory.build(
+            user=user,
+            content=content,
+            value_type=value_type
+        )
+        json_data = CurveSerializer(curve).data
+        json_data["user"] = user.id
+        json_data["content"] = content.id
+        json_data["value_type"] = value_type.id
+        json_data = {k: v for k, v in json_data.items() if v is not None}
+        self.client.login(
+            username="general", 
+            password="password")
+        response = self.client.post(
+            f"/api/curves/?format=json", 
+            data=json.dumps(json_data), 
+            content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+    
+    def test_can_create_curve_with_researcher(self):
+        user = EmailUserFactory.create()
+        content = ContentFactory.create()
+        value_type = ValueTypeFactory.create()
+        curve = CurveFactory.build(
+            user=user,
+            content=content,
+            value_type=value_type
+        )
+        json_data = CurveSerializer(curve).data
+        json_data["user"] = user.id
+        json_data["content"] = content.id
+        json_data["value_type"] = value_type.id
+        json_data = {k: v for k, v in json_data.items() if v is not None}
+        self.client.login(
+            username="researcher", 
+            password="password")
+        response = self.client.post(
+            f"/api/curves/?format=json", 
+            data=json.dumps(json_data), 
+            content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+    
+    def test_can_create_curve_enquetes(self):
+        user = EmailUserFactory.create()
+        content = ContentFactory.create()
+        value_type = ValueTypeFactory.create()
+        enquete = [EnqueteFactory.create() for _ in range(10)]
+        answers = [EnqueteAnswerFactory.create() for _ in range(10)]
+        curve = CurveFactory.create(
+            user=user,
+            content=content,
+            value_type=value_type,
+            answers=zip(enquete, answers)
+        )
+        json_data = CurveSerializer(curve).data
+        json_data["user"] = user.id
+        json_data["content"] = content.id
+        json_data["value_type"] = value_type.id
+        json_data = {k: v for k, v in json_data.items() if v is not None}
+        self.client.login(
+            username="researcher", 
+            password="password")
+        response = self.client.post(
+            f"/api/curves/?format=json", 
+            data=json.dumps(json_data), 
+            content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        curve_data = response.json()
+        self.assertTrue(all([
+            item["answer"] in [answer.answer for answer in answers] 
+                for item in curve_data["enquete"]]))
+
+
+class RequestTestCase(TestCase):
+    def setUp(self):
+        create_test_data()
+
+    def test_can_create_curve_data_with_no_enquete(self):
+        request = RequestFactory.create()
+        self.assertEqual(0, len(request.enquetes.all()))
+    
+    def test_can_create_curve_data_with_enquete(self):
+        enquete = [EnqueteFactory.create() for _ in range(10)]
+        request = RequestFactory.create(enquetes=enquete)
+        self.assertEqual(10, len(request.enquetes.all()))

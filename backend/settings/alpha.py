@@ -54,4 +54,4 @@ CORS_ORIGIN_WHITELIST = [
     f"https://{API_BASE}"
 ]
 
-CSRF_COOKIE_DOMAIN = "herokuapp.com"
+CSRF_COOKIE_DOMAIN = ".herokuapp.com"

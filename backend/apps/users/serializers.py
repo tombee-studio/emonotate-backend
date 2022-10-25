@@ -99,10 +99,10 @@ class CurveSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         enquetes = Enquete.objects.filter(pk__in=list(map(lambda item: item["id"], self.initial_data['enquete'])))
         for enquete in enquetes.iterator():
-            item = enquete.enqueteanswer_set.get(curve=instance)
+            _item = enquete.enqueteanswer_set.get(curve=instance)
             answer_item = list(filter(lambda item: item["id"] == enquete.id, self.initial_data['enquete']))[0]
-            item.answer = answer_item["answer"]
-            item.save()
+            _item.answer = answer_item["answer"]
+            _item.save()
         return instance
 
 
@@ -155,6 +155,7 @@ class RequestSerializer(serializers.ModelSerializer):
     
     def validate(self, attrs):
         attrs['participants'] = self.initial_data['participants']
+        attrs['enquetes'] = self.initial_data['enquetes']
         return attrs
     
     def create(self, validated_data):

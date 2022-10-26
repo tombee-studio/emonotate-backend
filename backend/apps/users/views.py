@@ -203,6 +203,13 @@ class ContentViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class EnqueteViewSet(viewsets.ModelViewSet):
+    serializer_class = EnqueteSerializer
+    queryset = Enquete.objects.all().order_by('created')
+    search_fields = ['title']
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ContentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all()
@@ -479,10 +486,17 @@ def download_curve_data(request):
 def change_email(request):
     email = json.loads(request.body)["email"]
     if LoginAPIView.is_invalid_emailuser(email):
-        return HttpResponse("無効なメールアドレスです", status=403)
+        return HttpResponse(json.dumps({
+            "message": "無効なメールアドレスです",
+            "error_code": "H10"
+        }), status=403)
     try:
-        EmailUser.objects.get(email=email)
-        return HttpResponse("そのメールアドレスは既に利用されています", status=403)
+        existing_user = EmailUser.objects.get(email=email)
+        return HttpResponse(json.dumps({
+            "message": "そのメールアドレスは既に利用されています",
+            "user": UserSerializer(existing_user).data,
+            "error_code": "H11"
+        }), status=403)
     except EmailUser.DoesNotExist:
         user = request.user
         user.email = email
@@ -490,3 +504,30 @@ def change_email(request):
         return JsonResponse(
             UserSerializer(EmailUser.objects.get(pk=user.id)).data, 
             status=202)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+@require_http_methods(["POST"])
+def merge_accounts(request):
+    origin_name = json.loads(request.body)["from"]
+    to_name = json.loads(request.body)["to"]
+    password = json.loads(request.body)["password"]
+    user = authenticate(request, username=to_name, password=password)
+    if user is not None:
+        origin_user = EmailUser.objects.get(username=origin_name)
+        to_user = EmailUser.objects.get(username=to_name)
+        login(request, to_user, backend='django.contrib.auth.backends.ModelBackend')
+        tasks = []
+        for item in origin_user.curve_set.all():
+            item.user = to_user
+            tasks.append(item)
+        Curve.objects.bulk_update(tasks, ["user"])
+        origin_user.delete()
+        return HttpResponse(json.dumps({
+            "user": UserSerializer(to_user).data
+        }), status=202)
+    else:
+        return HttpResponse(json.dumps({
+            "message": f"{EmailUser.objects.get(username=to_name).username}のパスワードを入力してください",
+            "error_code": "H09"
+        }), status=403)

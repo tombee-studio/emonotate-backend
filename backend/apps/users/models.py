@@ -60,7 +60,7 @@ class EmailUserManager(BaseUserManager):
         try:
             group = Group.objects.get(name='Guest')
         except Group.DoesNotExist:
-            print("Does not exists")
+            pass
         else:
             user.groups.add(group)
         return user
@@ -83,7 +83,7 @@ class EmailUserManager(BaseUserManager):
             try:
                 group = Group.objects.get(name='General')
             except Group.DoesNotExist:
-                print("Does not exists")
+                pass
             else:
                 user.groups.add(group)
         return user
@@ -101,7 +101,7 @@ class EmailUserManager(BaseUserManager):
         try:
             group = Group.objects.get(name='Researchers')
         except Group.DoesNotExist:
-            print("Does not exists")
+            pass
         else:
             user.groups.add(group)
         return user
@@ -204,6 +204,22 @@ class YouTubeContent(Content):
             super(YouTubeContent, self).save(**kwargs)
 
 
+class Enquete(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(
+        unique=True, 
+        max_length=128
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        max_length=1000
+    )
+
+    def __str__(self):
+        return self.title
+
+
 class Curve(models.Model):
     objects = BaseManager()
     created = models.DateTimeField(auto_now_add=True)
@@ -215,16 +231,19 @@ class Curve(models.Model):
     values = JSONField()
     version = models.CharField(max_length=16)
     room_name = models.CharField(max_length=32, default="")
+    enquete = models.ManyToManyField(Enquete, through="EnqueteAnswer")
     locked = models.BooleanField(default=True)
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)
 
 
-class Questionaire(models.Model):
-    objects = BaseManager()
-    url = models.URLField(default="")
-    user_id_form = models.CharField(max_length=32)
+class EnqueteAnswer(models.Model):
+    curve = models.ForeignKey(Curve, default=1, on_delete=models.CASCADE)
+    enquete = models.ForeignKey(Enquete, default=1, on_delete=models.CASCADE)
+    answer = models.TextField(
+        max_length=1000,
+    )
 
 
 class Request(models.Model):
@@ -248,12 +267,8 @@ class Request(models.Model):
         default=1,
         on_delete=models.CASCADE
     )
-    questionaire = models.ForeignKey(Questionaire, 
-        null=True, 
-        blank=True,
-        on_delete=models.SET_NULL, 
-        default=None)
     values = JSONField(default=[], blank=True)
+    enquetes = models.ManyToManyField(Enquete)
     expiration_date = models.DateTimeField(auto_now_add=True)
 
     def save(self, **kwargs):
@@ -271,4 +286,4 @@ class RelationParticipant(models.Model):
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     request = models.ForeignKey(Request, default=1, on_delete=models.CASCADE)
     sended_mail = models.BooleanField(default=False)
-    message = models.TextField(default="")
+    message = models.TextField(default="", blank=True)

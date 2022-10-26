@@ -12,6 +12,7 @@ router.register(r'curves', CurveViewSet, basename='curves')
 router.register(r'contents', ContentViewSet, basename='contents')
 router.register(r'youtube', YouTubeContentViewSet, basename='youtube')
 router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
+router.register(r'enquetes', EnqueteViewSet, basename='enquetes')
 router.register(r'requests', RequestViewSet, basename='requests')
 router.register(r'curves_with_youtube', CurveWithYouTubeContentViewSet, basename='curve_with_youtube')
 
@@ -26,3 +27,4 @@ urlpatterns += path('get_download_curve_data/<int:pk>', get_download_curve_data)
 urlpatterns += path('download_curve_data/', download_curve_data),
 urlpatterns += path('reset_email_addresses/<int:pk>', reset_email_addresses),
 urlpatterns += path('change_email/', change_email),
+urlpatterns += path('merge_accounts/', merge_accounts),

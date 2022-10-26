@@ -67,17 +67,43 @@ class YouTubeContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class EnqueteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enquete
+        fields = '__all__'
+
+
 class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
         fields = '__all__'
     
     def to_representation(self, instance):
+        def generate_enquete_json(enquete, curve):
+            data = EnqueteSerializer(enquete).data
+            membership = enquete.enqueteanswer_set.get(curve=curve)
+            data["answer"] = membership.answer
+            return data
         ret = super().to_representation(instance)
         ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
         ret['content'] = ContentSerializer(instance.content).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        ret['enquete'] = [generate_enquete_json(enquete, instance) for enquete in Enquete.objects.filter(pk__in=ret['enquete'])]
         return ret
+
+    def validate(self, attrs):
+        attrs['enquete'] = list(map(lambda item: item["id"], self.initial_data['enquete']))
+        return attrs
+    
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        enquetes = Enquete.objects.filter(pk__in=list(map(lambda item: item["id"], self.initial_data['enquete'])))
+        for enquete in enquetes.iterator():
+            _item = enquete.enqueteanswer_set.get(curve=instance)
+            answer_item = list(filter(lambda item: item["id"] == enquete.id, self.initial_data['enquete']))[0]
+            _item.answer = answer_item["answer"]
+            _item.save()
+        return instance
 
 
 class CurveWithYouTubeSerializer(serializers.ModelSerializer):
@@ -107,12 +133,6 @@ class CurveWithYouTubeSerializer(serializers.ModelSerializer):
         return super().is_valid(raise_exception)
 
 
-class QuestionaireSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Questionaire
-        fields = '__all__'
-
-
 class RequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Request
@@ -130,13 +150,12 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
         ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
-        ret['is_able_to_send'] = True
-        if ret['questionaire'] != None:
-            ret['questionaire'] = QuestionaireSerializer(Questionaire.objects.get(pk=ret['questionaire'])).data
+        ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
         return ret
     
     def validate(self, attrs):
         attrs['participants'] = self.initial_data['participants']
+        attrs['enquetes'] = self.initial_data['enquetes']
         return attrs
     
     def create(self, validated_data):
@@ -149,4 +168,5 @@ class RequestSerializer(serializers.ModelSerializer):
             description=validated_data['description']
         )
         instance.participants.set(validated_data['participants'])
+        instance.enquetes.set(validated_data['enquetes'])
         return instance

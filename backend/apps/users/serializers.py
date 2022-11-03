@@ -56,6 +56,17 @@ class ContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class SectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Section
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['content'] = ContentSerializer(instance.content).data
+        return ret
+
+
 class YouTubeContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = YouTubeContent

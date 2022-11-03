@@ -193,6 +193,18 @@ class Content(models.Model):
         return self.title
 
 
+class Section(models.Model):
+    objects = BaseManager()
+    created = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=256, default="")
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
+    content = models.ForeignKey(Content, default=1, on_delete=models.CASCADE)
+    values = JSONField(default=[], blank=True)
+
+    def __str__(self):
+        return f"{self.title} {self.content.title}({self.created})"
+
+
 class YouTubeContent(Content):
     objects = BaseManager()
     video_id = models.CharField(max_length=128, unique=True)
@@ -267,6 +279,10 @@ class Request(models.Model):
         default=1,
         on_delete=models.CASCADE
     )
+    section = models.ForeignKey(
+        Section,
+        default=1,
+        on_delete=models.CASCADE)
     values = JSONField(default=[], blank=True)
     enquetes = models.ManyToManyField(Enquete)
     expiration_date = models.DateTimeField(auto_now_add=True)

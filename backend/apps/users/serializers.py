@@ -162,7 +162,8 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
         ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
-        ret['section'] = SectionSerializer(Section.objects.get(pk=ret['section'])).data
+        if ret['section']:
+            ret['section'] = SectionSerializer(Section.objects.get(pk=ret['section'])).data
         return ret
     
     def validate(self, attrs):

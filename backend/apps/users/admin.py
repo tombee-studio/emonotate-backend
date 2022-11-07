@@ -40,6 +40,7 @@ class EnqueteAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Content)
+admin.site.register(Section)
 admin.site.register(EmailUser, EmailUserAdmin)
 admin.site.register(ValueType)
 admin.site.register(Curve, CurveAdmin)

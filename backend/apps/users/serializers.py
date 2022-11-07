@@ -56,6 +56,17 @@ class ContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class SectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Section
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['content'] = ContentSerializer(instance.content).data
+        return ret
+
+
 class YouTubeContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = YouTubeContent
@@ -151,6 +162,8 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
         ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
+        if ret['section']:
+            ret['section'] = SectionSerializer(Section.objects.get(pk=ret['section'])).data
         return ret
     
     def validate(self, attrs):
@@ -165,7 +178,8 @@ class RequestSerializer(serializers.ModelSerializer):
             value_type=validated_data['value_type'],
             title=validated_data['title'],
             values=validated_data['values'],
-            description=validated_data['description']
+            description=validated_data['description'],
+            section=validated_data['section']
         )
         instance.participants.set(validated_data['participants'])
         instance.enquetes.set(validated_data['enquetes'])

@@ -14,6 +14,7 @@ router.register(r'youtube', YouTubeContentViewSet, basename='youtube')
 router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
 router.register(r'enquetes', EnqueteViewSet, basename='enquetes')
 router.register(r'requests', RequestViewSet, basename='requests')
+router.register(r'sections', SectionViewSet, basename='sections')
 router.register(r'curves_with_youtube', CurveWithYouTubeContentViewSet, basename='curve_with_youtube')
 
 urlpatterns = router.urls

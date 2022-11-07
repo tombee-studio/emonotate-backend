@@ -281,7 +281,7 @@ class Request(models.Model):
     )
     section = models.ForeignKey(
         Section,
-        default=1,
+        null=True,
         on_delete=models.CASCADE)
     values = JSONField(default=[], blank=True)
     enquetes = models.ManyToManyField(Enquete)

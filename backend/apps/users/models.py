@@ -283,6 +283,7 @@ class Request(models.Model):
         Section,
         null=True,
         on_delete=models.CASCADE)
+    is_required_free_hand = models.BooleanField(default=False)
     values = JSONField(default=[], blank=True)
     enquetes = models.ManyToManyField(Enquete)
     expiration_date = models.DateTimeField(auto_now_add=True)

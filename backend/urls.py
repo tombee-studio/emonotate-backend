@@ -1,16 +1,17 @@
 import os
+from django.urls import path
 from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.contrib import admin
 
 from .settings.common import STATIC_URL, BASE_DIR
-from .views import app, index
+from .views import *
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('users.urls')),
     url(r'^history/', include('users.history')),
-    url(r'^app/', app, name='app'),
+    path('free-hand/<int:pk>/', free_hand_view, name='free-hand'),
     url(r'^auth/', include('auth.urls')),
     url(r'^convert/', include('lazysignup.urls')),
     url('^$', index, name='index'),

@@ -14,6 +14,7 @@ from lazysignup.decorators import allow_lazy_user
 from django.http import JsonResponse
 
 from users.serializers import UserSerializer
+from users.models import Request
 
 User = get_user_model()
 
@@ -43,4 +44,13 @@ def app(request):
     }
 
     template = 'backend/app.html'
+    return render(request, template, context)
+
+
+@login_required
+def free_hand_view(request, pk):
+    context = {
+        "request": Request.objects.get(pk=pk)
+    }
+    template = 'backend/free-hand.html'
     return render(request, template, context)

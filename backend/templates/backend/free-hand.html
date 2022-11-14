@@ -1,0 +1,48 @@
+{% load static %}
+
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Emonotate | 感情曲線研究支援ツール</title>
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <script src="https://www.youtube.com/iframe_api"></script>
+        <script src="https://cdn.anychart.com/js/latest/graphics.min.js"></script>
+    </head>
+    <body>
+        <div id="player"></div>
+        <div id="GraphView"  style="width: 1000px; height: 400px;"></div>
+        <script src="{% static 'users/js/youtubeView.js' %}"></script>
+        <script src="{% static 'users/js/GraphView.js' %}"></script>
+        <script>
+            var youtubeId = "{{request.content.youtubecontent.video_id}}";
+            function onYouTubeIframeAPIReady() {
+                player = new YT.Player('player', {
+                    height: '360',
+                    width: '640',
+                    videoId: youtubeId,
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }
+
+
+            function onPlayerReady(event) {
+                event.target.playVideo();
+            }
+
+            function onPlayerStateChange(event) {
+                if (event.data == YT.PlayerState.PLAYING && !done) {
+                    setTimeout(stopVideo, 6000);
+                    done = true;
+                }
+            }
+            function stopVideo() {
+                player.stopVideo();
+            } 
+        </script>
+    </body>
+</html>

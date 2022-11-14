@@ -13,36 +13,10 @@
     <body>
         <div id="player"></div>
         <div id="GraphView"  style="width: 1000px; height: 400px;"></div>
-        <script src="{% static 'users/js/youtubeView.js' %}"></script>
-        <script src="{% static 'users/js/GraphView.js' %}"></script>
         <script>
             var youtubeId = "{{request.content.youtubecontent.video_id}}";
-            function onYouTubeIframeAPIReady() {
-                player = new YT.Player('player', {
-                    height: '360',
-                    width: '640',
-                    videoId: youtubeId,
-                    events: {
-                        'onReady': onPlayerReady,
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
-            }
-
-
-            function onPlayerReady(event) {
-                event.target.playVideo();
-            }
-
-            function onPlayerStateChange(event) {
-                if (event.data == YT.PlayerState.PLAYING && !done) {
-                    setTimeout(stopVideo, 6000);
-                    done = true;
-                }
-            }
-            function stopVideo() {
-                player.stopVideo();
-            } 
         </script>
+        <script src="{% static 'users/js/youtubeView.js' %}"></script>
+        <script src="{% static 'users/js/GraphView.js' %}"></script>
     </body>
 </html>

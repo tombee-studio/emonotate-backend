@@ -9,14 +9,17 @@
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <script src="https://www.youtube.com/iframe_api"></script>
         <script src="https://cdn.anychart.com/js/latest/graphics.min.js"></script>
+        <script src="{% static 'users/js/YouTubeView.js' %}"></script>
     </head>
     <body>
         <div id="player"></div>
         <div id="GraphView"  style="width: 1000px; height: 400px;"></div>
         <script>
-            var youtubeId = "{{request.content.youtubecontent.video_id}}";
+            var youtubeID = "{{request.content.youtubecontent.video_id}}";
+            var youtubePlayerID = "player";
+            var youtubeView = new YouTubeView(youtubePlayerID, youtubeID);
+            youtubeView.initialize();
         </script>
-        <script src="{% static 'users/js/youtubeView.js' %}"></script>
         <script src="{% static 'users/js/GraphView.js' %}"></script>
     </body>
 </html>

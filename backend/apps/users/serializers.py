@@ -84,6 +84,12 @@ class EnqueteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class GoogleFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoogleForm
+        fields = '__all__'
+
+
 class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
@@ -162,6 +168,9 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
         ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
+        ret['has_google_form'] = ret['google_form'] != None
+        if ret['google_form'] != None:
+            ret['google_form'] = GoogleFormSerializer(GoogleForm.objects.get(pk=ret['google_form'])).data
         if ret['section']:
             ret['section'] = SectionSerializer(Section.objects.get(pk=ret['section'])).data
         return ret

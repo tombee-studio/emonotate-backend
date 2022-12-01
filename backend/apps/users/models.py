@@ -297,7 +297,7 @@ class Request(models.Model):
     values = JSONField(default=[], blank=True)
     enquetes = models.ManyToManyField(Enquete, blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
-    google_form = models.ForeignKey(GoogleForm, null=True, on_delete=models.SET_NULL)
+    google_form = models.ForeignKey(GoogleForm, blank=True, null=True, on_delete=models.SET_NULL)
 
     def save(self, **kwargs):
         if not self.room_name:

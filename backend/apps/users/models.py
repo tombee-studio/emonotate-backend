@@ -295,7 +295,7 @@ class Request(models.Model):
         on_delete=models.CASCADE)
     is_required_free_hand = models.BooleanField(default=False)
     values = JSONField(default=[], blank=True)
-    enquetes = models.ManyToManyField(Enquete)
+    enquetes = models.ManyToManyField(Enquete, blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
     google_form = models.ForeignKey(GoogleForm, null=True, on_delete=models.SET_NULL)
 

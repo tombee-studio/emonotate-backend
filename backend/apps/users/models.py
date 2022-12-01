@@ -258,6 +258,16 @@ class EnqueteAnswer(models.Model):
     )
 
 
+class GoogleForm(models.Model):
+    title = models.CharField(max_length=1024, blank=True, default="")
+    url = models.URLField(blank=False)
+    created = models.DateTimeField(auto_now_add=True)
+    username_entry_field = models.CharField(
+        max_length=128, blank=True, default="")
+    curve_id_entry_field = models.CharField(
+        max_length=128, blank=True, default="")
+
+
 class Request(models.Model):
     objects = BaseManager()
     room_name = models.CharField(max_length=6, null=True, blank=True, unique=True)
@@ -285,8 +295,9 @@ class Request(models.Model):
         on_delete=models.CASCADE)
     is_required_free_hand = models.BooleanField(default=False)
     values = JSONField(default=[], blank=True)
-    enquetes = models.ManyToManyField(Enquete)
+    enquetes = models.ManyToManyField(Enquete, blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
+    google_form = models.ForeignKey(GoogleForm, null=True, on_delete=models.SET_NULL)
 
     def save(self, **kwargs):
         if not self.room_name:

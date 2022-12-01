@@ -210,6 +210,13 @@ class SectionViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class GoogleFormViewSet(viewsets.ModelViewSet):
+    serializer_class = GoogleFormSerializer
+    queryset = GoogleForm.objects.all().order_by('created')
+    search_fields = ['title', 'created']
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class EnqueteViewSet(viewsets.ModelViewSet):
     serializer_class = EnqueteSerializer
     queryset = Enquete.objects.all().order_by('created')

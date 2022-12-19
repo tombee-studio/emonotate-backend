@@ -166,7 +166,12 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
-        ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
+        if len(ret['participants']) <= 10:
+            ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
+            ret['is_many_participants'] = False
+        else:
+            ret['participants'] = len(ret['participants'])
+            ret['is_many_participants'] = True
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
         ret['has_google_form'] = ret['google_form'] != None
         if ret['google_form'] != None:

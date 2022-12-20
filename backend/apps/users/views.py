@@ -448,7 +448,7 @@ def get_download_curve_data(request, pk):
         req = Request.objects.get(pk=pk)
         file_name = f"{req.room_name}.json"
         curves = Curve.objects.filter(room_name=req.room_name)
-        curves_data = [CurveSerializer(curve).data for curve in curves]
+        curves_data = CurveSerializer(curves, many=True).data
         response = s3.put_object(
             Bucket=AWS_STORAGE_BUCKET_NAME,
             Key=file_name,

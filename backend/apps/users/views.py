@@ -43,6 +43,9 @@ from django.shortcuts import redirect
 import boto3
 from importlib import import_module
 
+from rq import Queue
+from worker import conn
+
 from django.views.decorators.http import require_http_methods
 
 from .serializers import *
@@ -441,8 +444,7 @@ def sign_s3(request):
     }))
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-def get_download_curve_data(request, pk):
+def create_curve_data_in_s3(pk):
     s3 = boto3.client('s3')
     try:
         req = Request.objects.get(pk=pk)
@@ -454,12 +456,49 @@ def get_download_curve_data(request, pk):
             Key=file_name,
             Body=json.dumps(curves_data),
             ACL="public-read")
-        return JsonResponse(data={
-            "url": f"{S3_URL}{file_name}",
-            "file_name": file_name
-        })
+        req.state_processing_to_download = 2
+        req.save()
     except:
-        return HttpResponse(status=404)
+        req.state_processing_to_download = -1
+        req.save()
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+def get_download_curve_data(request, pk):
+    req = Request.objects.get(pk=pk)
+    file_name = f"{req.room_name}.json"
+    if req.state_processing_to_download == 0:
+        # ダウンロード可能タイミング
+        req.state_processing_to_download = 1
+        req.save()
+        q = Queue(connection=conn)
+        result = q.enqueue(create_curve_data_in_s3, pk)
+        return JsonResponse(data={
+            "state": "PROCESSING",
+        })
+    elif req.state_processing_to_download == 1:
+        # 非同期が実行中の処理
+        return JsonResponse(data={
+            "state": "PROCESSING"
+        })
+    elif req.state_processing_to_download == 2:
+        # 非同期が実行中の処理
+        file_name = f"{req.room_name}.json"
+        req.state_processing_to_download = 0
+        req.save()
+        return JsonResponse(data={
+            "state": "SUCCESSED",
+            "url": f"{S3_URL}{file_name}",
+            "file_name": file_name,
+        })
+    elif req.state_processing_to_download == -1:
+        req.state_processing_to_download = 0
+        req.save()
+        return JsonResponse(data={
+            "state": "FAILED"
+        })
+    else:
+        print(f"ERROR OCCUURED!!!! Invalid state_processing_to_download: {req.state_processing_to_download}")
 
 
 @method_decorator(csrf_exempt, name='dispatch')

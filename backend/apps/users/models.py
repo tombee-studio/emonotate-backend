@@ -298,6 +298,12 @@ class Request(models.Model):
     enquetes = models.ManyToManyField(Enquete, blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
     google_form = models.ForeignKey(GoogleForm, blank=True, null=True, on_delete=models.SET_NULL)
+    state_processing_to_download = models.IntegerField(choices=(
+        (0,  'WAITING'),
+        (1,  'PROCESSING'),
+        (2,  'SUCCESSED'),
+        (-1, 'FAILED')), 
+        default=0)
 
     def save(self, **kwargs):
         if not self.room_name:

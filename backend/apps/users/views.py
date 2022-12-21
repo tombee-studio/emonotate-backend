@@ -448,6 +448,8 @@ def create_curve_data_in_s3(pk):
     s3 = boto3.client('s3')
     try:
         req = Request.objects.get(pk=pk)
+        req.state_processing_to_download = 1
+        req.save()
         file_name = f"{req.room_name}.json"
         curves = Curve.objects.filter(room_name=req.room_name)
         curves_data = CurveSerializer(curves, many=True).data
@@ -469,8 +471,6 @@ def get_download_curve_data(request, pk):
     file_name = f"{req.room_name}.json"
     if req.state_processing_to_download == 0:
         # ダウンロード可能タイミング
-        req.state_processing_to_download = 1
-        req.save()
         q = Queue(connection=conn)
         result = q.enqueue(create_curve_data_in_s3, pk)
         return JsonResponse(data={

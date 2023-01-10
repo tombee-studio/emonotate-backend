@@ -306,8 +306,9 @@ class Request(models.Model):
     )
     section = models.ForeignKey(
         Section,
+        blank=True,
         null=True,
-        on_delete=models.CASCADE)
+        on_delete=models.SET_NULL)
     is_required_free_hand = models.BooleanField(default=False)
     values = JSONField(default=[], blank=True)
     enquetes = models.ManyToManyField(Enquete, blank=True)

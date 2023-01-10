@@ -13,8 +13,8 @@ from lazysignup.decorators import allow_lazy_user
 
 from django.http import JsonResponse
 
-from users.serializers import UserSerializer
-from users.models import Request
+from users.serializers import UserSerializer, RequestSerializer
+from users.models import Request, Curve
 
 User = get_user_model()
 
@@ -49,8 +49,16 @@ def app(request):
 
 @login_required
 def free_hand_view(request, pk):
+    curve_json = Curve.get_empty_json()
+    req = Request.objects.get(pk=pk)
+    curve_json["content"] = req.content.id
+    curve_json["value_type"] = req.value_type.id
+    curve_json["user"] = request.user.id
+    curve_json["locked"] = True
+    curve_json["room_name"] = req.room_name
     context = {
-        "request": Request.objects.get(pk=pk)
+        "request": req,
+        "curve_json": json.dumps(curve_json),
     }
     template = 'backend/free-hand.html'
     return render(request, template, context)

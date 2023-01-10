@@ -181,8 +181,6 @@ class RequestSerializer(serializers.ModelSerializer):
         return ret
     
     def validate(self, attrs):
-        attrs['participants'] = self.initial_data['participants']
-        attrs['enquetes'] = self.initial_data['enquetes']
         return attrs
     
     def create(self, validated_data):
@@ -192,9 +190,17 @@ class RequestSerializer(serializers.ModelSerializer):
             value_type=validated_data['value_type'],
             title=validated_data['title'],
             values=validated_data['values'],
-            description=validated_data['description'],
-            section=validated_data['section']
+            description=validated_data['description']
         )
-        instance.participants.set(validated_data['participants'])
-        instance.enquetes.set(validated_data['enquetes'])
+        return instance
+    
+    def update(self, instance, validated_data):
+        instance.content = validated_data['content']
+        instance.owner = validated_data['owner']
+        instance.value_type = validated_data['value_type']
+        instance.title = validated_data['title']
+        instance.values = validated_data['values']
+        instance.description = validated_data['description']
+        instance.is_required_free_hand = validated_data['is_required_free_hand']
+        instance.save()
         return instance

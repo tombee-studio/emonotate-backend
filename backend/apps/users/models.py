@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import os
+import json
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
                                         BaseUserManager)
 from django.contrib.postgres.fields import JSONField
@@ -248,6 +249,20 @@ class Curve(models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)
+
+
+    @staticmethod
+    def get_empty_json():
+        return {
+            "user": None,
+            "content": None,
+            "value_type": None,
+            "version": "1.0.0",
+            "room_name": None,
+            "enquete": [],
+            "locked": None,
+            "values": None
+        }
 
 
 class EnqueteAnswer(models.Model):

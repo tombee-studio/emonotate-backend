@@ -7,19 +7,25 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Emonotate | 感情曲線研究支援ツール</title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <script>
+            let youtubeID = "{{request.content.youtubecontent.video_id}}";
+            let youtubePlayerID = "player";
+            let graphViewId = "stage_container";
+            let curve = {{curve_json | safe}};
+        </script>
         <script src="https://www.youtube.com/iframe_api"></script>
         <script src="https://cdn.anychart.com/js/latest/graphics.min.js"></script>
         <script src="{% static 'users/js/YouTubeView.js' %}"></script>
+        <script src="{% static 'users/js/GraphView.js' %}"></script>
+        <script src="{% static 'users/js/FreeHandInputField.js'%}"></script>
+        <script src="{% static 'users/js/ButtonAction.js'%}"></script>
     </head>
     <body>
         <div id="player"></div>
-        <div id="GraphView"  style="width: 1000px; height: 400px;"></div>
-        <script>
-            var youtubeID = "{{request.content.youtubecontent.video_id}}";
-            var youtubePlayerID = "player";
-            var youtubeView = new YouTubeView(youtubePlayerID, youtubeID);
-            youtubeView.initialize();
-        </script>
-        <script src="{% static 'users/js/GraphView.js' %}"></script>
+        <div>{{ request.description }}</div>
+        <div id="stage_container" style="width: 640px; height: 320px;"></div>
+        <button type=”button” onclick="createCurve()">
+            作成
+        </button>
     </body>
 </html>

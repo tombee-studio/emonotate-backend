@@ -366,6 +366,27 @@ class ParticipantView(View):
             "is_error": False,
             "participants": json.loads(data)
         }, status=200)
+    
+    def delete(self, request, pk, *args, **kwrags):
+        req = Request.objects.get(pk=pk)
+        params = json.loads(request.body)
+        delete_participants = req.participants.filter(email__in=params)
+        req.participants.remove(*delete_participants)
+        req.save()
+        if len(req.participants.all()) > 25:
+            return JsonResponse({
+                    "is_error": True,
+                    "error": "PARTICIPANT_VIEW001",
+                    "message": "参加者の人数が許容数を超えています",
+                    "number": len(req.participants.all())
+                },
+                status=200)
+        ser = UserSerializer(req.participants.all(), many=True)
+        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
+        return JsonResponse({
+            "is_error": False,
+            "participants": json.loads(data)
+        }, status=200)
 
 
 async def send_mail(request, title, description, participant):

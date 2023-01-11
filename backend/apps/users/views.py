@@ -517,11 +517,13 @@ def get_download_curve_data(request, pk):
         result = q.enqueue(create_curve_data_in_s3, pk)
         return JsonResponse(data={
             "state": "PROCESSING",
+            "request": RequestSerializer(req).data
         })
     elif req.state_processing_to_download == 1:
         # 非同期が実行中の処理
         return JsonResponse(data={
-            "state": "PROCESSING"
+            "state": "PROCESSING",
+            "request": RequestSerializer(req).data
         })
     elif req.state_processing_to_download == 2:
         # 非同期が実行中の処理
@@ -532,12 +534,14 @@ def get_download_curve_data(request, pk):
             "state": "SUCCESSED",
             "url": f"{S3_URL}{file_name}",
             "file_name": file_name,
+            "request": RequestSerializer(req).data
         })
     elif req.state_processing_to_download == -1:
         req.state_processing_to_download = 0
         req.save()
         return JsonResponse(data={
-            "state": "FAILED"
+            "state": "FAILED",
+            "request": RequestSerializer(req).data
         })
     else:
         print(f"ERROR OCCUURED!!!! Invalid state_processing_to_download: {req.state_processing_to_download}")

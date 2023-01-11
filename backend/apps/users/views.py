@@ -310,6 +310,64 @@ class RequestViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=403)
 
 
+class ParticipantView(View):
+    @staticmethod
+    def json_dt_patch(o):
+        import datetime
+        from decimal import Decimal
+
+        if isinstance(o, datetime.date) or isinstance(o, datetime.datetime):
+            return o.strftime("%Y/%m/%d %H:%M:%S")
+        elif isinstance(o, Decimal):
+            return str(o)
+        return o
+
+    def get(self, request, pk=None, *args, **kwargs):
+        req = Request.objects.get(pk=pk)
+        if len(req.participants.all()) > 25:
+            return JsonResponse({
+                    "is_error": True,
+                    "error": "PARTICIPANT_VIEW001",
+                    "message": "参加者の人数が許容数を超えています",
+                    "number": len(req.participants.all())
+                },
+                status=200)
+        ser = UserSerializer(req.participants.all(), many=True)
+        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
+        return JsonResponse({
+            "is_error": False,
+            "participants": json.loads(data)
+        }, status=200)
+    
+
+    def post(self, request, pk, *args, **kwargs):
+        req = Request.objects.get(pk=pk)
+        params = json.loads(request.body)
+        for email in params["emails"]:
+            try:
+                user = EmailUser.objects.get(email=email)
+            except EmailUser.DoesNotExist:
+                user = EmailUser.objects.create_unique_user(email)
+                user.email = email
+                user.save()
+            req.participants.add(user)
+            req.save()
+        if len(req.participants.all()) > 25:
+            return JsonResponse({
+                    "is_error": True,
+                    "error": "PARTICIPANT_VIEW001",
+                    "message": "参加者の人数が許容数を超えています",
+                    "number": len(req.participants.all())
+                },
+                status=200)
+        ser = UserSerializer(req.participants.all(), many=True)
+        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
+        return JsonResponse({
+            "is_error": False,
+            "participants": json.loads(data)
+        }, status=200)
+
+
 async def send_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(

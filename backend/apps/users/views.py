@@ -304,16 +304,16 @@ class RequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         role = self.request.GET.get('role')
         if role == 'owner':
-            return self.queryset.filter(owner=self.request.user)
+            return self.queryset.filter(owner=self.request.user).order_by('created')
         elif role == 'participant':
-            return self.request.user.request_set.all()
+            return self.request.user.request_set.all().order_by('created')
         elif role == 'relative':
             user = self.request.user
             invited_user_requests = self.queryset.filter(owner__in=user.emailuser_set.all())
             inviting_user_requests = self.queryset.filter(owner__in=user.inviting_users.all())
-            return invited_user_requests.union(inviting_user_requests)
+            return invited_user_requests.union(inviting_user_requests).order_by('created')
         else:
-            return self.queryset
+            return self.queryset.filter(owner=self.request.user).order_by('created')
     
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('users.add_request'):

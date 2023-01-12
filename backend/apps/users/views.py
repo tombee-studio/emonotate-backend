@@ -70,6 +70,20 @@ class LoginAPIView(View):
     def is_invalid_emailuser(email):
         return re.match(r"emonotate\+.+@gmail.com", email)
 
+    def process_queries(self, queries, user):
+        self.process_passport(queries, user)
+        self.process_inviting(queries, user)
+    
+
+    def process_inviting(self, queries, user):
+        if queries.get("inviting") == None:
+            return
+        token = queries.get("inviting")
+        token_obj = InvitingToken.objects.get(token=token)
+        user.inviting_users.add(token_obj.user)
+        user.save()
+
+
     def process_passport(self, queries, user):
         if queries.get("passport") == None:
             return
@@ -82,8 +96,16 @@ class LoginAPIView(View):
     def get(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         token = request.GET.get("token")
+        inviting = request.GET.get("inviting")
+        if inviting != None:
+            inviting_user = EmailUser.objects.create_unique_user()
+            inviting_user.groups.add(Group.objects.get(name='Guest'))
+            inviting_user.groups.add(Group.objects.get(name='Researchers'))
+            self.process_queries(request.GET, inviting_user)
+            login(request, inviting_user, backend='django.contrib.auth.backends.ModelBackend')
+    
         if request.user.is_authenticated:
-            self.process_passport(request.GET, request.user)
+            self.process_queries(request.GET, request.user)
             return redirect(f"{module.APPLICATION_URL}")
 
         if token == None:
@@ -92,19 +114,20 @@ class LoginAPIView(View):
             # *****
             queries = [f'{query}={request.GET[query]}' for query in request.GET]
             return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
-        else:
-            # *****
-            # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
-            # *****
-            if request.user.is_authenticated:
-                logout(request)
-            auth = JWTAuthentication()
-            tokenAuth = JWTTokenUserAuthentication()
-            token_user = tokenAuth.get_user(auth.get_validated_token(token))
-            user = EmailUser.objects.get(pk=token_user.user_id)
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            self.process_passport(request.GET, user)
-            return redirect("/")
+
+        # *****
+        # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
+        # *****
+        if request.user.is_authenticated:
+            logout(request)
+        auth = JWTAuthentication()
+        tokenAuth = JWTTokenUserAuthentication()
+        token_user = tokenAuth.get_user(auth.get_validated_token(token))
+        user = EmailUser.objects.get(pk=token_user.user_id)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        self.process_queries(request.GET, user)
+        return redirect("/")
+
 
     def post(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
@@ -127,9 +150,9 @@ class LoginAPIView(View):
                     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         if request.user.is_authenticated:
             try:
-                self.process_passport(request.GET, user)
-            except Exception:
-                pass
+                self.process_queries(request.GET, request.user)
+            except Exception as ex:
+                print(ex)
             if not LoginAPIView.is_invalid_emailuser(request.user.email):
                 return JsonResponse(UserSerializer(request.user).data)
             else:

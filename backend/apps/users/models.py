@@ -152,6 +152,9 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
+    inviting_users = models.ManyToManyField(
+        "EmailUser", 
+        null=True)
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'
@@ -341,7 +344,7 @@ class RelationParticipant(models.Model):
 
 class InvitingToken(models.Model):
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
-    token = models.TextField(default="")
+    token = models.TextField(default="", unique=True)
     expiration_date = models.DateTimeField(blank=True)
 
     def save(self, **kwargs):

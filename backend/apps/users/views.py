@@ -310,6 +310,59 @@ class RequestViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=403)
 
 
+class InvitingTokenView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            token_obj = InvitingToken.objects.get(user=request.user)
+            if token_obj.expiration_date > datetime.now():
+                return JsonResponse({
+                    "is_error": False,
+                    "inviting_token": InvitingTokenSerializer(token_obj).data
+                }, status=200)
+            else:
+                token_obj.delete()
+        except InvitingToken.DoesNotExist:
+            pass
+        return JsonResponse({
+            "is_error": True,
+            "error": "GENERATE_INVITING_TOKEN_VIEW001",
+            "message": "Inviting Tokenを作成したことがありません"
+        },
+        status=200)
+
+
+    def post(self, request, *args, **kwargs):
+        params = json.loads(request.body)
+        expiration_date_str = params['expiration_date']
+        expiration_date = datetime.strptime(expiration_date_str, "%Y-%m-%dT%H:%M")
+        user = request.user
+        try:
+            token_obj = InvitingToken.objects.get(user=user)
+            if datetime.now() < token_obj.expiration_date:
+                return JsonResponse({
+                    "is_error": True,
+                    "error": "GENERATE_INVITING_TOKEN_VIEW002",
+                    "message": "既に有効なInviting Tokenが存在しているためを作成できません",
+                    "inviting_token": InvitingTokenSerializer(token_obj).data
+                }, status=200)
+            else:
+                token_obj.delete()
+        except InvitingToken.DoesNotExist:
+            pass
+        if expiration_date < datetime.now():
+            return JsonResponse({
+                "is_error": True,
+                "error": "GENERATE_INVITING_TOKEN_VIEW003",
+                "message": "現在以前に有効期限を設定することはできません"
+            }, status=200)
+        token_obj = InvitingToken(user=user, expiration_date=expiration_date)
+        token_obj.save()
+        return JsonResponse({
+            "is_error": False,
+            "inviting_token": InvitingTokenSerializer(token_obj).data
+        }, status=201)
+
+
 class ParticipantView(View):
     @staticmethod
     def json_dt_patch(o):

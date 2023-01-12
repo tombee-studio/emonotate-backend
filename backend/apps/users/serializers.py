@@ -204,3 +204,9 @@ class RequestSerializer(serializers.ModelSerializer):
         instance.is_required_free_hand = validated_data['is_required_free_hand']
         instance.save()
         return instance
+
+
+class InvitingTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvitingToken
+        fields = '__all__'

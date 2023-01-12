@@ -24,6 +24,8 @@ class UserSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         ret["groups"] = [group.name for group in instance.groups.all()]
         ret["is_lazy_user"] = is_lazy_user(instance)
+        ret["inviting_users"] = len(instance.inviting_users.all())
+        ret["invited_users"] = len(instance.emailuser_set.all())
         return ret
 
 
@@ -204,3 +206,9 @@ class RequestSerializer(serializers.ModelSerializer):
         instance.is_required_free_hand = validated_data['is_required_free_hand']
         instance.save()
         return instance
+
+
+class InvitingTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvitingToken
+        fields = '__all__'

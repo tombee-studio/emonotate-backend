@@ -152,6 +152,9 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
+    inviting_users = models.ManyToManyField(
+        "EmailUser", 
+        null=True)
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'
@@ -327,7 +330,7 @@ class Request(models.Model):
             while Request.objects.filter(room_name=self.room_name).exists():
                 self.room_name = randomname()
         super(Request, self).save(**kwargs)
-    
+
     def __str__(self):
         return f'({self.id}){self.title}({self.room_name})'
 
@@ -337,3 +340,19 @@ class RelationParticipant(models.Model):
     request = models.ForeignKey(Request, default=1, on_delete=models.CASCADE)
     sended_mail = models.BooleanField(default=False)
     message = models.TextField(default="", blank=True)
+
+
+class InvitingToken(models.Model):
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
+    token = models.TextField(default="", unique=True)
+    expiration_date = models.DateTimeField(blank=True)
+
+    def save(self, **kwargs):
+        if not self.token:
+            self.token = randomname(16)
+            while InvitingToken.objects.filter(token=self.token).exists():
+                self.token = randomname(16)
+        super(InvitingToken, self).save(**kwargs)
+
+    def __str__(self, *kwargs):
+        return f"{user}"

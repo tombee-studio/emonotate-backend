@@ -70,6 +70,20 @@ class LoginAPIView(View):
     def is_invalid_emailuser(email):
         return re.match(r"emonotate\+.+@gmail.com", email)
 
+    def process_queries(self, queries, user):
+        self.process_passport(queries, user)
+        self.process_inviting(queries, user)
+    
+
+    def process_inviting(self, queries, user):
+        if queries.get("inviting") == None:
+            return
+        token = queries.get("inviting")
+        token_obj = InvitingToken.objects.get(token=token)
+        user.inviting_users.add(token_obj.user)
+        user.save()
+
+
     def process_passport(self, queries, user):
         if queries.get("passport") == None:
             return
@@ -82,8 +96,16 @@ class LoginAPIView(View):
     def get(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         token = request.GET.get("token")
+        inviting = request.GET.get("inviting")
+        if inviting != None:
+            inviting_user = EmailUser.objects.create_unique_user()
+            inviting_user.groups.add(Group.objects.get(name='Guest'))
+            inviting_user.groups.add(Group.objects.get(name='Researchers'))
+            self.process_queries(request.GET, inviting_user)
+            login(request, inviting_user, backend='django.contrib.auth.backends.ModelBackend')
+    
         if request.user.is_authenticated:
-            self.process_passport(request.GET, request.user)
+            self.process_queries(request.GET, request.user)
             return redirect(f"{module.APPLICATION_URL}")
 
         if token == None:
@@ -92,19 +114,20 @@ class LoginAPIView(View):
             # *****
             queries = [f'{query}={request.GET[query]}' for query in request.GET]
             return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
-        else:
-            # *****
-            # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
-            # *****
-            if request.user.is_authenticated:
-                logout(request)
-            auth = JWTAuthentication()
-            tokenAuth = JWTTokenUserAuthentication()
-            token_user = tokenAuth.get_user(auth.get_validated_token(token))
-            user = EmailUser.objects.get(pk=token_user.user_id)
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            self.process_passport(request.GET, user)
-            return redirect("/")
+
+        # *****
+        # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
+        # *****
+        if request.user.is_authenticated:
+            logout(request)
+        auth = JWTAuthentication()
+        tokenAuth = JWTTokenUserAuthentication()
+        token_user = tokenAuth.get_user(auth.get_validated_token(token))
+        user = EmailUser.objects.get(pk=token_user.user_id)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        self.process_queries(request.GET, user)
+        return redirect("/")
+
 
     def post(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
@@ -127,9 +150,9 @@ class LoginAPIView(View):
                     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         if request.user.is_authenticated:
             try:
-                self.process_passport(request.GET, user)
-            except Exception:
-                pass
+                self.process_queries(request.GET, request.user)
+            except Exception as ex:
+                print(ex)
             if not LoginAPIView.is_invalid_emailuser(request.user.email):
                 return JsonResponse(UserSerializer(request.user).data)
             else:
@@ -201,28 +224,28 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
-    queryset = Content.objects.all().order_by('created')
+    queryset = Content.objects.all().order_by('created').reverse()
     search_fields = ['title']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SectionViewSet(viewsets.ModelViewSet):
     serializer_class = SectionSerializer
-    queryset = Section.objects.all().order_by('created')
+    queryset = Section.objects.all().order_by('created').reverse()
     search_fields = ['title', 'created']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GoogleFormViewSet(viewsets.ModelViewSet):
     serializer_class = GoogleFormSerializer
-    queryset = GoogleForm.objects.all().order_by('created')
+    queryset = GoogleForm.objects.all().order_by('created').reverse()
     search_fields = ['title', 'created']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class EnqueteViewSet(viewsets.ModelViewSet):
     serializer_class = EnqueteSerializer
-    queryset = Enquete.objects.all().order_by('created')
+    queryset = Enquete.objects.all().order_by('created').reverse()
     search_fields = ['title']
 
 
@@ -247,13 +270,13 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = CurveWithYouTubeSerializer
-    queryset = Curve.objects.all().order_by('created')
+    queryset = Curve.objects.all().order_by('created').reverse()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
-    queryset = Curve.objects.all().order_by('created')
+    queryset = Curve.objects.all().order_by('created').reverse()
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
@@ -261,14 +284,14 @@ class CurveViewSet(viewsets.ModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    queryset = User.objects.all().order_by('date_joined')
+    queryset = User.objects.all().order_by('date_joined').reverse()
     search_fields = ('username', 'email')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
-    queryset = YouTubeContent.objects.all().order_by('created')
+    queryset = YouTubeContent.objects.all().order_by('created').reverse()
     search_fields = ['=video_id']
 
 
@@ -281,11 +304,16 @@ class RequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         role = self.request.GET.get('role')
         if role == 'owner':
-            return self.queryset.filter(owner=self.request.user)
+            return self.queryset.filter(owner=self.request.user).order_by('created').reverse()
         elif role == 'participant':
-            return self.request.user.request_set.all()
+            return self.request.user.request_set.all().order_by('created').reverse()
+        elif role == 'relative':
+            user = self.request.user
+            invited_user_requests = self.queryset.filter(owner__in=user.emailuser_set.all())
+            inviting_user_requests = self.queryset.filter(owner__in=user.inviting_users.all())
+            return invited_user_requests.union(inviting_user_requests).order_by('created').reverse()
         else:
-            return self.queryset
+            return self.queryset.reverse()
     
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('users.add_request'):
@@ -299,15 +327,74 @@ class RequestViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=403)
     
     def update(self, request, *args, **kwargs):
-        if not request.user.has_perm('users.change_request'):
-            return Response("permission denied", status=403)
         instance = self.get_object()
+        if "mode" in request.data:
+            if request.data["mode"] == "duplicate":
+                instance.id = None
+                instance.owner = request.user
+                instance.room_name = ""
+                instance.save()
+                ser = self.get_serializer(instance)
+                return Response(ser.data, status=201)
         serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid(raise_exception=True):
             self.perform_update(serializer)
             return Response(serializer.data, status=200)
         else:
             return Response(serializer.data, status=403)
+
+
+class InvitingTokenView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            token_obj = InvitingToken.objects.get(user=request.user)
+            if token_obj.expiration_date > datetime.now():
+                return JsonResponse({
+                    "is_error": False,
+                    "inviting_token": InvitingTokenSerializer(token_obj).data
+                }, status=200)
+            else:
+                token_obj.delete()
+        except InvitingToken.DoesNotExist:
+            pass
+        return JsonResponse({
+            "is_error": True,
+            "error": "GENERATE_INVITING_TOKEN_VIEW001",
+            "message": "Inviting Tokenを作成したことがありません"
+        },
+        status=200)
+
+
+    def post(self, request, *args, **kwargs):
+        params = json.loads(request.body)
+        expiration_date_str = params['expiration_date']
+        expiration_date = datetime.strptime(expiration_date_str, "%Y-%m-%dT%H:%M")
+        user = request.user
+        try:
+            token_obj = InvitingToken.objects.get(user=user)
+            if datetime.now() < token_obj.expiration_date:
+                return JsonResponse({
+                    "is_error": True,
+                    "error": "GENERATE_INVITING_TOKEN_VIEW002",
+                    "message": "既に有効なInviting Tokenが存在しているためを作成できません",
+                    "inviting_token": InvitingTokenSerializer(token_obj).data
+                }, status=200)
+            else:
+                token_obj.delete()
+        except InvitingToken.DoesNotExist:
+            pass
+        if expiration_date < datetime.now():
+            return JsonResponse({
+                "is_error": True,
+                "error": "GENERATE_INVITING_TOKEN_VIEW003",
+                "message": "現在以前に有効期限を設定することはできません"
+            }, status=200)
+        token_obj = InvitingToken(user=user, expiration_date=expiration_date)
+        token_obj.save()
+        return JsonResponse({
+            "is_error": False,
+            "inviting_token": InvitingTokenSerializer(token_obj).data
+        }, status=201)
 
 
 class ParticipantView(View):

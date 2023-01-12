@@ -307,6 +307,11 @@ class RequestViewSet(viewsets.ModelViewSet):
             return self.queryset.filter(owner=self.request.user)
         elif role == 'participant':
             return self.request.user.request_set.all()
+        elif role == 'relative':
+            user = self.request.user
+            invited_user_requests = self.queryset.filter(owner__in=user.emailuser_set.all())
+            inviting_user_requests = self.queryset.filter(owner__in=user.inviting_users.all())
+            return invited_user_requests.union(inviting_user_requests)
         else:
             return self.queryset
     

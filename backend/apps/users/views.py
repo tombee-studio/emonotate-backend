@@ -224,28 +224,28 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
-    queryset = Content.objects.all().order_by('created')
+    queryset = Content.objects.all().order_by('created').reverse()
     search_fields = ['title']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SectionViewSet(viewsets.ModelViewSet):
     serializer_class = SectionSerializer
-    queryset = Section.objects.all().order_by('created')
+    queryset = Section.objects.all().order_by('created').reverse()
     search_fields = ['title', 'created']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GoogleFormViewSet(viewsets.ModelViewSet):
     serializer_class = GoogleFormSerializer
-    queryset = GoogleForm.objects.all().order_by('created')
+    queryset = GoogleForm.objects.all().order_by('created').reverse()
     search_fields = ['title', 'created']
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class EnqueteViewSet(viewsets.ModelViewSet):
     serializer_class = EnqueteSerializer
-    queryset = Enquete.objects.all().order_by('created')
+    queryset = Enquete.objects.all().order_by('created').reverse()
     search_fields = ['title']
 
 
@@ -270,13 +270,13 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = CurveWithYouTubeSerializer
-    queryset = Curve.objects.all().order_by('created')
+    queryset = Curve.objects.all().order_by('created').reverse()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CurveViewSet(viewsets.ModelViewSet):
     serializer_class = CurveSerializer
-    queryset = Curve.objects.all().order_by('created')
+    queryset = Curve.objects.all().order_by('created').reverse()
     filter_backends = [filters.SearchFilter]
     search_fields = ['=room_name']
 
@@ -284,14 +284,14 @@ class CurveViewSet(viewsets.ModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    queryset = User.objects.all().order_by('date_joined')
+    queryset = User.objects.all().order_by('date_joined').reverse()
     search_fields = ('username', 'email')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class YouTubeContentViewSet(viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
-    queryset = YouTubeContent.objects.all().order_by('created')
+    queryset = YouTubeContent.objects.all().order_by('created').reverse()
     search_fields = ['=video_id']
 
 
@@ -304,16 +304,16 @@ class RequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         role = self.request.GET.get('role')
         if role == 'owner':
-            return self.queryset.filter(owner=self.request.user).order_by('created')
+            return self.queryset.filter(owner=self.request.user).order_by('created').reverse()
         elif role == 'participant':
-            return self.request.user.request_set.all().order_by('created')
+            return self.request.user.request_set.all().order_by('created').reverse()
         elif role == 'relative':
             user = self.request.user
             invited_user_requests = self.queryset.filter(owner__in=user.emailuser_set.all())
             inviting_user_requests = self.queryset.filter(owner__in=user.inviting_users.all())
-            return invited_user_requests.union(inviting_user_requests).order_by('created')
+            return invited_user_requests.union(inviting_user_requests).order_by('created').reverse()
         else:
-            return self.queryset.filter(owner=self.request.user).order_by('created')
+            return self.queryset.reverse()
     
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('users.add_request'):
@@ -327,9 +327,15 @@ class RequestViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=403)
     
     def update(self, request, *args, **kwargs):
-        if not request.user.has_perm('users.change_request'):
-            return Response("permission denied", status=403)
         instance = self.get_object()
+        if "mode" in request.data:
+            if request.data["mode"] == "duplicate":
+                instance.id = None
+                instance.owner = request.user
+                instance.room_name = ""
+                instance.save()
+                ser = self.get_serializer(instance)
+                return Response(ser.data, status=201)
         serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid(raise_exception=True):
             self.perform_update(serializer)

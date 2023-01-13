@@ -355,4 +355,4 @@ class InvitingToken(models.Model):
         super(InvitingToken, self).save(**kwargs)
 
     def __str__(self, *kwargs):
-        return f"{user}"
+        return f"{self.user}"

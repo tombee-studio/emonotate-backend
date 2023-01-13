@@ -81,6 +81,8 @@ class LoginAPIView(View):
         token = queries.get("inviting")
         token_obj = InvitingToken.objects.get(token=token)
         user.inviting_users.add(token_obj.user)
+        user.groups.add(Group.objects.get(name='Guest'))
+        user.groups.add(Group.objects.get(name='Researchers'))
         user.save()
 
 
@@ -97,36 +99,36 @@ class LoginAPIView(View):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         token = request.GET.get("token")
         inviting = request.GET.get("inviting")
-        if inviting != None:
-            inviting_user = EmailUser.objects.create_unique_user()
-            inviting_user.groups.add(Group.objects.get(name='Guest'))
-            inviting_user.groups.add(Group.objects.get(name='Researchers'))
-            self.process_queries(request.GET, inviting_user)
-            login(request, inviting_user, backend='django.contrib.auth.backends.ModelBackend')
-    
         if request.user.is_authenticated:
             self.process_queries(request.GET, request.user)
             return redirect(f"{module.APPLICATION_URL}")
+        else:
+            if inviting != None:
+                inviting_user = EmailUser.objects.create_unique_user()
+                inviting_user.groups.add(Group.objects.get(name='Guest'))
+                inviting_user.groups.add(Group.objects.get(name='Researchers'))
+                self.process_queries(request.GET, inviting_user)
+                login(request, inviting_user, backend='django.contrib.auth.backends.ModelBackend')
 
-        if token == None:
-            # *****
-            # tokenがない場合、通常のログインプロセスへと移行
-            # *****
-            queries = [f'{query}={request.GET[query]}' for query in request.GET]
-            return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
+            if token == None:
+                # *****
+                # tokenがない場合、通常のログインプロセスへと移行
+                # *****
+                queries = [f'{query}={request.GET[query]}' for query in request.GET]
+                return redirect(f"{module.APPLICATION_URL}app/login/{'' if not request.GET else '?' + '&'.join(queries)}")
 
-        # *****
-        # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
-        # *****
-        if request.user.is_authenticated:
-            logout(request)
-        auth = JWTAuthentication()
-        tokenAuth = JWTTokenUserAuthentication()
-        token_user = tokenAuth.get_user(auth.get_validated_token(token))
-        user = EmailUser.objects.get(pk=token_user.user_id)
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        self.process_queries(request.GET, user)
-        return redirect("/")
+            # *****
+            # tokenがある場合、ユーザによるアクセスが保証されるため、JWT認証へと移行
+            # *****
+            if request.user.is_authenticated:
+                logout(request)
+            auth = JWTAuthentication()
+            tokenAuth = JWTTokenUserAuthentication()
+            token_user = tokenAuth.get_user(auth.get_validated_token(token))
+            user = EmailUser.objects.get(pk=token_user.user_id)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            self.process_queries(request.GET, user)
+            return redirect("/")
 
 
     def post(self, request):

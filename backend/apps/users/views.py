@@ -64,16 +64,12 @@ class Me(View):
             }, status=404)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginAPIView(View):
+class UserAuthenticationModule:
     @staticmethod
-    def is_invalid_emailuser(email):
-        return re.match(r"emonotate\+.+@gmail.com", email)
-
-    def process_queries(self, queries, user):
-        self.process_passport(queries, user)
-        self.process_inviting(queries, user)
-    
+    def process_queries(queries, user):
+        instance = UserAuthenticationModule()
+        instance.process_passport(queries, user)
+        instance.process_inviting(queries, user)
 
     def process_inviting(self, queries, user):
         if queries.get("inviting") == None:
@@ -95,21 +91,22 @@ class LoginAPIView(View):
             request.participants.add(user)
             request.save()
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginAPIView(View):
+    @staticmethod
+    def is_invalid_emailuser(email):
+        return re.match(r"emonotate\+.+@gmail.com", email)
+
+
     def get(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         token = request.GET.get("token")
         inviting = request.GET.get("inviting")
         if request.user.is_authenticated:
-            self.process_queries(request.GET, request.user)
+            UserAuthenticationModule.process_queries(request.GET, request.user)
             return redirect(f"{module.APPLICATION_URL}")
         else:
-            if inviting != None:
-                inviting_user = EmailUser.objects.create_unique_user()
-                inviting_user.groups.add(Group.objects.get(name='Guest'))
-                inviting_user.groups.add(Group.objects.get(name='Researchers'))
-                self.process_queries(request.GET, inviting_user)
-                login(request, inviting_user, backend='django.contrib.auth.backends.ModelBackend')
-
             if token == None:
                 # *****
                 # tokenがない場合、通常のログインプロセスへと移行
@@ -127,7 +124,7 @@ class LoginAPIView(View):
             token_user = tokenAuth.get_user(auth.get_validated_token(token))
             user = EmailUser.objects.get(pk=token_user.user_id)
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            self.process_queries(request.GET, user)
+            UserAuthenticationModule.process_queries(request.GET, request.user)
             return redirect("/")
 
 
@@ -158,26 +155,19 @@ class LoginAPIView(View):
             if not LoginAPIView.is_invalid_emailuser(request.user.email):
                 return JsonResponse(UserSerializer(request.user).data)
             else:
-                return JsonResponse(data={
-                    "url": f"{module.APPLICATION_URL}app/change_email/"
+                queries = [f'{query}={request.GET[query]}' for query in request.GET]
+                return JsonResponse({
+                    'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
                 }, status=302)
         else:
             return JsonResponse({
+                "is_error": True,
                 'message': 'ログインできませんでした',
             }, status=403)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SignupAPIView(View):
-    def process_passport(self, queries, user):
-        if queries.get("passport") == None:
-            return
-        passport = queries.get("passport")
-        request_ids = [int(id_str) for id_str in passport.split(',')]
-        for request in Request.objects.filter(pk__in=request_ids):
-            request.participants.add(user)
-            request.save()
-
     def post(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         params = json.loads(request.body)
@@ -190,12 +180,14 @@ class SignupAPIView(View):
                 raise "パスワードが一致しません"
             user = EmailUser.objects.create_user(username, email, password1)
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            self.process_passport(request.GET, user)
+            queries = [f'{query}={request.GET[query]}' for query in request.GET]
             return JsonResponse({
-                'is_authenticated': True
+                "is_error": False,
+                'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
             }, status=201)
         except Exception as err:
             return JsonResponse({
+                "is_error": True,
                 'message': err.__class__.__name__
             }, status=400) 
 

@@ -476,6 +476,30 @@ class ParticipantView(View):
         }, status=200)
 
 
+class RelativeUsersView(View):
+    @staticmethod
+    def json_dt_patch(o):
+        import datetime
+        from decimal import Decimal
+
+        if isinstance(o, datetime.date) or isinstance(o, datetime.datetime):
+            return o.strftime("%Y/%m/%d %H:%M:%S")
+        elif isinstance(o, Decimal):
+            return str(o)
+        return o
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        invited_users = user.emailuser_set.all()
+        inviting_users = user.inviting_users.all()
+        ser = UserSerializer(invited_users.union(inviting_users).order_by("id"), many=True)
+        data = json.dumps(ser.data, default=RelativeUsersView.json_dt_patch)
+        return JsonResponse({
+            "is_error": False,
+            "users": json.loads(data)
+        }, status=200)
+
+
 async def send_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(

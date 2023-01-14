@@ -155,6 +155,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     inviting_users = models.ManyToManyField(
         "EmailUser", 
         null=True)
+    is_verified = models.BooleanField(default=False)
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'

@@ -34,3 +34,4 @@ urlpatterns += path('participants/<int:pk>', ParticipantView.as_view(), name="pa
 urlpatterns += path('inviting_tokens/', InvitingTokenView.as_view(), name='inviting_tokens'),
 urlpatterns += path('relative_users/', RelativeUsersView.as_view(), name='relative_users'),
 urlpatterns += path('verify/', UserVerifyView.as_view(), name='verify'),
+urlpatterns += path('change_password/<int:pk>', ChangePasswordView.as_view(), name='change_password'),

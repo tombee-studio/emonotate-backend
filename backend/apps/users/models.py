@@ -155,6 +155,7 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     inviting_users = models.ManyToManyField(
         "EmailUser", 
         null=True)
+    is_verified = models.BooleanField(default=False)
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'
@@ -355,4 +356,4 @@ class InvitingToken(models.Model):
         super(InvitingToken, self).save(**kwargs)
 
     def __str__(self, *kwargs):
-        return f"{user}"
+        return f"{self.user}"

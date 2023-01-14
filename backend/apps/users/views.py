@@ -23,7 +23,6 @@ from .serializers import *
 
 from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
 from django.http import HttpResponse
-from django.core.mail import send_mail
 
 from django.contrib.auth import authenticate, login, logout
 from django.utils.decorators import method_decorator
@@ -54,6 +53,18 @@ from .models import *
 User = get_user_model()
 
 
+def send_mail(user, title, description):
+    module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+    return requests.post(
+        f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
+        auth=("api", os.environ.get("MAILGUN_API_KEY")),
+        data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
+            "to": [user.email],
+            "subject": title,
+            "text": description
+    })
+
+
 class Me(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -64,16 +75,12 @@ class Me(View):
             }, status=404)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginAPIView(View):
+class UserAuthenticationModule:
     @staticmethod
-    def is_invalid_emailuser(email):
-        return re.match(r"emonotate\+.+@gmail.com", email)
-
-    def process_queries(self, queries, user):
-        self.process_passport(queries, user)
-        self.process_inviting(queries, user)
-    
+    def process_queries(queries, user):
+        instance = UserAuthenticationModule()
+        instance.process_passport(queries, user)
+        instance.process_inviting(queries, user)
 
     def process_inviting(self, queries, user):
         if queries.get("inviting") == None:
@@ -95,21 +102,22 @@ class LoginAPIView(View):
             request.participants.add(user)
             request.save()
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginAPIView(View):
+    @staticmethod
+    def is_invalid_emailuser(email):
+        return re.match(r"emonotate\+.+@gmail.com", email)
+
+
     def get(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         token = request.GET.get("token")
         inviting = request.GET.get("inviting")
         if request.user.is_authenticated:
-            self.process_queries(request.GET, request.user)
+            UserAuthenticationModule.process_queries(request.GET, request.user)
             return redirect(f"{module.APPLICATION_URL}")
         else:
-            if inviting != None:
-                inviting_user = EmailUser.objects.create_unique_user()
-                inviting_user.groups.add(Group.objects.get(name='Guest'))
-                inviting_user.groups.add(Group.objects.get(name='Researchers'))
-                self.process_queries(request.GET, inviting_user)
-                login(request, inviting_user, backend='django.contrib.auth.backends.ModelBackend')
-
             if token == None:
                 # *****
                 # tokenがない場合、通常のログインプロセスへと移行
@@ -127,7 +135,7 @@ class LoginAPIView(View):
             token_user = tokenAuth.get_user(auth.get_validated_token(token))
             user = EmailUser.objects.get(pk=token_user.user_id)
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            self.process_queries(request.GET, user)
+            UserAuthenticationModule.process_queries(request.GET, request.user)
             return redirect("/")
 
 
@@ -158,25 +166,30 @@ class LoginAPIView(View):
             if not LoginAPIView.is_invalid_emailuser(request.user.email):
                 return JsonResponse(UserSerializer(request.user).data)
             else:
-                return JsonResponse(data={
-                    "url": f"{module.APPLICATION_URL}app/change_email/"
+                queries = [f'{query}={request.GET[query]}' for query in request.GET]
+                return JsonResponse({
+                    'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
                 }, status=302)
         else:
             return JsonResponse({
+                "is_error": True,
                 'message': 'ログインできませんでした',
             }, status=403)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SignupAPIView(View):
-    def process_passport(self, queries, user):
-        if queries.get("passport") == None:
-            return
-        passport = queries.get("passport")
-        request_ids = [int(id_str) for id_str in passport.split(',')]
-        for request in Request.objects.filter(pk__in=request_ids):
-            request.participants.add(user)
-            request.save()
+    def create_mail(self, user):
+        access_token = RefreshToken.for_user(user).access_token
+        access_token.set_exp(lifetime=timedelta(minutes=30))
+        title = f"【Important】 Sending Verification URL"
+        description = ""
+        description += f"This is Emonotate Operating Staff.\n"
+        description += f"We send a url to verify below:\n"
+        description += f"{module.APPLICATION_URL}api/verify/?token={access_token}\n"
+        description += f"{'-' * 16}\n\n"
+        description += "Have a nice emonotating!\n"
+        return (title, description)
 
     def post(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
@@ -185,19 +198,55 @@ class SignupAPIView(View):
         email = params['email']
         password1 = params['password1']
         password2 = params['password2']
+        
+        if password1 != password2:
+            return HttpResponse("パスワードが一致しません", status=404)
+
         try:
-            if password1 != password2:
-                raise "パスワードが一致しません"
-            user = EmailUser.objects.create_user(username, email, password1)
+            user = EmailUser.objects.get(username=username)
+            return HttpResponse(f"ユーザ名はすでに使用されています", status=404)
+        except:
+            pass
+
+        try:
+            user = EmailUser.objects.get(email=email)
+            return HttpResponse(f"そのメールアドレスはすでに使用されています", status=404)
+        except:
+            pass
+
+        user = EmailUser.objects.create_user(username, email, password1)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        queries = [f'{query}={request.GET[query]}' for query in request.GET]
+        q = Queue(connection=conn)
+        (title, description) = self.create_mail(user)
+        result = q.enqueue(send_mail, user, title, description)
+        return JsonResponse({
+            "is_error": False,
+            'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
+        }, status=201)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UserVerifyView(View):
+    def get(self, request):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        if "token" not in request.GET:
+            message = "無効な認証用URLです"
+            return redirect(f"{module.APPLICATION_URL}app/login/?error={message}")
+        try:
+            token = request.GET.get("token")
+
+            auth = JWTAuthentication()
+            tokenAuth = JWTTokenUserAuthentication()
+            token_user = tokenAuth.get_user(auth.get_validated_token(token))
+            user = EmailUser.objects.get(pk=token_user.user_id)
+            user.is_verified = True
+            user.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            self.process_passport(request.GET, user)
-            return JsonResponse({
-                'is_authenticated': True
-            }, status=201)
-        except Exception as err:
-            return JsonResponse({
-                'message': err.__class__.__name__
-            }, status=400) 
+            return redirect(f"{module.APPLICATION_URL}app/")
+        except:
+            message = "無効な認証用URLです"
+            return redirect(f"{module.APPLICATION_URL}app/login/?error={message}")
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -502,7 +551,7 @@ class RelativeUsersView(View):
         }, status=200)
 
 
-async def send_mail(request, title, description, participant):
+async def send_request_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(
             f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
@@ -526,7 +575,7 @@ def split_list(array, n):
         yield array[idx:idx + n]
 
 
-def send_mails(req, participants):
+def send_request_mails(req, participants):
     if os.environ.get("STAGE") == "DEV":
         for clique in participants:
             for participant in clique:
@@ -551,7 +600,7 @@ def send_mails(req, participants):
             description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
             description += f"{'-' * 16}\n\n"
             description += "Have a nice emonotating!\n"
-            tasks.append(loop.create_task(send_mail(req, title, description, participant)))
+            tasks.append(loop.create_task(send_request_mail(req, title, description, participant)))
         results, *_ = loop.run_until_complete(asyncio.wait(tasks))
         for r in results:
             participant, request, response = r.result()
@@ -573,7 +622,7 @@ def send_request_mail(request, pk):
     else:
         participants = req.participants.filter(pk__in=set([int(i) for i in emails.split(";")]))
     participants = split_list(list(participants), 5)
-    send_mails(req, participants)
+    send_request_mails(req, participants)
     req.expiration_date = datetime.now() + timedelta(minutes=30)
     req.save()
     data = RequestSerializer(req).data

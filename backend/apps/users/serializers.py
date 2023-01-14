@@ -22,7 +22,10 @@ class UserSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        ret["groups"] = [group.name for group in instance.groups.all()]
+        if ret["is_verified"]:
+            ret["groups"] = [group.name for group in instance.groups.all()]
+        else:
+            ret["groups"] = ["Guest"]
         ret["is_lazy_user"] = is_lazy_user(instance)
         ret["inviting_users"] = len(instance.inviting_users.all())
         ret["invited_users"] = len(instance.emailuser_set.all())

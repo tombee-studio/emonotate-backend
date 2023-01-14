@@ -25,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
         except:
             raise ValidationError(_('そのユーザは存在しません'), code='invalid username')
         try:
-            if owner.email is not attrs["email"]:
+            if owner.email != attrs["email"]:
                 user = EmailUser.objects.get(email=attrs["email"])
                 raise ValidationError(_('そのメールアドレスはすでに使用されています'), code='invalid email')
         except EmailUser.DoesNotExist as ex:

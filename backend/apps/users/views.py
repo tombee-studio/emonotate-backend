@@ -23,7 +23,6 @@ from .serializers import *
 
 from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
 from django.http import HttpResponse
-from django.core.mail import send_mail
 
 from django.contrib.auth import authenticate, login, logout
 from django.utils.decorators import method_decorator
@@ -52,6 +51,18 @@ from .serializers import *
 from .models import *
 
 User = get_user_model()
+
+
+def send_mail(user, title, description):
+    module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+    return requests.post(
+        f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
+        auth=("api", os.environ.get("MAILGUN_API_KEY")),
+        data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
+            "to": [user.email],
+            "subject": title,
+            "text": description
+    })
 
 
 class Me(View):
@@ -168,6 +179,18 @@ class LoginAPIView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SignupAPIView(View):
+    def create_mail(self, user):
+        access_token = RefreshToken.for_user(user).access_token
+        access_token.set_exp(lifetime=timedelta(minutes=30))
+        title = f"【Important】 Sending Verification URL"
+        description = ""
+        description += f"This is Emonotate Operating Staff.\n"
+        description += f"We send a url to verify below:\n"
+        description += f"{module.APPLICATION_URL}api/verify/?token={access_token}\n"
+        description += f"{'-' * 16}\n\n"
+        description += "Have a nice emonotating!\n"
+        return (title, description)
+
     def post(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         params = json.loads(request.body)
@@ -175,21 +198,55 @@ class SignupAPIView(View):
         email = params['email']
         password1 = params['password1']
         password2 = params['password2']
+        
+        if password1 != password2:
+            return HttpResponse("パスワードが一致しません", status=404)
+
         try:
-            if password1 != password2:
-                raise "パスワードが一致しません"
-            user = EmailUser.objects.create_user(username, email, password1)
+            user = EmailUser.objects.get(username=username)
+            return HttpResponse(f"ユーザ名はすでに使用されています", status=404)
+        except:
+            pass
+
+        try:
+            user = EmailUser.objects.get(email=email)
+            return HttpResponse(f"そのメールアドレスはすでに使用されています", status=404)
+        except:
+            pass
+
+        user = EmailUser.objects.create_user(username, email, password1)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        queries = [f'{query}={request.GET[query]}' for query in request.GET]
+        q = Queue(connection=conn)
+        (title, description) = self.create_mail(user)
+        result = q.enqueue(send_mail, user, title, description)
+        return JsonResponse({
+            "is_error": False,
+            'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
+        }, status=201)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UserVerifyView(View):
+    def get(self, request):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        if "token" not in request.GET:
+            message = "無効な認証用URLです"
+            return redirect(f"{module.APPLICATION_URL}app/login/?error={message}")
+        try:
+            token = request.GET.get("token")
+
+            auth = JWTAuthentication()
+            tokenAuth = JWTTokenUserAuthentication()
+            token_user = tokenAuth.get_user(auth.get_validated_token(token))
+            user = EmailUser.objects.get(pk=token_user.user_id)
+            user.is_verified = True
+            user.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            queries = [f'{query}={request.GET[query]}' for query in request.GET]
-            return JsonResponse({
-                "is_error": False,
-                'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
-            }, status=201)
-        except Exception as err:
-            return JsonResponse({
-                "is_error": True,
-                'message': err.__class__.__name__
-            }, status=400) 
+            return redirect(f"{module.APPLICATION_URL}app/")
+        except:
+            message = "無効な認証用URLです"
+            return redirect(f"{module.APPLICATION_URL}app/login/?error={message}")
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -494,7 +551,7 @@ class RelativeUsersView(View):
         }, status=200)
 
 
-async def send_mail(request, title, description, participant):
+async def send_request_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(
             f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
@@ -518,7 +575,7 @@ def split_list(array, n):
         yield array[idx:idx + n]
 
 
-def send_mails(req, participants):
+def send_request_mails(req, participants):
     if os.environ.get("STAGE") == "DEV":
         for clique in participants:
             for participant in clique:
@@ -543,7 +600,7 @@ def send_mails(req, participants):
             description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
             description += f"{'-' * 16}\n\n"
             description += "Have a nice emonotating!\n"
-            tasks.append(loop.create_task(send_mail(req, title, description, participant)))
+            tasks.append(loop.create_task(send_request_mail(req, title, description, participant)))
         results, *_ = loop.run_until_complete(asyncio.wait(tasks))
         for r in results:
             participant, request, response = r.result()
@@ -565,7 +622,7 @@ def send_request_mail(request, pk):
     else:
         participants = req.participants.filter(pk__in=set([int(i) for i in emails.split(";")]))
     participants = split_list(list(participants), 5)
-    send_mails(req, participants)
+    send_request_mails(req, participants)
     req.expiration_date = datetime.now() + timedelta(minutes=30)
     req.save()
     data = RequestSerializer(req).data

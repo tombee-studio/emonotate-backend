@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import *
+from django.core.exceptions import ValidationError
+
+from django.utils.translation import gettext as _
 
 from django.utils.timezone import datetime
 
@@ -15,10 +18,30 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
-    
+
+    def validate(self, attrs):
+        try:
+            owner = EmailUser.objects.get(pk=attrs["id"])
+        except:
+            raise ValidationError(_('そのユーザは存在しません'), code='invalid username')
+        try:
+            if owner.email is not attrs["email"]:
+                user = EmailUser.objects.get(email=attrs["email"])
+                raise ValidationError(_('そのメールアドレスはすでに使用されています'), code='invalid email')
+        except EmailUser.DoesNotExist as ex:
+            pass
+        return super().validate(attrs)
+
     def to_internal_value(self, data):
         data['groups'] = list([Group.objects.get(name=name).id for name in data['groups']])
         return data
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data['username']
+        instance.email = validated_data['email']
+        instance.is_verified = False
+        instance.save()
+        return instance
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)

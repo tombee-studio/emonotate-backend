@@ -74,6 +74,21 @@ class Me(View):
                 "message": "not authenticated"
             }, status=404)
 
+class MailGenerator:
+    @staticmethod
+    def create_verify_mail(user):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        access_token = RefreshToken.for_user(user).access_token
+        access_token.set_exp(lifetime=timedelta(minutes=30))
+        title = f"【Important】 Sending Verification URL"
+        description = ""
+        description += f"This is Emonotate Operating Staff.\n"
+        description += f"We send a url to verify below:\n"
+        description += f"{module.APPLICATION_URL}api/verify/?token={access_token}\n"
+        description += f"{'-' * 16}\n\n"
+        description += "Have a nice emonotating!\n"
+        return (title, description)
+
 
 class UserAuthenticationModule:
     @staticmethod
@@ -179,18 +194,6 @@ class LoginAPIView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SignupAPIView(View):
-    def create_mail(self, user):
-        access_token = RefreshToken.for_user(user).access_token
-        access_token.set_exp(lifetime=timedelta(minutes=30))
-        title = f"【Important】 Sending Verification URL"
-        description = ""
-        description += f"This is Emonotate Operating Staff.\n"
-        description += f"We send a url to verify below:\n"
-        description += f"{module.APPLICATION_URL}api/verify/?token={access_token}\n"
-        description += f"{'-' * 16}\n\n"
-        description += "Have a nice emonotating!\n"
-        return (title, description)
-
     def post(self, request):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
         params = json.loads(request.body)
@@ -218,7 +221,7 @@ class SignupAPIView(View):
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         queries = [f'{query}={request.GET[query]}' for query in request.GET]
         q = Queue(connection=conn)
-        (title, description) = self.create_mail(user)
+        (title, description) = MailGenerator.create_verify_mail(user)
         result = q.enqueue(send_mail, user, title, description)
         return JsonResponse({
             "is_error": False,
@@ -247,6 +250,15 @@ class UserVerifyView(View):
         except:
             message = "無効な認証用URLです"
             return redirect(f"{module.APPLICATION_URL}app/login/?error={message}")
+
+    def post(self, request):
+        user = request.user
+        if not request.user.is_authenticated:
+            return HttpResponse("認証されていないユーザです", status=403)
+        q = Queue(connection=conn)
+        (title, description) = MailGenerator.create_verify_mail(user)
+        result = q.enqueue(send_mail, user, title, description)
+        return HttpResponse("認証用メールを送信しました", status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -549,6 +561,21 @@ class RelativeUsersView(View):
             "is_error": False,
             "users": json.loads(data)
         }, status=200)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ChangePasswordView(View):
+    def put(self, request, pk, *args, **kwargs):
+        params = json.loads(request.body)
+        password1 = params["password"]
+        password2 = params["password2"]
+        if password1 != password2:
+            return HttpResponse("確認用のパスワードが一致していません", status=400)
+        user = EmailUser.objects.get(pk=pk)
+        user.set_password(password1)
+        user.save()
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return HttpResponse("パスワードを変更しました", status=200)
 
 
 async def send_request_mail(request, title, description, participant):

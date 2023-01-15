@@ -130,8 +130,11 @@ class LoginAPIView(View):
         token = request.GET.get("token")
         inviting = request.GET.get("inviting")
         if request.user.is_authenticated:
-            UserAuthenticationModule.process_queries(request.GET, request.user)
-            return redirect(f"{module.APPLICATION_URL}")
+            try:
+                UserAuthenticationModule.process_queries(request.GET, request.user)
+                return redirect(f"{module.APPLICATION_URL}")
+            except:
+                return redirect(f"{module.APPLICATION_URL}?error=無効なURLです")
         else:
             if token == None:
                 # *****

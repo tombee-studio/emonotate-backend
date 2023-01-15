@@ -30,6 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
                 raise ValidationError(_('そのメールアドレスはすでに使用されています'), code='invalid email')
         except EmailUser.DoesNotExist as ex:
             pass
+        attrs["is_changed_email"] = owner.email != attrs["email"]
         return super().validate(attrs)
 
     def to_internal_value(self, data):
@@ -39,7 +40,8 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.username = validated_data['username']
         instance.email = validated_data['email']
-        instance.is_verified = False
+        if validated_data["is_changed_email"]:
+            instance.is_verified = False
         instance.save()
         return instance
     

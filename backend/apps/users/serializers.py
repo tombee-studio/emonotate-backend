@@ -52,7 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
             ret["groups"] = [group.name for group in instance.groups.all()]
         else:
             ret["groups"] = ["Guest"]
-            profile_notifications.append("is not verified")
+            profile_notifications.append("本人確認がされていないため、研究者向け機能を使用することができません。認証メールを送信し本人確認を行なってください。")
         ret["is_lazy_user"] = is_lazy_user(instance)
         ret["inviting_users"] = len(instance.inviting_users.all())
         ret["invited_users"] = len(instance.emailuser_set.all())

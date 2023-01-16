@@ -35,3 +35,4 @@ urlpatterns += path('inviting_tokens/', InvitingTokenView.as_view(), name='invit
 urlpatterns += path('relative_users/', RelativeUsersView.as_view(), name='relative_users'),
 urlpatterns += path('verify/', UserVerifyView.as_view(), name='verify'),
 urlpatterns += path('change_password/<int:pk>', ChangePasswordView.as_view(), name='change_password'),
+urlpatterns += path('reset_password/', ResetPasswordView.as_view(), name='reset_password'),

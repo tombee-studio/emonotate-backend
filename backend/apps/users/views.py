@@ -89,6 +89,20 @@ class MailGenerator:
         description += "Have a nice emonotating!\n"
         return (title, description)
 
+    @staticmethod
+    def create_password_reset_mail(user):
+        module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        access_token = RefreshToken.for_user(user).access_token
+        access_token.set_exp(lifetime=timedelta(minutes=30))
+        title = f"【Important】 Sending Password Reset URL"
+        description = ""
+        description += f"This is Emonotate Operating Staff.\n"
+        description += f"We send a url to reset your password below:\n"
+        description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
+        description += f"{'-' * 16}\n\n"
+        description += "Have a nice emonotating!\n"
+        return (title, description)
+
 
 class UserAuthenticationModule:
     @staticmethod
@@ -564,6 +578,21 @@ class RelativeUsersView(View):
             "is_error": False,
             "users": json.loads(data)
         }, status=200)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResetPasswordView(View):
+    def post(self, request):
+        params = json.loads(request.body)
+        email = params["email"]
+        try:
+            user = EmailUser.objects.get(email=email)
+            q = Queue(connection=conn)
+            (title, description) = MailGenerator.create_password_reset_mail(user)
+            result = q.enqueue(send_mail, user, title, description)
+            return HttpResponse("パスワードリセットのためのメールを送信しました", status=200)
+        except:
+            return HttpResponse("無効なメールアドレスです", status=400)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

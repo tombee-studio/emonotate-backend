@@ -1,3 +1,4 @@
+import io
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import *
@@ -10,6 +11,8 @@ from django.utils.timezone import datetime
 from django.contrib.auth.models import Group
 
 from lazysignup.utils import is_lazy_user
+
+import webvtt
 
 User = get_user_model()
 
@@ -95,10 +98,21 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = '__all__'
-    
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret['content'] = ContentSerializer(instance.content).data
+        try:
+            out = webvtt.read_buffer(io.StringIO(instance.webvtt))
+            ret['values'] = [{
+                'start': point.start,
+                'end': point.end,
+                'text': point.text
+            } for point in out]
+            ret['is_incorrect_webvtt'] = False
+        except webvtt.MalformedFileError:
+            ret['values'] = []
+            ret['is_incorrect_webvtt'] = True
         return ret
 
 
@@ -212,7 +226,10 @@ class RequestSerializer(serializers.ModelSerializer):
         if ret['google_form'] != None:
             ret['google_form'] = GoogleFormSerializer(GoogleForm.objects.get(pk=ret['google_form'])).data
         if ret['section']:
+            ret['is_included_section'] = True
             ret['section'] = SectionSerializer(Section.objects.get(pk=ret['section'])).data
+        else:
+            ret['is_included_section'] = False
         return ret
     
     def validate(self, attrs):

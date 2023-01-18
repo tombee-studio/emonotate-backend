@@ -99,6 +99,14 @@ class SectionSerializer(serializers.ModelSerializer):
         model = Section
         fields = '__all__'
 
+    def validate_webvtt(self, value):
+        try:
+            webvtt.read_buffer(io.StringIO(value))
+            return value
+        except webvtt.errors.MalformedCaptionError as er:
+            raise ValidationError("区間情報が正しい形式に則っていません。WebVTT形式で入力してください。")
+
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret['content'] = ContentSerializer(instance.content).data

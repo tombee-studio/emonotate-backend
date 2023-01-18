@@ -36,3 +36,4 @@ urlpatterns += path('relative_users/', RelativeUsersView.as_view(), name='relati
 urlpatterns += path('verify/', UserVerifyView.as_view(), name='verify'),
 urlpatterns += path('change_password/<int:pk>', ChangePasswordView.as_view(), name='change_password'),
 urlpatterns += path('reset_password/', ResetPasswordView.as_view(), name='reset_password'),
+urlpatterns += path('set_section/<int:pk>', SetSectionView.as_view(), name='reset_password'),

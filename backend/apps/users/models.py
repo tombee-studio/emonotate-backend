@@ -204,7 +204,7 @@ class Section(models.Model):
     title = models.CharField(max_length=256, default="")
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     content = models.ForeignKey(Content, default=1, on_delete=models.CASCADE)
-    values = JSONField(default=[], blank=True)
+    webvtt = models.TextField(default="", blank=True)
 
     def __str__(self):
         return f"{self.title} {self.content.title}({self.created})"

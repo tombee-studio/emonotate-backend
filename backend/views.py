@@ -56,9 +56,11 @@ def free_hand_view(request, pk):
     curve_json["user"] = request.user.id
     curve_json["locked"] = True
     curve_json["room_name"] = req.room_name
+    request_json = RequestSerializer(req).data
     context = {
         "request": req,
         "curve_json": json.dumps(curve_json),
+        "request_json": json.dumps(request_json)
     }
     template = 'backend/free-hand.html'
     return render(request, template, context)

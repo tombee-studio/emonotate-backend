@@ -627,6 +627,23 @@ class SetSectionView(View):
         return HttpResponse("区間情報を変更しました", status=200)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class SetGoogleFormView(View):
+    def put(self, request, pk, *args, **kwargs):
+        params = json.loads(request.body)
+        try:
+            req = Request.objects.get(pk=pk)
+        except Request.DoesNotExist:
+            return HttpResponse("リクエストが存在しません", status=200)
+        try:
+            google_form = GoogleForm.objects.get(pk=params["google_form"])
+        except GoogleForm.DoesNotExist:
+            return HttpResponse("区間情報が存在しません", status=200)
+        req.google_form = google_form
+        req.save()
+        return HttpResponse("区間情報を変更しました", status=200)
+
+
 async def send_request_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(

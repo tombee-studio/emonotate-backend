@@ -58,7 +58,8 @@ def free_hand_view(request, pk):
     curve_json["room_name"] = req.room_name
     request_json = RequestSerializer(req).data
     context = {
-        "request": req,
+        "has_google_form": req.google_form != None,
+        "request_model": req,
         "curve_json": json.dumps(curve_json),
         "request_json": json.dumps(request_json)
     }

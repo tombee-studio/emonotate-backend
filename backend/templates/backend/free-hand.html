@@ -9,7 +9,7 @@
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
         <script>
-            let youtubeID = "{{request_model.content.youtubecontent.video_id}}";
+            let youtubeID = "{{video_id}}";
             let youtubePlayerID = "player";
             let graphViewId = "stage_container";
             let curve = {{curve_json | safe}};
@@ -48,7 +48,7 @@
             </div>
             <div class="row">
                 <div class="p-2 col">
-                    <button class="btn btn-primary" type=”button” onclick="createCurve()">
+                    <button class="btn btn-primary" type=”button” onclick="buttonAction.createCurve()">
                         作成
                     </button>
                 </div>

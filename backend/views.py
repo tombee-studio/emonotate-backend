@@ -48,35 +48,53 @@ def app(request):
 
 
 @login_required
-def free_hand_view(request, pk):
+def free_hand_view(request):
     curve_json = Curve.get_empty_json()
-    req = Request.objects.get(pk=pk)
-    curve_json["content"] = req.content.id
-    curve_json["value_type"] = req.value_type.id
-    curve_json["user"] = request.user.id
-    curve_json["locked"] = True
-    curve_json["room_name"] = req.room_name
-    request_json = RequestSerializer(req).data
-    context = {
-        "has_google_form": req.google_form != None,
-        "request_model": req,
-        "curve_json": json.dumps(curve_json),
-        "request_json": json.dumps(request_json)
-    }
-    template = 'backend/free-hand.html'
-    return render(request, template, context)
+    if "request" in request.GET:
+        req = Request.objects.get(pk=int(request.GET.get("request")))
+        video_id = req.content.youtubecontent.video_id
+        curve_json["content"] = req.content.id
+        curve_json["value_type"] = req.value_type.id
+        curve_json["user"] = request.user.id
+        curve_json["locked"] = True
+        curve_json["room_name"] = req.room_name
+        request_json = RequestSerializer(req).data
+        context = {
+            "video_id": video_id,
+            "has_google_form": req.google_form != None,
+            "request_model": req,
+            "curve_json": json.dumps(curve_json),
+            "request_json": json.dumps(request_json)
+        }
+        template = 'backend/free-hand.html'
+        return render(request, template, context)
+    else:
+        video_id = request.GET.get("video_id")
+        curve_json["content"] = None
+        curve_json["value_type"] = 1
+        curve_json["user"] = request.user.id
+        curve_json["locked"] = True
+        curve_json["room_name"] = request.GET.get("room_name", 
+            f"{request.GET.get('room_name')}")
+        context = {
+            "video_id": video_id,
+            "curve_json": json.dumps(curve_json),
+            "request_json": {}
+        }
+        template = 'backend/free-hand.html'
+        return render(request, template, context)
 
 @login_required
 def fold_line_view(request):
     curve_json = Curve.get_empty_json()
-    curve_json["video_id"] = request.GET.get("video_id")
+    video_id = request.GET.get("video_id")
     curve_json["value_type"] = 1
     curve_json["user"] = request.user.id
     curve_json["locked"] = request.GET.get("locked", False)
     curve_json["room_name"] = request.GET.get("room_name", 
         f"{request.GET.get('room_name')}")
     context = {
-        "video_id": request.GET.get("video_id"),
+        "video_id": video_id,
         "curve_json": json.dumps(curve_json)
     }
     template = 'backend/fold-line.html'

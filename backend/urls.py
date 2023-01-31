@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^api/', include('users.urls')),
     url(r'^history/', include('users.history')),
     path('free-hand/<int:pk>/', free_hand_view, name='free-hand'),
+    path('fold-line/', fold_line_view, name='fold-line'),
     url(r'^auth/', include('auth.urls')),
     url(r'^convert/', include('lazysignup.urls')),
     url('^$', index, name='index'),

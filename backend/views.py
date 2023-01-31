@@ -65,3 +65,19 @@ def free_hand_view(request, pk):
     }
     template = 'backend/free-hand.html'
     return render(request, template, context)
+
+@login_required
+def fold_line_view(request):
+    curve_json = Curve.get_empty_json()
+    curve_json["video_id"] = request.GET.get("video_id")
+    curve_json["value_type"] = 1
+    curve_json["user"] = request.user.id
+    curve_json["locked"] = request.GET.get("locked", False)
+    curve_json["room_name"] = request.GET.get("room_name", 
+        f"{request.GET.get('room_name')}")
+    context = {
+        "video_id": request.GET.get("video_id"),
+        "curve_json": json.dumps(curve_json)
+    }
+    template = 'backend/fold-line.html'
+    return render(request, template, context)

@@ -644,6 +644,12 @@ class SetGoogleFormView(View):
         return HttpResponse("区間情報を変更しました", status=200)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class GCPAccessTokenView(View):
+    def post(self, request, *args, **kwargs):
+        return HttpResponse(os.environ.get("GCP_STORAGE_TOKEN"), status=200)
+
+
 async def send_request_mail(request, title, description, participant):
     async with requests.Session() as session:
         response = await session.post(

@@ -97,7 +97,8 @@ class FreeHandDetailView(View):
             "option": "detail",
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": json.dumps(curve_dict),
-            "request_json": {}
+            "request_json": {},
+            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/{curve.id}.png?alt=media"
         }
         template = 'backend/free-hand.html'
         response = render(request, template, context)
@@ -149,7 +150,8 @@ class FoldLineDetailView(View):
         context = {
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": CurveSerializer(curve).data,
-            "request_json": {}
+            "request_json": {},
+            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/{curve.id}.png?alt=media"
         }
         template = 'backend/free-hand.html'
         response = render(request, template, context)

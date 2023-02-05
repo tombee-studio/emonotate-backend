@@ -250,6 +250,9 @@ class Curve(models.Model):
     room_name = models.CharField(max_length=32, default="")
     enquete = models.ManyToManyField(Enquete, through="EnqueteAnswer")
     locked = models.BooleanField(default=True)
+    kind = models.IntegerField(choices=(
+        (1, 'フリーハンド'),
+        (2, '指定点')), default=1)
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)

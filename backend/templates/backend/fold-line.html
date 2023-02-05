@@ -8,8 +8,10 @@
         <title>Emonotate | 感情曲線研究支援ツール</title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <script src="{% static 'users/js/utils.js' %}"></script>
         <script>
             let youtubeID = "{{video_id}}";
+            let option = "{{option}}";
             let youtubePlayerID = "player";
             let graphViewId = "stage_container";
             let curve = {{curve_json | safe}};
@@ -20,7 +22,7 @@
         <script src="{% static 'users/js/MyYouTubeView.js' %}"></script>
         <script src="{% static 'users/js/FoldLineGraphView.js' %}"></script>
         <script src="{% static 'users/js/FoldLineInputField.js'%}"></script>
-        <script src="{% static 'users/js/FoldLineButtonAction.js'%}"></script>
+        <script src="{% static 'users/js/ButtonAction.js'%}"></script>
     </head>
     <body>
         <div class="container gap-3 p-2">

@@ -123,6 +123,7 @@ class FoldLineView(View):
             request_json = RequestSerializer(req).data
             context = {
                 "video_id": video_id,
+                "option": "new",
                 "has_google_form": req.google_form != None,
                 "request_model": req,
                 "curve_json": json.dumps(curve_json),
@@ -137,6 +138,7 @@ class FoldLineView(View):
             curve_json["room_name"] = request.GET.get("room_name", 
                 f"{request.GET.get('room_name')}")
             context = {
+                "option": "new",
                 "video_id": video_id,
                 "curve_json": json.dumps(curve_json)
             }
@@ -149,14 +151,16 @@ class FoldLineView(View):
 class FoldLineDetailView(View):
     def get(self, request, pk, *args, **kwargs):
         curve = Curve.objects.get(pk=pk)
+        curve_dict = CurveSerializer(curve).data
         context = {
+            "option": "detail",
             "is_ownself": curve.user.id == request.user.id,
             "video_id": curve.content.youtubecontent.video_id,
-            "curve_json": CurveSerializer(curve).data,
+            "curve_json": json.dumps(curve_dict),
             "request_json": {},
             "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/{curve.id}.png?alt=media"
         }
-        template = 'backend/free-hand.html'
+        template = 'backend/fold-line.html'
         response = render(request, template, context)
         response.set_cookie('GCP_ACCESS_TOKEN', 'value')
         return response

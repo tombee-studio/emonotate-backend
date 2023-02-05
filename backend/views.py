@@ -98,6 +98,7 @@ class FreeHandDetailView(View):
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": json.dumps(curve_dict),
             "request_json": {},
+            "ogp_title": f"{curve.content.title}を視聴したときの私の{curve.value_type.title}曲線！！",
             "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/{curve.id}.png?alt=media"
         }
         template = 'backend/free-hand.html'

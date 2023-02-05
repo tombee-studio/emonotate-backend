@@ -94,6 +94,7 @@ class FreeHandDetailView(View):
         curve = Curve.objects.get(pk=pk)
         curve_dict = CurveSerializer(curve).data
         context = {
+            "is_ownself": curve.user.id == request.user.id,
             "option": "detail",
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": json.dumps(curve_dict),
@@ -149,6 +150,7 @@ class FoldLineDetailView(View):
     def get(self, request, pk, *args, **kwargs):
         curve = Curve.objects.get(pk=pk)
         context = {
+            "is_ownself": curve.user.id == request.user.id,
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": CurveSerializer(curve).data,
             "request_json": {},

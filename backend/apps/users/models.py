@@ -360,3 +360,10 @@ class InvitingToken(models.Model):
 
     def __str__(self, *kwargs):
         return f"{self.user}"
+
+
+class GCPToken(models.Model):
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
+    access_token = models.TextField(default="", unique=True)
+    refresh_token = models.TextField(default="", unique=True)
+    bucket_name = models.TextField(default="", unique=True)

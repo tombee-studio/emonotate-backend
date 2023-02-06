@@ -270,3 +270,9 @@ class InvitingTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvitingToken
         fields = '__all__'
+
+
+class GCPTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GCPToken
+        fields = '__all__'

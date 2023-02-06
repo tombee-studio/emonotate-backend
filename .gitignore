@@ -8,3 +8,4 @@ migrations/
 .env
 package-lock.json
 *.log
+*-credentials.json

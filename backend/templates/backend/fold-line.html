@@ -54,9 +54,18 @@
                             作成
                         </button>
                     {% else %}
-                        <button class="btn btn-primary" type=”button” onclick="buttonAction.updateCurve()">
-                            更新
-                        </button>
+                        {% if is_ownself %}
+                            <button class="btn btn-primary" type=”button” onclick="buttonAction.updateCurve()">
+                                更新
+                            </button>
+                            <button class="btn btn-primary" type=”button” onclick="buttonAction.uploadImage()">
+                                画像をアップロード
+                            </button>
+                        {% else %}
+                            <button class="btn btn-primary" type=”button” onclick="buttonAction.jumpToDashboard()">
+                                感情曲線を描画する
+                            </button>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

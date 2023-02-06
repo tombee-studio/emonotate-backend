@@ -9,6 +9,7 @@ from django.utils.timezone import datetime, timedelta
 
 from asgiref.sync import sync_to_async
 import requests_async as requests
+import requests as requests_sync
 from importlib import import_module
 
 from rest_framework.response import Response
@@ -646,8 +647,33 @@ class SetGoogleFormView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GCPAccessTokenView(View):
+    def validate_access_token(self, gcptoken):
+        url = 'https://www.googleapis.com/oauth2/v3/tokeninfo'
+        res = requests_sync.get(url, {'access_token': gcptoken.access_token})
+        if res.json().get('error_description', None) is None:
+            return True
+        return False
+    
+    def refresh_access_token(self, gcptoken):
+        url = 'https://www.googleapis.com/oauth2/v4/token'
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        data = {
+            'client_id': os.environ.get("GCP_CLIENT_ID"),
+            'client_secret': os.environ.get("GCP_CLIENT_SECRET"),
+            'refresh_token': os.environ.get("GCP_STORAGE_REFRESH_TOKEN"),
+            'grant_type': 'refresh_token'
+        }
+        res = requests_sync.post(url, data=data)
+        print(res.text)
+
     def post(self, request, *args, **kwargs):
-        return HttpResponse(os.environ.get("GCP_STORAGE_TOKEN"), status=200)
+        gcptoken = GCPToken.objects.get(pk=1)
+        if not self.validate_access_token(gcptoken):
+            self.refresh_access_token(gcptoken)
+            return HttpResponse("Access Tokenの有効期限が切れています", status=401)
+        return JsonResponse(GCPTokenSerializer(gcptoken).data, status=200)
 
 
 async def send_request_mail(request, title, description, participant):

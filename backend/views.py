@@ -120,6 +120,7 @@ class FoldLineView(View):
             curve_json["user"] = request.user.id
             curve_json["locked"] = True
             curve_json["room_name"] = req.room_name
+            curve_json["kind"] = 2
             request_json = RequestSerializer(req).data
             context = {
                 "video_id": video_id,
@@ -135,6 +136,7 @@ class FoldLineView(View):
             curve_json["value_type"] = 1
             curve_json["user"] = request.user.id
             curve_json["locked"] = request.GET.get("locked", False)
+            curve_json["kind"] = 2
             curve_json["room_name"] = request.GET.get("room_name", 
                 f"{request.GET.get('room_name')}")
             context = {

@@ -1,16 +1,19 @@
 import os
-from dotenv import load_dotenv
+import environ
 from sys import path
 from os.path import join
 
 from django.urls import reverse_lazy
 
-load_dotenv()
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+env = environ.Env(DEBUG=(bool, True))
+env_file = os.path.join(BASE_DIR, ".env")
+
 path.append(join(BASE_DIR, 'apps'))
+
+print(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
 
 ALLOWED_HOSTS = ['*']
 

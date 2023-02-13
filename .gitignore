@@ -9,3 +9,5 @@ migrations/
 package-lock.json
 *.log
 *-credentials.json
+cloud_sql_proxy
+backend/static/

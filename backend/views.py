@@ -61,6 +61,7 @@ class FreeHandView(View):
             curve_json["room_name"] = req.room_name
             request_json = RequestSerializer(req).data
             context = {
+                "is_ownself": request.user.is_authenticated,
                 "option": "new",
                 "video_id": video_id,
                 "has_google_form": req.google_form != None,
@@ -78,6 +79,7 @@ class FreeHandView(View):
             curve_json["room_name"] = request.GET.get("room_name", 
                 f"{request.GET.get('room_name')}")
             context = {
+                "is_ownself": request.user.is_authenticated,
                 "option": "new",
                 "video_id": video_id,
                 "curve_json": json.dumps(curve_json),
@@ -123,6 +125,7 @@ class FoldLineView(View):
             curve_json["kind"] = 2
             request_json = RequestSerializer(req).data
             context = {
+                "is_ownself": request.user.is_authenticated,
                 "video_id": video_id,
                 "option": "new",
                 "has_google_form": req.google_form != None,
@@ -140,6 +143,7 @@ class FoldLineView(View):
             curve_json["room_name"] = request.GET.get("room_name", 
                 f"{request.GET.get('room_name')}")
             context = {
+                "is_ownself": request.user.is_authenticated,
                 "option": "new",
                 "video_id": video_id,
                 "curve_json": json.dumps(curve_json)

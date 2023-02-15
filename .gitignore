@@ -11,3 +11,4 @@ package-lock.json
 *-credentials.json
 cloud_sql_proxy
 backend/static/
+start_proxy.sh

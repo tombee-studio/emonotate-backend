@@ -19,3 +19,4 @@ __pycache__/
 /setup.cfg
 venv/
 cloud_sql_proxy
+.envrc

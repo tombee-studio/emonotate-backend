@@ -10,8 +10,6 @@ from django.utils.timezone import datetime
 
 from django.contrib.auth.models import Group
 
-from lazysignup.utils import is_lazy_user
-
 import webvtt
 
 User = get_user_model()
@@ -56,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
         else:
             ret["groups"] = ["Guest"]
             profile_notifications.append("本人確認がされていないため、研究者向け機能を使用することができません。認証メールを送信し本人確認を行なってください。")
-        ret["is_lazy_user"] = is_lazy_user(instance)
+        ret["is_lazy_user"] = False
         ret["inviting_users"] = len(instance.inviting_users.all())
         ret["invited_users"] = len(instance.emailuser_set.all())
         ret["notifications"] = {

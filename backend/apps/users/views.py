@@ -35,8 +35,6 @@ from django.views.generic import View
 
 from django.http import JsonResponse
 
-from lazysignup.decorators import allow_lazy_user
-
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication

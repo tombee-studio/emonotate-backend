@@ -16,7 +16,6 @@ urlpatterns = [
     path('fold-line/', FoldLineView.as_view(), name='fold-line'),
     path('fold-line/<int:pk>', FoldLineDetailView.as_view(), name='free-hand'),
     url(r'^auth/', include('auth.urls')),
-    url(r'^convert/', include('lazysignup.urls')),
     url('^$', index, name='index'),
 ]
 

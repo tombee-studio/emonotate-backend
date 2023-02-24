@@ -58,10 +58,10 @@ steps:
       ]
 
 substitutions:
-  _INSTANCE_NAME: django-postgresql
+  _INSTANCE_NAME: emonotate-postgres
   _REGION: asia-northeast1
   _SERVICE_NAME: emonotate-backend
-  _SECRET_SETTINGS_NAME: backend_settings
+  _SECRET_SETTINGS_NAME: django_settings
 
 images:
   - "gcr.io/${PROJECT_ID}/${_SERVICE_NAME}"

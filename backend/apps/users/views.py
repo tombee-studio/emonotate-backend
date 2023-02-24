@@ -57,19 +57,26 @@ User = get_user_model()
 
 def send_mail(user, title, description):
     module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
-    return requests.post(
-        f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
-        auth=("api", os.environ.get("MAILGUN_API_KEY")),
-        data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
-            "to": [user.email],
-            "subject": title,
-            "text": description
+    headers = {
+        "Authorization": os.environ.get("BEARER_TOKEN"),
+        "Content-Type": "application/json"
+    }
+    data = json.dumps({
+        "from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
+        "to": [user.email],
+        "subject": title,
+        "text": description
     })
+    return requests.post(
+        f"{os.environ.get('SMTP_SERVER_URI')}/{os.environ.get('SMTP_SERVER_ENDPOINT')}",
+        headers=headers,
+        data=data)
 
 
 class Me(View):
     def get(self, request):
         if request.user.is_authenticated:
+            print(f"ME: {request.user}")
             return JsonResponse(UserSerializer(request.user).data, status=200)
         else:
             return JsonResponse(data={

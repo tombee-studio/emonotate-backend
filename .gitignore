@@ -12,3 +12,4 @@ package-lock.json
 cloud_sql_proxy
 backend/static/
 start_proxy.sh
+.envrc

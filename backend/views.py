@@ -9,8 +9,6 @@ from django.conf import settings
 from django.urls import reverse
 from django.shortcuts import render, redirect
 
-from lazysignup.decorators import allow_lazy_user
-
 from django.http import JsonResponse
 
 from users.serializers import UserSerializer, RequestSerializer, CurveSerializer

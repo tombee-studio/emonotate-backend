@@ -58,8 +58,8 @@ steps:
       ]
 
 substitutions:
-  _INSTANCE_NAME: django-instance
-  _REGION: us-central1
+  _INSTANCE_NAME: emonotate-postgres
+  _REGION: asia-northeast1
   _SERVICE_NAME: emonotate-backend
   _SECRET_SETTINGS_NAME: django_settings
 

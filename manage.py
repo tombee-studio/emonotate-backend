@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import os
 import sys
-from dotenv import load_dotenv
-load_dotenv()
 
 STAGE = os.environ['STAGE']
 

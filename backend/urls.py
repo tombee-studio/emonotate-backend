@@ -24,5 +24,4 @@ if os.environ['STAGE'] == 'DEVL':
 elif os.environ['STAGE'] == 'ALPHA':
     urlpatterns += static(STATIC_URL, document_root=os.path.join(BASE_DIR, 'static'))
 elif os.environ['STAGE'] == 'PROD':
-    from .settings.prod import STATIC_ROOT
-    urlpatterns += static(STATIC_URL, STATIC_ROOT)
+    urlpatterns += static(STATIC_URL)

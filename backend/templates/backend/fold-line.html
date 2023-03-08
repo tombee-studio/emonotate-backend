@@ -1,0 +1,104 @@
+{% load static %}
+
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Emonotate | 感情曲線研究支援ツール</title>
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <script src="{% static 'users/js/utils.js' %}"></script>
+        <script>
+            let youtubeID = "{{video_id}}";
+            let option = "{{option}}";
+            let youtubePlayerID = "player";
+            let graphViewId = "stage_container";
+            let curve = {{curve_json | safe}};
+            let request = {};
+        </script>
+        <script src="https://www.youtube.com/iframe_api"></script>
+        <script src="https://cdn.anychart.com/js/latest/graphics.min.js"></script>
+        <script src="{% static 'users/js/MyYouTubeView.js' %}"></script>
+        <script src="{% static 'users/js/FoldLineGraphView.js' %}"></script>
+        <script src="{% static 'users/js/FoldLineInputField.js'%}"></script>
+        <script src="{% static 'users/js/ButtonAction.js'%}"></script>
+        <script src="{% static 'users/js/ValueTypeList.js'%}"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        <style>
+            .dropdown-menu {
+                overflow:auto;
+                max-height: 250px;
+                min-width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container gap-3 p-2">
+            {% if has_google_form %}
+            <div class="row">
+                <div class="col">
+                    <div class="alert alert-warning" role="alert">
+                        本アンケートではポップアップウィンドウを使用します。<br>
+                        Safariをご利用の方はポップアップを許可した設定の上でご参加ください。<br>
+                        <a href="https://support.apple.com/ja-jp/guide/safari/sfri40696/mac">ポップアップを許可する方法(Apple公式サイト)</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="row">
+                <div class="p-2 col-md-auto">
+                    <div id="player"></div>
+                </div>
+                <div class="p-2 col">
+                    <div class="dropdown">
+                        <label for="search">あなたはどんな感情について感情曲線を描きますか？</label>
+                        <input id="search" type="text" name="list_name" class="form-control dropdown-toggle" data-toggle="dropdown">
+                        <ul id="value_types" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        </ul>
+                    </div>
+                    <div>
+                        {{ request_model.description }}
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="p-2 col-md-auto">
+                    <div id="stage_container" style="width: 640px; height: 320px;"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="p-2 col">
+                    {% if is_ownself %}
+                        {% if option == "new" %}
+                            <button class="btn btn-primary" type=”button” onclick="buttonAction.createCurve()">
+                                作成
+                            </button>
+                        {% else %}
+                            <button class="btn btn-primary" type=”button” onclick="buttonAction.updateCurve()">
+                                更新
+                            </button>
+                        {% endif %}
+                        <button class="btn btn-secondary" type=”button” onclick="buttonAction.jumpToDashboard()">
+                            ダッシュボードへ
+                        </button>
+                    {% else %}
+                            <button class="btn btn-primary" type=”button” onclick="buttonAction.jumpToDashboard()">
+                                感情曲線を描画する
+                            </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <script>
+            $(document).on('ontouched click', '.autocomplete', function() {
+                var text = $(this).data('autocomplete');
+                var target = $(this).data('target');
+                $('#search').val(target);
+                curve.value_type = Number(text);
+            });
+        </script>
+    </body>
+</html>

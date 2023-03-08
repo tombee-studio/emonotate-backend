@@ -8,3 +8,10 @@ migrations/
 .env
 package-lock.json
 *.log
+*-credentials.json
+cloud_sql_proxy
+backend/static/
+start_proxy.sh
+.envrc
+.env*
+static/

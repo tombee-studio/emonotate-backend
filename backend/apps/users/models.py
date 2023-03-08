@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import os
+import json
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
                                         BaseUserManager)
 from django.contrib.postgres.fields import JSONField
@@ -151,6 +152,10 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     last_updated = models.DateTimeField(auto_now=True)
+    inviting_users = models.ManyToManyField(
+        "EmailUser", 
+        null=True)
+    is_verified = models.BooleanField(default=False, null=True, blank=True)
     objects = EmailUserManager()
 
     USERNAME_FIELD = 'username'
@@ -199,7 +204,7 @@ class Section(models.Model):
     title = models.CharField(max_length=256, default="")
     user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
     content = models.ForeignKey(Content, default=1, on_delete=models.CASCADE)
-    values = JSONField(default=[], blank=True)
+    webvtt = models.TextField(default="", blank=True)
 
     def __str__(self):
         return f"{self.title} {self.content.title}({self.created})"
@@ -245,9 +250,26 @@ class Curve(models.Model):
     room_name = models.CharField(max_length=32, default="")
     enquete = models.ManyToManyField(Enquete, through="EnqueteAnswer")
     locked = models.BooleanField(default=True)
+    kind = models.IntegerField(choices=(
+        (1, 'フリーハンド'),
+        (2, '指定点')), default=1)
 
     def __str__(self):
         return '{} {}'.format(self.content.title, self.id)
+
+
+    @staticmethod
+    def get_empty_json():
+        return {
+            "user": None,
+            "content": None,
+            "value_type": None,
+            "version": "1.0.0",
+            "room_name": None,
+            "enquete": [],
+            "locked": None,
+            "values": None
+        }
 
 
 class EnqueteAnswer(models.Model):
@@ -256,6 +278,16 @@ class EnqueteAnswer(models.Model):
     answer = models.TextField(
         max_length=1000,
     )
+
+
+class GoogleForm(models.Model):
+    title = models.CharField(max_length=1024, blank=True, default="")
+    url = models.URLField(blank=False)
+    created = models.DateTimeField(auto_now_add=True)
+    username_entry_field = models.CharField(
+        max_length=128, blank=True, default="")
+    curve_id_entry_field = models.CharField(
+        max_length=128, blank=True, default="")
 
 
 class Request(models.Model):
@@ -281,12 +313,20 @@ class Request(models.Model):
     )
     section = models.ForeignKey(
         Section,
+        blank=True,
         null=True,
-        on_delete=models.CASCADE)
+        on_delete=models.SET_NULL)
     is_required_free_hand = models.BooleanField(default=False)
     values = JSONField(default=[], blank=True)
-    enquetes = models.ManyToManyField(Enquete)
+    enquetes = models.ManyToManyField(Enquete, blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
+    google_form = models.ForeignKey(GoogleForm, blank=True, null=True, on_delete=models.SET_NULL)
+    state_processing_to_download = models.IntegerField(choices=(
+        (0,  'WAITING'),
+        (1,  'PROCESSING'),
+        (2,  'SUCCESSED'),
+        (-1, 'FAILED')), 
+        default=0)
 
     def save(self, **kwargs):
         if not self.room_name:
@@ -294,7 +334,7 @@ class Request(models.Model):
             while Request.objects.filter(room_name=self.room_name).exists():
                 self.room_name = randomname()
         super(Request, self).save(**kwargs)
-    
+
     def __str__(self):
         return f'({self.id}){self.title}({self.room_name})'
 
@@ -304,3 +344,26 @@ class RelationParticipant(models.Model):
     request = models.ForeignKey(Request, default=1, on_delete=models.CASCADE)
     sended_mail = models.BooleanField(default=False)
     message = models.TextField(default="", blank=True)
+
+
+class InvitingToken(models.Model):
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
+    token = models.TextField(default="", unique=True)
+    expiration_date = models.DateTimeField(blank=True)
+
+    def save(self, **kwargs):
+        if not self.token:
+            self.token = randomname(16)
+            while InvitingToken.objects.filter(token=self.token).exists():
+                self.token = randomname(16)
+        super(InvitingToken, self).save(**kwargs)
+
+    def __str__(self, *kwargs):
+        return f"{self.user}"
+
+
+class GCPToken(models.Model):
+    user = models.ForeignKey(EmailUser, default=1, on_delete=models.CASCADE)
+    access_token = models.TextField(default="", unique=True)
+    refresh_token = models.TextField(default="", unique=True)
+    bucket_name = models.TextField(default="", unique=True)

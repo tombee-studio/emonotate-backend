@@ -15,6 +15,7 @@ router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
 router.register(r'enquetes', EnqueteViewSet, basename='enquetes')
 router.register(r'requests', RequestViewSet, basename='requests')
 router.register(r'sections', SectionViewSet, basename='sections')
+router.register(r'google_forms', GoogleFormViewSet, basename='sections')
 router.register(r'curves_with_youtube', CurveWithYouTubeContentViewSet, basename='curve_with_youtube')
 
 urlpatterns = router.urls
@@ -29,3 +30,12 @@ urlpatterns += path('download_curve_data/', download_curve_data),
 urlpatterns += path('reset_email_addresses/<int:pk>', reset_email_addresses),
 urlpatterns += path('change_email/', change_email),
 urlpatterns += path('merge_accounts/', merge_accounts),
+urlpatterns += path('participants/<int:pk>', ParticipantView.as_view(), name="participants"),
+urlpatterns += path('inviting_tokens/', InvitingTokenView.as_view(), name='inviting_tokens'),
+urlpatterns += path('relative_users/', RelativeUsersView.as_view(), name='relative_users'),
+urlpatterns += path('verify/', UserVerifyView.as_view(), name='verify'),
+urlpatterns += path('change_password/<int:pk>', ChangePasswordView.as_view(), name='change_password'),
+urlpatterns += path('reset_password/', ResetPasswordView.as_view(), name='reset_password'),
+urlpatterns += path('set_section/<int:pk>', SetSectionView.as_view(), name='set_section'),
+urlpatterns += path('set_google_form/<int:pk>', SetGoogleFormView.as_view(), name='set_google_form'),
+urlpatterns += path('gcp_access_token/', GCPAccessTokenView.as_view(), name='gcp_access_token'),

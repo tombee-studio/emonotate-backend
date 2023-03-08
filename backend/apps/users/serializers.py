@@ -1,12 +1,16 @@
+import io
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import *
+from django.core.exceptions import ValidationError
+
+from django.utils.translation import gettext as _
 
 from django.utils.timezone import datetime
 
 from django.contrib.auth.models import Group
 
-from lazysignup.utils import is_lazy_user
+import webvtt
 
 User = get_user_model()
 
@@ -15,15 +19,47 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
-    
+
+    def validate(self, attrs):
+        try:
+            owner = EmailUser.objects.get(pk=attrs["id"])
+        except:
+            raise ValidationError(_('そのユーザは存在しません'), code='invalid username')
+        try:
+            if owner.email != attrs["email"]:
+                user = EmailUser.objects.get(email=attrs["email"])
+                raise ValidationError(_('そのメールアドレスはすでに使用されています'), code='invalid email')
+        except EmailUser.DoesNotExist as ex:
+            pass
+        attrs["is_changed_email"] = owner.email != attrs["email"]
+        return super().validate(attrs)
+
     def to_internal_value(self, data):
         data['groups'] = list([Group.objects.get(name=name).id for name in data['groups']])
         return data
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data['username']
+        instance.email = validated_data['email']
+        if validated_data["is_changed_email"]:
+            instance.is_verified = False
+        instance.save()
+        return instance
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        ret["groups"] = [group.name for group in instance.groups.all()]
-        ret["is_lazy_user"] = is_lazy_user(instance)
+        profile_notifications = []
+        if ret["is_verified"]:
+            ret["groups"] = [group.name for group in instance.groups.all()]
+        else:
+            ret["groups"] = ["Guest"]
+            profile_notifications.append("本人確認がされていないため、研究者向け機能を使用することができません。認証メールを送信し本人確認を行なってください。")
+        ret["is_lazy_user"] = False
+        ret["inviting_users"] = len(instance.inviting_users.all())
+        ret["invited_users"] = len(instance.emailuser_set.all())
+        ret["notifications"] = {
+            "profile": profile_notifications
+        }
         return ret
 
 
@@ -60,10 +96,29 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = '__all__'
-    
+
+    def validate_webvtt(self, value):
+        try:
+            webvtt.read_buffer(io.StringIO(value))
+            return value
+        except webvtt.errors.MalformedCaptionError as er:
+            raise ValidationError("区間情報が正しい形式に則っていません。WebVTT形式で入力してください。")
+
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret['content'] = ContentSerializer(instance.content).data
+        try:
+            out = webvtt.read_buffer(io.StringIO(instance.webvtt))
+            ret['values'] = [{
+                'start': point.start,
+                'end': point.end,
+                'text': point.text
+            } for point in out]
+            ret['is_incorrect_webvtt'] = False
+        except webvtt.MalformedFileError:
+            ret['values'] = []
+            ret['is_incorrect_webvtt'] = True
         return ret
 
 
@@ -81,6 +136,12 @@ class YouTubeContentSerializer(serializers.ModelSerializer):
 class EnqueteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enquete
+        fields = '__all__'
+
+
+class GoogleFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoogleForm
         fields = '__all__'
 
 
@@ -160,15 +221,24 @@ class RequestSerializer(serializers.ModelSerializer):
         ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
-        ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
+        if len(ret['participants']) <= 10:
+            ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
+            ret['is_many_participants'] = False
+        else:
+            ret['participants'] = len(ret['participants'])
+            ret['is_many_participants'] = True
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
+        ret['has_google_form'] = ret['google_form'] != None
+        if ret['google_form'] != None:
+            ret['google_form'] = GoogleFormSerializer(GoogleForm.objects.get(pk=ret['google_form'])).data
         if ret['section']:
+            ret['is_included_section'] = True
             ret['section'] = SectionSerializer(Section.objects.get(pk=ret['section'])).data
+        else:
+            ret['is_included_section'] = False
         return ret
     
     def validate(self, attrs):
-        attrs['participants'] = self.initial_data['participants']
-        attrs['enquetes'] = self.initial_data['enquetes']
         return attrs
     
     def create(self, validated_data):
@@ -178,9 +248,29 @@ class RequestSerializer(serializers.ModelSerializer):
             value_type=validated_data['value_type'],
             title=validated_data['title'],
             values=validated_data['values'],
-            description=validated_data['description'],
-            section=validated_data['section']
+            description=validated_data['description']
         )
-        instance.participants.set(validated_data['participants'])
-        instance.enquetes.set(validated_data['enquetes'])
         return instance
+    
+    def update(self, instance, validated_data):
+        instance.content = validated_data['content']
+        instance.owner = validated_data['owner']
+        instance.value_type = validated_data['value_type']
+        instance.title = validated_data['title']
+        instance.values = validated_data['values']
+        instance.description = validated_data['description']
+        instance.is_required_free_hand = validated_data['is_required_free_hand']
+        instance.save()
+        return instance
+
+
+class InvitingTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvitingToken
+        fields = '__all__'
+
+
+class GCPTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GCPToken
+        fields = '__all__'

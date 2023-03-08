@@ -11,9 +11,11 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('users.urls')),
     url(r'^history/', include('users.history')),
-    path('free-hand/<int:pk>/', free_hand_view, name='free-hand'),
+    path('free-hand/', FreeHandView.as_view(), name='free-hand'),
+    path('free-hand/<int:pk>', FreeHandDetailView.as_view(), name='free-hand-detail'),
+    path('fold-line/', FoldLineView.as_view(), name='fold-line'),
+    path('fold-line/<int:pk>', FoldLineDetailView.as_view(), name='free-hand'),
     url(r'^auth/', include('auth.urls')),
-    url(r'^convert/', include('lazysignup.urls')),
     url('^$', index, name='index'),
 ]
 
@@ -22,5 +24,4 @@ if os.environ['STAGE'] == 'DEVL':
 elif os.environ['STAGE'] == 'ALPHA':
     urlpatterns += static(STATIC_URL, document_root=os.path.join(BASE_DIR, 'static'))
 elif os.environ['STAGE'] == 'PROD':
-    from .settings.prod import STATIC_ROOT
-    urlpatterns += static(STATIC_URL, STATIC_ROOT)
+    urlpatterns += static(STATIC_URL)

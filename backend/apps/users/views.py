@@ -194,7 +194,7 @@ class LoginAPIView(View):
                     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         if request.user.is_authenticated:
             try:
-                self.process_queries(request.GET, request.user)
+                UserAuthenticationModule.process_queries(request.GET, request.user)
             except Exception as ex:
                 print(ex)
             if not LoginAPIView.is_invalid_emailuser(request.user.email):

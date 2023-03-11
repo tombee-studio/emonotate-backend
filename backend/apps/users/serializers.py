@@ -163,18 +163,8 @@ class CurveSerializer(serializers.ModelSerializer):
         ret['enquete'] = [generate_enquete_json(enquete, instance) for enquete in Enquete.objects.filter(pk__in=ret['enquete'])]
         return ret
 
-    def validate(self, attrs):
-        attrs['enquete'] = list(map(lambda item: item["id"], self.initial_data['enquete']))
-        return attrs
-    
     def create(self, validated_data):
         instance = super().create(validated_data)
-        enquetes = Enquete.objects.filter(pk__in=list(map(lambda item: item["id"], self.initial_data['enquete'])))
-        for enquete in enquetes.iterator():
-            _item = enquete.enqueteanswer_set.get(curve=instance)
-            answer_item = list(filter(lambda item: item["id"] == enquete.id, self.initial_data['enquete']))[0]
-            _item.answer = answer_item["answer"]
-            _item.save()
         return instance
 
 

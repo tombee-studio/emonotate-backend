@@ -15,3 +15,5 @@ start_proxy.sh
 .envrc
 .env*
 static/
+cloudmigrate*
+*startup*

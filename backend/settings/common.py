@@ -1,19 +1,23 @@
+import io
 import os
 import environ
+import google.auth
+from google.cloud import secretmanager
 from sys import path
 from os.path import join
 
 from django.urls import reverse_lazy
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+env = environ.Env()
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(DEBUG=(bool, True))
 env_file = os.path.join(BASE_DIR, ".env")
 
 path.append(join(BASE_DIR, 'apps'))
-
-print(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
 
 ALLOWED_HOSTS = ['*']
 
@@ -147,5 +151,76 @@ MEDIA_URL = S3_URL
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 
-APPLICATION_BASE = ""
-APPLICATION_URL = ""
+# Attempt to load the Project ID into the environment, safely failing on error.
+try:
+    _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
+except google.auth.exceptions.DefaultCredentialsError:
+    pass
+
+if os.getenv("TRAMPOLINE_CI", None):
+    # Create local settings if running with CI, for unit testing
+
+    placeholder = (
+        f"SECRET_KEY=a\n"
+        "GS_BUCKET_NAME=None\n"
+        f"DATABASE_URL=sqlite://{os.path.join(BASE_DIR, 'db.sqlite3')}"
+    )
+    env.read_env(io.StringIO(placeholder))
+# [END_EXCLUDE]
+elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    # Pull secrets from Secret Manager
+    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+
+    client = secretmanager.SecretManagerServiceClient()
+    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
+    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+
+    env.read_env(io.StringIO(payload))
+else:
+    raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+
+try:
+    DEBUG = os.environ["DEBUG"]
+except:
+    DEBUG = False
+
+DATABASES = {
+    'default': env.db()
+}
+
+if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
+    DATABASES["default"]["HOST"] = "127.0.0.1"
+    DATABASES["default"]["PORT"] = 8100
+
+ALLOWED_HOSTS = ['*']
+
+INTERNAL_IPS = ['192.168.56.1']
+
+INSTALLED_APPS += (
+)
+
+STATICFILES_DIRS = [
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+HTTP_PROTOCOL = 'http' if DEBUG else 'https'
+API_BASE = os.environ.get("API_BASE")
+APPLICATION_BASE = os.environ.get("APP_BASE")
+APPLICATION_URL = f"{HTTP_PROTOCOL}://{APPLICATION_BASE}/"
+
+CSRF_TRUSTED_ORIGINS = [ 
+    f"{APPLICATION_BASE}", 
+    f"{API_BASE}",
+    f"{HTTP_PROTOCOL}://{APPLICATION_BASE}", 
+    f"{HTTP_PROTOCOL}://{API_BASE}" 
+]
+
+CORS_ORIGIN_WHITELIST = [ 
+    f"{HTTP_PROTOCOL}://{APPLICATION_BASE}",
+    f"{HTTP_PROTOCOL}://{API_BASE}"
+]
+
+CORS_ORIGIN_ALLOW_ALL = True
+CSRF_COOKIE_DOMAIN = "emonotate.com"

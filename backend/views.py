@@ -14,6 +14,7 @@ from django.http import JsonResponse
 from users.serializers import UserSerializer, RequestSerializer, CurveSerializer
 from users.models import Request, Curve
 from django.views.generic import View, DetailView
+from django.middleware.csrf import get_token
 
 User = get_user_model()
 
@@ -86,6 +87,7 @@ class FreeHandView(View):
             template = 'backend/free-hand.html'
         response = render(request, template, context)
         response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
         return response
 
 
@@ -105,6 +107,7 @@ class FreeHandDetailView(View):
         template = 'backend/free-hand.html'
         response = render(request, template, context)
         response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
         return response
 
 
@@ -149,6 +152,7 @@ class FoldLineView(View):
             template = 'backend/fold-line.html'
         response = render(request, template, context)
         response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
         return response
 
 
@@ -167,4 +171,5 @@ class FoldLineDetailView(View):
         template = 'backend/fold-line.html'
         response = render(request, template, context)
         response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
         return response

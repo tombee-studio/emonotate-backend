@@ -9,7 +9,6 @@ from os.path import join
 from django.urls import reverse_lazy
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 env = environ.Env()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -172,13 +171,15 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
     client = secretmanager.SecretManagerServiceClient()
-    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+    settings_name = os.environ.get("SETTINGS_NAME", "django_settings_beta")
     name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
 
     env.read_env(io.StringIO(payload))
 else:
     raise Exception("No local .env or GOOGLE_CLOUD_PROJECT detected. No secrets found.")
+
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 try:
     DEBUG = os.environ["DEBUG"]
@@ -211,8 +212,6 @@ APPLICATION_BASE = os.environ.get("APP_BASE")
 APPLICATION_URL = f"{HTTP_PROTOCOL}://{APPLICATION_BASE}/"
 
 CSRF_TRUSTED_ORIGINS = [ 
-    f"{APPLICATION_BASE}", 
-    f"{API_BASE}",
     f"{HTTP_PROTOCOL}://{APPLICATION_BASE}", 
     f"{HTTP_PROTOCOL}://{API_BASE}" 
 ]
@@ -223,4 +222,3 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
-CSRF_COOKIE_DOMAIN = "emonotate.com"

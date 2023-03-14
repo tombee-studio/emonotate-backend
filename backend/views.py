@@ -162,6 +162,7 @@ class FoldLineView(View):
         response.set_cookie('GCP_ACCESS_TOKEN', 'value')
         response.set_cookie('csrftoken', get_token(request))
         response.set_cookie('staging', staging)
+
         return response
 
 

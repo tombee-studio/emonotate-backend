@@ -17,3 +17,4 @@ start_proxy.sh
 static/
 cloudmigrate*
 *startup*
+update_cloud_run.sh

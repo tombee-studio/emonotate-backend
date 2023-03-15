@@ -20,3 +20,5 @@ __pycache__/
 venv/
 cloud_sql_proxy
 .envrc
+
+update_cloud_run.sh

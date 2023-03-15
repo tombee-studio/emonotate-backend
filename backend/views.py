@@ -106,7 +106,7 @@ class FreeHandDetailView(View):
             "curve_json": json.dumps(curve_dict),
             "request_json": {},
             "ogp_title": f"{curve.content.title}を視聴したときの私の{curve.value_type.title}曲線！！",
-            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/images/{staging}/{curve.id}.png?alt=media",
+            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/image_{staging}_{curve.id}.png?alt=media",
             "stage": staging
         }
         template = 'backend/free-hand.html'
@@ -177,7 +177,7 @@ class FoldLineDetailView(View):
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": json.dumps(curve_dict),
             "request_json": {},
-            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/images/{staging}/{curve.id}.png?alt=media",
+            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/image_{staging}_{curve.id}.png?alt=media",
             "stage": staging
         }
         template = 'backend/fold-line.html'

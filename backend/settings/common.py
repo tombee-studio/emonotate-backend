@@ -195,13 +195,15 @@ try:
 except:
     DEBUG = False
 
-DATABASES = {
-    'default': env.db()
-}
-
-if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
-    DATABASES["default"]["HOST"] = "127.0.0.1"
-    DATABASES["default"]["PORT"] = 8100
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {
+        'default': env.db()
+    }
+    if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
+        DATABASES["default"]["HOST"] = "127.0.0.1"
+        DATABASES["default"]["PORT"] = 8100
+else:
+    DATABASES = {}
 
 ALLOWED_HOSTS = ['*']
 

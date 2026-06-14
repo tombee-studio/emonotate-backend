@@ -16,8 +16,14 @@ def handler(event, context):
         from django.db import connections
         from django.core.management import call_command
 
-        # Reset any stale/aborted DB connections from previous invocations
-        connections.close_all()
+        # Force-reset any stale DB connections from previous invocations
+        for alias in connections:
+            conn = connections[alias]
+            try:
+                conn.close()
+            except Exception:
+                pass
+            conn.connection = None  # Make Django open a fresh connection
 
         args = shlex.split(event["manage"])
         out = io.StringIO()

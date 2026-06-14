@@ -13,7 +13,11 @@ def handler(event, context):
     if "manage" in event:
         import io
         import shlex
+        from django.db import connections
         from django.core.management import call_command
+
+        # Reset any stale/aborted DB connections from previous invocations
+        connections.close_all()
 
         args = shlex.split(event["manage"])
         out = io.StringIO()

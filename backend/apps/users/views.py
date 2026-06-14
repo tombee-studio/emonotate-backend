@@ -15,7 +15,7 @@ except ImportError:
 from django.utils.timezone import datetime, timedelta
 
 from asgiref.sync import sync_to_async
-import requests_async as requests
+import requests
 import requests as requests_sync
 from importlib import import_module
 
@@ -243,9 +243,12 @@ class SignupAPIView(View):
         user = EmailUser.objects.create_user(username, email, password1)
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         queries = [f'{query}={request.GET[query]}' for query in request.GET]
-        q = Queue(connection=conn)
-        (title, description) = MailGenerator.create_verify_mail(user)
-        result = q.enqueue(send_mail, user, title, description)
+        try:
+            q = Queue(connection=conn)
+            (title, description) = MailGenerator.create_verify_mail(user)
+            q.enqueue(send_mail, user, title, description)
+        except Exception:
+            pass
         return JsonResponse({
             "is_error": False,
             'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
@@ -278,9 +281,12 @@ class UserVerifyView(View):
         user = request.user
         if not request.user.is_authenticated:
             return HttpResponse("認証されていないユーザです", status=403)
-        q = Queue(connection=conn)
-        (title, description) = MailGenerator.create_verify_mail(user)
-        result = q.enqueue(send_mail, user, title, description)
+        try:
+            q = Queue(connection=conn)
+            (title, description) = MailGenerator.create_verify_mail(user)
+            q.enqueue(send_mail, user, title, description)
+        except Exception:
+            pass
         return HttpResponse("認証用メールを送信しました", status=200)
 
 
@@ -593,9 +599,12 @@ class ResetPasswordView(View):
         email = params["email"]
         try:
             user = EmailUser.objects.get(email=email)
-            q = Queue(connection=conn)
-            (title, description) = MailGenerator.create_password_reset_mail(user)
-            result = q.enqueue(send_mail, user, title, description)
+            try:
+                q = Queue(connection=conn)
+                (title, description) = MailGenerator.create_password_reset_mail(user)
+                q.enqueue(send_mail, user, title, description)
+            except Exception:
+                pass
             return HttpResponse("パスワードリセットのためのメールを送信しました", status=200)
         except:
             return HttpResponse("無効なメールアドレスです", status=400)
@@ -668,17 +677,16 @@ class GCPAccessTokenView(View):
         return JsonResponse(response_data, status=200)
 
 
-async def send_request_mail(request, title, description, participant):
-    async with requests.Session() as session:
-        response = await session.post(
-            f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
-            auth=("api", os.environ.get("MAILGUN_API_KEY")),
-            data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
-                "to": [participant.email],
-                "subject": title,
-                "text": description
-        })
-        return (participant, request, response)
+def send_request_mail(request, title, description, participant):
+    response = requests.post(
+        f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
+        auth=("api", os.environ.get("MAILGUN_API_KEY")),
+        data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
+            "to": [participant.email],
+            "subject": title,
+            "text": description
+    })
+    return (participant, request, response)
 
 
 def split_list(array, n):
@@ -813,8 +821,11 @@ def get_download_curve_data(request, pk):
     file_name = f"{req.room_name}.json"
     if req.state_processing_to_download == 0:
         # ダウンロード可能タイミング
-        q = Queue(connection=conn)
-        result = q.enqueue(create_curve_data_in_s3, pk)
+        try:
+            q = Queue(connection=conn)
+            q.enqueue(create_curve_data_in_s3, pk)
+        except Exception:
+            pass
         return JsonResponse(data={
             "state": "PROCESSING",
             "request": RequestSerializer(req).data

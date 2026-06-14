@@ -78,7 +78,7 @@ class Me(View):
         else:
             return JsonResponse(data={
                 "message": "not authenticated"
-            }, status=404)
+            }, status=401)
 
 class MailGenerator:
     @staticmethod

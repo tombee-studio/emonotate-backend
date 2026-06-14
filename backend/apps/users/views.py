@@ -5,8 +5,12 @@ import json
 import asyncio
 import traceback
 
-import firebase_admin
-from firebase_admin import credentials
+try:
+    import firebase_admin
+    from firebase_admin import credentials
+    _has_firebase = True
+except ImportError:
+    _has_firebase = False
 
 from django.utils.timezone import datetime, timedelta
 

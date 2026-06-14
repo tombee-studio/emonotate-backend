@@ -1,0 +1,13 @@
+FROM public.ecr.aws/lambda/python:3.9
+
+WORKDIR ${LAMBDA_TASK_ROOT}
+
+COPY requirements-aws.txt .
+RUN pip install --no-cache-dir -r requirements-aws.txt
+
+COPY . .
+
+ENV DJANGO_SETTINGS_MODULE=backend.settings.aws
+ENV PYTHONUNBUFFERED=1
+
+CMD ["lambda_handler.handler"]

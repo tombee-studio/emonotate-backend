@@ -1,0 +1,25 @@
+name: Deploy backend to dev
+
+run-name: Deploy backend ${{ github.sha }} to dev
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  id-token: write
+  contents: read
+
+# Never run two backend deploys to the same environment at once; queue them instead.
+concurrency:
+  group: deploy-backend-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: dev
+    secrets:
+      aws_role_arn: ${{ secrets.AWS_CI_ROLE_ARN_DEV }}

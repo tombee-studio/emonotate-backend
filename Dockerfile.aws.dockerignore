@@ -1,0 +1,11 @@
+.git
+**/.env
+**/.env.*
+**/.envrc
+**/.aws
+**/*.pem
+**/*-credentials.json
+**/__pycache__
+**/*.sqlite3
+venv
+.venv

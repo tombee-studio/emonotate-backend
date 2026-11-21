@@ -1,10 +1,9 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from django.conf.urls import url, include
+from django.urls import re_path as url, include
 from .views import *
 
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -15,11 +14,10 @@ router.register(r'valuetypes', ValueTypeViewSet, basename='valuetypes')
 router.register(r'enquetes', EnqueteViewSet, basename='enquetes')
 router.register(r'requests', RequestViewSet, basename='requests')
 router.register(r'sections', SectionViewSet, basename='sections')
-router.register(r'google_forms', GoogleFormViewSet, basename='sections')
+router.register(r'google_forms', GoogleFormViewSet, basename='google_forms')
 router.register(r'curves_with_youtube', CurveWithYouTubeContentViewSet, basename='curve_with_youtube')
 
-urlpatterns = router.urls
-urlpatterns += url(r'sign_s3/$', sign_s3),
+urlpatterns = list(router.urls)
 urlpatterns += path('me/', Me.as_view(), name='login'),
 urlpatterns += path('login/', LoginAPIView.as_view(), name='login'),
 urlpatterns += path('logout/', LogoutAPIView.as_view(), name='logout'),

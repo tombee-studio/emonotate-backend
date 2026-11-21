@@ -29,6 +29,9 @@ def handler(event, context):
         out = io.StringIO()
         try:
             call_command(*args, stdout=out, stderr=out)
+            if args[0] == "migrate":
+                from users.util import prepare
+                prepare()
             return {"status": "ok", "output": out.getvalue()}
         except Exception as exc:
             return {"status": "error", "error": str(exc), "output": out.getvalue()}

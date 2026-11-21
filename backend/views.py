@@ -7,13 +7,14 @@ from django.contrib.auth import login, authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.urls import reverse
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 
 from django.http import JsonResponse
 
 from users.serializers import UserSerializer, RequestSerializer, CurveSerializer
 from users.models import Request, Curve
 from django.views.generic import View, DetailView
+from django.middleware.csrf import get_token
 
 User = get_user_model()
 
@@ -65,7 +66,8 @@ class FreeHandView(View):
                 "has_google_form": req.google_form != None,
                 "request_model": req,
                 "curve_json": json.dumps(curve_json),
-                "request_json": json.dumps(request_json)
+                "request_json": json.dumps(request_json),
+                "stage": os.environ.get("STAGE").lower()
             }
             template = 'backend/free-hand.html'
         else:
@@ -81,18 +83,21 @@ class FreeHandView(View):
                 "option": "new",
                 "video_id": video_id,
                 "curve_json": json.dumps(curve_json),
-                "request_json": {}
+                "request_json": {},
+                "stage": os.environ.get("STAGE").lower()
             }
             template = 'backend/free-hand.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
+        response.set_cookie('staging', os.environ.get("STAGE"))
         return response
 
 
 class FreeHandDetailView(View):
     def get(self, request, pk, *args, **kwargs):
-        curve = Curve.objects.get(pk=pk)
+        curve = get_object_or_404(Curve, pk=pk, user=request.user)
         curve_dict = CurveSerializer(curve).data
+        staging = os.environ.get("STAGE").lower()
         context = {
             "is_ownself": curve.user.id == request.user.id,
             "option": "detail",
@@ -100,17 +105,19 @@ class FreeHandDetailView(View):
             "curve_json": json.dumps(curve_dict),
             "request_json": {},
             "ogp_title": f"{curve.content.title}を視聴したときの私の{curve.value_type.title}曲線！！",
-            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/{curve.id}.png?alt=media"
+            "stage": staging
         }
         template = 'backend/free-hand.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
+        response.set_cookie('staging', staging)
         return response
 
 
 class FoldLineView(View):
     def get(self, request, *args, **kwargs):
         curve_json = Curve.get_empty_json()
+        staging = os.environ.get("STAGE").lower()
         if "request" in request.GET:
             req = Request.objects.get(pk=int(request.GET.get("request")))
             video_id = req.content.youtubecontent.video_id
@@ -129,7 +136,8 @@ class FoldLineView(View):
                 "has_google_form": req.google_form != None,
                 "request_model": req,
                 "curve_json": json.dumps(curve_json),
-                "request_json": json.dumps(request_json)
+                "request_json": json.dumps(request_json),
+                "stage": staging
             }
             template = 'backend/fold-line.html'
         else:
@@ -148,23 +156,27 @@ class FoldLineView(View):
             }
             template = 'backend/fold-line.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
+        response.set_cookie('staging', staging)
+
         return response
 
 
 class FoldLineDetailView(View):
     def get(self, request, pk, *args, **kwargs):
-        curve = Curve.objects.get(pk=pk)
+        curve = get_object_or_404(Curve, pk=pk, user=request.user)
         curve_dict = CurveSerializer(curve).data
+        staging = os.environ.get("STAGE").lower()
         context = {
             "option": "detail",
             "is_ownself": curve.user.id == request.user.id,
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": json.dumps(curve_dict),
             "request_json": {},
-            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/{curve.id}.png?alt=media"
+            "stage": staging
         }
         template = 'backend/fold-line.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
+        response.set_cookie('csrftoken', get_token(request))
+        response.set_cookie('staging', staging)
         return response

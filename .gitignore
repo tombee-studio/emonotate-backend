@@ -15,3 +15,9 @@ start_proxy.sh
 .envrc
 .env*
 static/
+cloudmigrate*
+*startup*
+update_cloud_run.sh
+
+!backend/apps/users/migrations/
+!backend/apps/users/migrations/*.py

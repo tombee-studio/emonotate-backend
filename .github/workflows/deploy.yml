@@ -1,0 +1,136 @@
+name: Deploy backend (reusable)
+
+# test -> ECR image -> Lambda -> migrations -> check Cognito redirect via CloudFront.
+# Each stage runs only when the previous one succeeded.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment name used in AWS resource names (dev or prd)"
+        required: true
+        type: string
+    secrets:
+      aws_role_arn:
+        description: "IAM role assumed through GitHub OIDC for this environment"
+        required: true
+
+env:
+  AWS_REGION: ap-northeast-1
+  PROJECT: emonotate
+  ENV: ${{ inputs.environment }}
+
+jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+
+  deploy:
+    name: Deploy backend (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      image_uri: ${{ steps.build.outputs.image_uri }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role_arn }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        id: build
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          REPO="${REGISTRY}/${PROJECT}-${ENV}-backend"
+          docker build --platform linux/amd64 --provenance=false \
+            -f Dockerfile.aws \
+            -t "${REPO}:${IMAGE_TAG}" \
+            -t "${REPO}:latest" \
+            .
+          docker push "${REPO}:${IMAGE_TAG}"
+          docker push "${REPO}:latest"
+          echo "image_uri=${REPO}:${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Update Lambda function code
+        env:
+          IMAGE_URI: ${{ steps.build.outputs.image_uri }}
+        run: |
+          FUNCTION="${PROJECT}-${ENV}-backend"
+          aws lambda wait function-updated --function-name "$FUNCTION"
+          aws lambda update-function-code \
+            --function-name "$FUNCTION" \
+            --image-uri "$IMAGE_URI" \
+            --query FunctionArn --output text
+          aws lambda wait function-updated --function-name "$FUNCTION"
+
+      - name: Run database migrations
+        run: |
+          response=$(mktemp)
+          aws lambda invoke \
+            --function-name "${PROJECT}-${ENV}-backend" \
+            --cli-read-timeout 210 \
+            --cli-binary-format raw-in-base64-out \
+            --payload '{"manage":"migrate --fake-initial --noinput"}' \
+            "$response" > /dev/null
+          # Fails the step unless the handler reported {"status": "ok"}.
+          jq -er 'if .status == "ok" then .output
+                  else error(.error // .errorMessage // "Migration failed") end' "$response"
+
+  verify:
+    name: Verify (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role_arn }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check Cognito redirect through CloudFront
+        id: verify
+        run: |
+          DOMAIN=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Comment=='${PROJECT}-${ENV}-frontend-cf'].DomainName" \
+            --output text)
+          if [[ -z "$DOMAIN" || "$DOMAIN" == "None" ]]; then
+            echo "::error::CloudFront distribution ${PROJECT}-${ENV}-frontend-cf not found"
+            exit 1
+          fi
+          echo "url=https://${DOMAIN}/" >> "$GITHUB_OUTPUT"
+          location=$(curl --fail --silent --show-error --max-time 20 \
+            --output /dev/null --write-out '%{redirect_url}' \
+            "https://${DOMAIN}/api/cognito/login/")
+          if [[ "$location" != https://*.amazoncognito.com/oauth2/authorize\?* ]]; then
+            echo "::error::Login did not redirect to Cognito (got: '${location}')"
+            exit 1
+          fi
+          echo "Cognito redirect OK"
+
+      - name: Write deployment summary
+        if: always()
+        env:
+          IMAGE_URI: ${{ needs.deploy.outputs.image_uri }}
+          URL: ${{ steps.verify.outputs.url }}
+          RESULT: ${{ steps.verify.outcome }}
+        run: |
+          {
+            echo "### Backend deploy to ${ENV}"
+            echo ""
+            echo "| Item | Value |"
+            echo "|---|---|"
+            echo "| Environment | \`${ENV}\` |"
+            echo "| Commit | \`${GITHUB_SHA}\` |"
+            echo "| Ref | \`${GITHUB_REF_NAME}\` |"
+            echo "| Lambda image | \`${IMAGE_URI}\` |"
+            echo "| URL | ${URL:-unknown} |"
+            echo "| Verification | ${RESULT} |"
+          } >> "$GITHUB_STEP_SUMMARY"

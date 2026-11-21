@@ -5,13 +5,17 @@ import json
 import asyncio
 import traceback
 
-import firebase_admin
-from firebase_admin import credentials
+try:
+    import firebase_admin
+    from firebase_admin import credentials
+    _has_firebase = True
+except ImportError:
+    _has_firebase = False
 
-from django.utils.timezone import datetime, timedelta
+from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
-import requests_async as requests
+import requests
 import requests as requests_sync
 from importlib import import_module
 
@@ -25,7 +29,9 @@ from .models import *
 
 from .serializers import *
 
-from backend.settings.common import AWS_STORAGE_BUCKET_NAME, S3_URL
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+from .sources import storage
 from django.http import HttpResponse
 
 from django.contrib.auth import authenticate, login, logout
@@ -35,17 +41,11 @@ from django.views.generic import View
 
 from django.http import JsonResponse
 
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from django.shortcuts import redirect
 
-import boto3
 from importlib import import_module
 
-from rq import Queue
-from worker import conn
 
 from django.views.decorators.http import require_http_methods
 
@@ -74,12 +74,13 @@ class Me(View):
         else:
             return JsonResponse(data={
                 "message": "not authenticated"
-            }, status=404)
+            }, status=401)
 
 class MailGenerator:
     @staticmethod
     def create_verify_mail(user):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        from rest_framework_simplejwt.tokens import RefreshToken
         access_token = RefreshToken.for_user(user).access_token
         access_token.set_exp(lifetime=timedelta(minutes=30))
         title = f"【Important】 Sending Verification URL"
@@ -94,6 +95,7 @@ class MailGenerator:
     @staticmethod
     def create_password_reset_mail(user):
         module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
+        from rest_framework_simplejwt.tokens import RefreshToken
         access_token = RefreshToken.for_user(user).access_token
         access_token.set_exp(lifetime=timedelta(minutes=30))
         title = f"【Important】 Sending Password Reset URL"
@@ -164,6 +166,7 @@ class LoginAPIView(View):
             # *****
             if request.user.is_authenticated:
                 logout(request)
+            from rest_framework_simplejwt.authentication import JWTAuthentication, JWTTokenUserAuthentication
             auth = JWTAuthentication()
             tokenAuth = JWTTokenUserAuthentication()
             token_user = tokenAuth.get_user(auth.get_validated_token(token))
@@ -239,9 +242,14 @@ class SignupAPIView(View):
         user = EmailUser.objects.create_user(username, email, password1)
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         queries = [f'{query}={request.GET[query]}' for query in request.GET]
-        q = Queue(connection=conn)
-        (title, description) = MailGenerator.create_verify_mail(user)
-        result = q.enqueue(send_mail, user, title, description)
+        try:
+            from rq import Queue
+            from worker import conn
+            q = Queue(connection=conn)
+            (title, description) = MailGenerator.create_verify_mail(user)
+            q.enqueue(send_mail, user, title, description)
+        except Exception:
+            pass
         return JsonResponse({
             "is_error": False,
             'url': f"{module.APPLICATION_URL}api/login/{'' if not request.GET else '?' + '&'.join(queries)}"
@@ -258,6 +266,7 @@ class UserVerifyView(View):
         try:
             token = request.GET.get("token")
 
+            from rest_framework_simplejwt.authentication import JWTAuthentication, JWTTokenUserAuthentication
             auth = JWTAuthentication()
             tokenAuth = JWTTokenUserAuthentication()
             token_user = tokenAuth.get_user(auth.get_validated_token(token))
@@ -274,9 +283,14 @@ class UserVerifyView(View):
         user = request.user
         if not request.user.is_authenticated:
             return HttpResponse("認証されていないユーザです", status=403)
-        q = Queue(connection=conn)
-        (title, description) = MailGenerator.create_verify_mail(user)
-        result = q.enqueue(send_mail, user, title, description)
+        try:
+            from rq import Queue
+            from worker import conn
+            q = Queue(connection=conn)
+            (title, description) = MailGenerator.create_verify_mail(user)
+            q.enqueue(send_mail, user, title, description)
+        except Exception:
+            pass
         return HttpResponse("認証用メールを送信しました", status=200)
 
 
@@ -308,6 +322,20 @@ class ContentViewSet(viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all().order_by('created').reverse()
     search_fields = ['title']
+
+
+    def get_queryset(self):
+        from django.db.models import Q
+        if self.request.method not in ("GET", "HEAD", "OPTIONS"):
+            return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(Q(upload__isnull=True) | Q(user=self.request.user) |
+                                    Q(request__participants=self.request.user)).distinct()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -346,17 +374,31 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Curve.objects.all()
 
     def get_queryset(self):
-        return Curve.objects.filter(user=self.request.user)
+        return Curve.objects.filter(user=self.request.user).order_by("-created", "-pk")
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CurveWithYouTubeContentViewSet(viewsets.ModelViewSet):
+class OwnCurveViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        if serializer.instance.locked:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("この曲線はロックされています。")
+        serializer.save(user=self.request.user)
+
+
+class CurveWithYouTubeContentViewSet(OwnCurveViewSet):
     serializer_class = CurveWithYouTubeSerializer
     queryset = Curve.objects.all().order_by('created').reverse()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CurveViewSet(viewsets.ModelViewSet):
+class CurveViewSet(OwnCurveViewSet):
     serializer_class = CurveSerializer
     queryset = Curve.objects.all().order_by('created').reverse()
     filter_backends = [filters.SearchFilter]
@@ -368,6 +410,13 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all().order_by('date_joined').reverse()
     search_fields = ('username', 'email')
+
+    def get_queryset(self):
+        if getattr(settings, 'COGNITO_POOL_ID', None):
+            if self.request.method not in ('GET', 'HEAD', 'OPTIONS'):
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("アカウントはCognitoで管理されています。")
+        return super().get_queryset()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -384,6 +433,8 @@ class RequestViewSet(viewsets.ModelViewSet):
     search_fields = ['title']
     
     def get_queryset(self):
+        if self.request.method not in ('GET', 'HEAD', 'OPTIONS'):
+            return self.queryset.filter(owner=self.request.user)
         role = self.request.GET.get('role')
         if role == 'owner':
             return self.queryset.filter(owner=self.request.user).order_by('created').reverse()
@@ -402,7 +453,7 @@ class RequestViewSet(viewsets.ModelViewSet):
             return Response("permission denied", status=403)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            self.perform_create(serializer)
+            serializer.save(owner=request.user)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=201, headers=headers)
         else:
@@ -420,13 +471,18 @@ class RequestViewSet(viewsets.ModelViewSet):
                 return Response(ser.data, status=201)
         serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid(raise_exception=True):
-            self.perform_update(serializer)
+            serializer.save(owner=request.user)
             return Response(serializer.data, status=200)
         else:
             return Response(serializer.data, status=403)
 
 
 class InvitingTokenView(View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name="Researchers").exists():
+            return HttpResponse(status=403)
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         try:
             token_obj = InvitingToken.objects.get(user=request.user)
@@ -492,7 +548,7 @@ class ParticipantView(View):
         return o
 
     def get(self, request, pk=None, *args, **kwargs):
-        req = Request.objects.get(pk=pk)
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
         if len(req.participants.all()) > 25:
             return JsonResponse({
                     "is_error": True,
@@ -510,7 +566,7 @@ class ParticipantView(View):
     
 
     def post(self, request, pk, *args, **kwargs):
-        req = Request.objects.get(pk=pk)
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
         params = json.loads(request.body)
         for email in params["emails"]:
             try:
@@ -537,7 +593,7 @@ class ParticipantView(View):
         }, status=200)
     
     def delete(self, request, pk, *args, **kwrags):
-        req = Request.objects.get(pk=pk)
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
         params = json.loads(request.body)
         delete_participants = req.participants.filter(email__in=params)
         req.participants.remove(*delete_participants)
@@ -589,9 +645,14 @@ class ResetPasswordView(View):
         email = params["email"]
         try:
             user = EmailUser.objects.get(email=email)
-            q = Queue(connection=conn)
-            (title, description) = MailGenerator.create_password_reset_mail(user)
-            result = q.enqueue(send_mail, user, title, description)
+            try:
+                from rq import Queue
+                from worker import conn
+                q = Queue(connection=conn)
+                (title, description) = MailGenerator.create_password_reset_mail(user)
+                q.enqueue(send_mail, user, title, description)
+            except Exception:
+                pass
             return HttpResponse("パスワードリセットのためのメールを送信しました", status=200)
         except:
             return HttpResponse("無効なメールアドレスです", status=400)
@@ -617,7 +678,7 @@ class SetSectionView(View):
     def put(self, request, pk, *args, **kwargs):
         params = json.loads(request.body)
         try:
-            req = Request.objects.get(pk=pk)
+            req = get_object_or_404(Request, pk=pk, owner=request.user)
         except Request.DoesNotExist:
             return HttpResponse("リクエストが存在しません", status=200)
         try:
@@ -634,7 +695,7 @@ class SetGoogleFormView(View):
     def put(self, request, pk, *args, **kwargs):
         params = json.loads(request.body)
         try:
-            req = Request.objects.get(pk=pk)
+            req = get_object_or_404(Request, pk=pk, owner=request.user)
         except Request.DoesNotExist:
             return HttpResponse("リクエストが存在しません", status=200)
         try:
@@ -664,19 +725,6 @@ class GCPAccessTokenView(View):
         return JsonResponse(response_data, status=200)
 
 
-async def send_request_mail(request, title, description, participant):
-    async with requests.Session() as session:
-        response = await session.post(
-            f"{os.environ.get('MAILGUN_API_BASE_URL')}/messages",
-            auth=("api", os.environ.get("MAILGUN_API_KEY")),
-            data={"from": f"{os.environ.get('MAILGUN_SENDER_NAME')} <{os.environ.get('MAILGUN_SMTP_LOGIN')}>",
-                "to": [participant.email],
-                "subject": title,
-                "text": description
-        })
-        return (participant, request, response)
-
-
 def split_list(array, n):
     """
     リストをサブリストに分割する
@@ -697,37 +745,23 @@ def send_request_mails(req, participants):
                 membership.message = ""
                 membership.save()
         return
-    module = import_module(os.environ.get('DJANGO_SETTINGS_MODULE'))
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    from django.core import signing
+    from urllib.parse import urlencode
     for clique in participants:
-        tasks = list()
         for participant in clique:
-            access_token = RefreshToken.for_user(participant).access_token
-            access_token.set_exp(lifetime=timedelta(days=1))
-            title = f"【Request】 {req.title}"
-            description = f"You got a request from {req.owner.username}({req.owner.email})\n"
-            description += f"{'-' * 16}\n"
-            description += f"{req.description}\n\n"
-            description += f"You can click here to participate in\n"
-            description += f"{module.APPLICATION_URL}api/login/?token={access_token}\n"
-            description += f"{'-' * 16}\n\n"
-            description += "Have a nice emonotating!\n"
-            tasks.append(loop.create_task(send_request_mail(req, title, description, participant)))
-        results, *_ = loop.run_until_complete(asyncio.wait(tasks))
-        for r in results:
-            participant, request, response = r.result()
-            membership = participant.relationparticipant_set.get(request=request)
-            membership.sended_mail = response.status_code == 200
-            membership.message = response.json()["message"]
+            token = signing.dumps({"request": req.pk, "email": participant.email}, salt="request-email")
+            link = settings.APPLICATION_URL + "api/cognito/login/?" + urlencode({"invitation": token})
+            description = f"{req.owner.username}さんからの依頼です。\n{req.description}\n{link}"
+            result = send_mail(participant, f"【Request】 {req.title}", description)
+            membership = participant.relationparticipant_set.get(request=req)
+            membership.sended_mail = result.ok
+            membership.message = str(result.status_code)
             membership.save()
-        time.sleep(2.)
-    loop.close()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 def send_request_mail(request, pk):
-    req = Request.objects.get(pk=pk)
+    req = get_object_or_404(Request, pk=pk, owner=request.user)
     emails = request.GET.get("targets")
     participants = []
     if emails == None:
@@ -744,7 +778,7 @@ def send_request_mail(request, pk):
 
 @method_decorator(csrf_exempt, name='dispatch')
 def reset_email_addresses(request, pk):
-    request = Request.objects.get(pk=pk)
+    request = get_object_or_404(Request, pk=pk, owner=request.user)
     for participant in request.participants.all():
         participant.email = ""
         participant.save()
@@ -758,89 +792,22 @@ def get_email_list(request, pk):
     return HttpResponse(status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-def sign_s3(request):
-    file_name = request.GET['file_name']
-    file_type = request.GET['file_type']
-
-    s3 = boto3.client('s3')
-
-    presigned_post = s3.generate_presigned_post(
-        Bucket=AWS_STORAGE_BUCKET_NAME,
-        Key=file_name,
-        Fields={"acl": "public-read", "Content-Type": file_type},
-        Conditions=[
-            {"acl": "public-read"},
-            {"Content-Type": file_type}
-        ],
-        ExpiresIn=3600
-    )
-
-    return HttpResponse(json.dumps({
-        'data': presigned_post,
-        'url': '%s%s' % (S3_URL, file_name)
-    }))
+def s3_download_url(key):
+    return storage().generate_presigned_url("get_object", Params={
+        "Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": key,
+    }, ExpiresIn=300)
 
 
-def create_curve_data_in_s3(pk):
-    s3 = boto3.client('s3')
-    try:
-        req = Request.objects.get(pk=pk)
-        req.state_processing_to_download = 1
-        req.save()
-        file_name = f"{req.room_name}.json"
-        curves = Curve.objects.filter(room_name=req.room_name)
-        curves_data = CurveSerializer(curves, many=True).data
-        response = s3.put_object(
-            Bucket=AWS_STORAGE_BUCKET_NAME,
-            Key=file_name,
-            Body=json.dumps(curves_data),
-            ACL="public-read")
-        req.state_processing_to_download = 2
-        req.save()
-    except:
-        req.state_processing_to_download = -1
-        req.save()
-
-
-@method_decorator(csrf_exempt, name='dispatch')
+@require_http_methods(["GET"])
 def get_download_curve_data(request, pk):
-    req = Request.objects.get(pk=pk)
+    req = get_object_or_404(Request, pk=pk, owner=request.user)
     file_name = f"{req.room_name}.json"
-    if req.state_processing_to_download == 0:
-        # ダウンロード可能タイミング
-        q = Queue(connection=conn)
-        result = q.enqueue(create_curve_data_in_s3, pk)
-        return JsonResponse(data={
-            "state": "PROCESSING",
-            "request": RequestSerializer(req).data
-        })
-    elif req.state_processing_to_download == 1:
-        # 非同期が実行中の処理
-        return JsonResponse(data={
-            "state": "PROCESSING",
-            "request": RequestSerializer(req).data
-        })
-    elif req.state_processing_to_download == 2:
-        # 非同期が実行中の処理
-        file_name = f"{req.room_name}.json"
-        req.state_processing_to_download = 0
-        req.save()
-        return JsonResponse(data={
-            "state": "SUCCESSED",
-            "url": f"{S3_URL}{file_name}",
-            "file_name": file_name,
-            "request": RequestSerializer(req).data
-        })
-    elif req.state_processing_to_download == -1:
-        req.state_processing_to_download = 0
-        req.save()
-        return JsonResponse(data={
-            "state": "FAILED",
-            "request": RequestSerializer(req).data
-        })
-    else:
-        print(f"ERROR OCCUURED!!!! Invalid state_processing_to_download: {req.state_processing_to_download}")
+    key = f"exports/{request.user.pk}/{file_name}"
+    curves = Curve.objects.filter(room_name=req.room_name)
+    storage().put_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key,
+                         Body=json.dumps(CurveSerializer(curves, many=True).data), ContentType="application/json")
+    return JsonResponse({"state": "SUCCESSED", "url": s3_download_url(key), "file_name": file_name,
+                         "request": RequestSerializer(req).data})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -858,18 +825,18 @@ def download_curve_data(request):
             }, status=403)
     else:
         curve_ids = request.user.curve_set.all()
-    s3 = boto3.client('s3')
-    curves = Curve.objects.filter(pk__in=curve_ids)
+    s3 = storage()
+    curves = request.user.curve_set.filter(pk__in=curve_ids)
     try:
         file_name = f"{request.user.username}.json"
+        key = f"exports/{request.user.pk}/curves.json"
         curves_data = [CurveSerializer(curve).data for curve in curves]
         response = s3.put_object(
-            Bucket=AWS_STORAGE_BUCKET_NAME,
-            Key=file_name,
-            Body=json.dumps(curves_data),
-            ACL="public-read")
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=key,
+            Body=json.dumps(curves_data), ContentType="application/json")
         return JsonResponse(data={
-            "url": f"{S3_URL}{file_name}",
+            "url": s3_download_url(key),
             "file_name": file_name
         })
     except:

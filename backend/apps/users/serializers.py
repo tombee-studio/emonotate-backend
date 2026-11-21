@@ -6,11 +6,10 @@ from django.core.exceptions import ValidationError
 
 from django.utils.translation import gettext as _
 
-from django.utils.timezone import datetime
+from datetime import datetime
 
 from django.contrib.auth.models import Group
 
-import webvtt
 
 User = get_user_model()
 
@@ -18,7 +17,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        exclude = ('password',)
 
     def validate(self, attrs):
         try:
@@ -82,13 +81,12 @@ class ContentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
-        try:
-            c = Content.objects.get(pk=instance.id)
-            youtube = YouTubeContent.objects.get(pk=c.youtubecontent)
-            ret['video_id'] = youtube.video_id
-            ret['is_youtube'] = True
-        except Content.youtubecontent.RelatedObjectDoesNotExist:
-            ret['is_youtube'] = False
+        ret['is_youtube'] = hasattr(instance, 'youtubecontent')
+        if ret['is_youtube']:
+            ret['video_id'] = instance.youtubecontent.video_id
+        if hasattr(instance, 'upload'):
+            ret['data_type'] = instance.upload.mime_type
+            ret['url'] = f"/api/sources/{instance.pk}/file/"
         return ret
 
 
@@ -98,6 +96,7 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate_webvtt(self, value):
+        import webvtt
         try:
             webvtt.read_buffer(io.StringIO(value))
             return value
@@ -107,6 +106,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        import webvtt
         ret['content'] = ContentSerializer(instance.content).data
         try:
             out = webvtt.read_buffer(io.StringIO(instance.webvtt))
@@ -163,9 +163,29 @@ class CurveSerializer(serializers.ModelSerializer):
         ret['enquete'] = [generate_enquete_json(enquete, instance) for enquete in Enquete.objects.filter(pk__in=ret['enquete'])]
         return ret
 
-    def create(self, validated_data):
-        instance = super().create(validated_data)
-        return instance
+    def validate(self, attrs):
+        answers = self.initial_data.get("enquete", [])
+        if not isinstance(answers, list):
+            raise serializers.ValidationError({"enquete": "Expected a list."})
+        if any(isinstance(answer, dict) for answer in answers):
+            for answer in answers:
+                if (not isinstance(answer, dict) or not isinstance(answer.get("id"), int)
+                        or not isinstance(answer.get("answer"), str) or len(answer["answer"]) > 1000):
+                    raise serializers.ValidationError({"enquete": "Invalid answer."})
+            ids = {answer["id"] for answer in answers}
+            if len(ids) != len(answers) or Enquete.objects.filter(pk__in=ids).count() != len(ids):
+                raise serializers.ValidationError({"enquete": "Unknown or duplicate question."})
+        return attrs
+
+    def save(self, **kwargs):
+        from django.db import transaction
+        with transaction.atomic():
+            curve = super().save(**kwargs)
+            for answer in self.initial_data.get("enquete", []):
+                if isinstance(answer, dict):
+                    EnqueteAnswer.objects.update_or_create(curve=curve, enquete_id=answer["id"],
+                                                          defaults={"answer": answer["answer"]})
+            return curve
 
 
 class CurveWithYouTubeSerializer(serializers.ModelSerializer):

@@ -7,7 +7,7 @@ from django.contrib.auth import login, authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.urls import reverse
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 
 from django.http import JsonResponse
 
@@ -88,7 +88,6 @@ class FreeHandView(View):
             }
             template = 'backend/free-hand.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
         response.set_cookie('csrftoken', get_token(request))
         response.set_cookie('staging', os.environ.get("STAGE"))
         return response
@@ -96,7 +95,7 @@ class FreeHandView(View):
 
 class FreeHandDetailView(View):
     def get(self, request, pk, *args, **kwargs):
-        curve = Curve.objects.get(pk=pk)
+        curve = get_object_or_404(Curve, pk=pk, user=request.user)
         curve_dict = CurveSerializer(curve).data
         staging = os.environ.get("STAGE").lower()
         context = {
@@ -106,12 +105,10 @@ class FreeHandDetailView(View):
             "curve_json": json.dumps(curve_dict),
             "request_json": {},
             "ogp_title": f"{curve.content.title}を視聴したときの私の{curve.value_type.title}曲線！！",
-            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/image_{staging}_{curve.id}.png?alt=media",
             "stage": staging
         }
         template = 'backend/free-hand.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
         response.set_cookie('csrftoken', get_token(request))
         response.set_cookie('staging', staging)
         return response
@@ -159,7 +156,6 @@ class FoldLineView(View):
             }
             template = 'backend/fold-line.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
         response.set_cookie('csrftoken', get_token(request))
         response.set_cookie('staging', staging)
 
@@ -168,7 +164,7 @@ class FoldLineView(View):
 
 class FoldLineDetailView(View):
     def get(self, request, pk, *args, **kwargs):
-        curve = Curve.objects.get(pk=pk)
+        curve = get_object_or_404(Curve, pk=pk, user=request.user)
         curve_dict = CurveSerializer(curve).data
         staging = os.environ.get("STAGE").lower()
         context = {
@@ -177,12 +173,10 @@ class FoldLineDetailView(View):
             "video_id": curve.content.youtubecontent.video_id,
             "curve_json": json.dumps(curve_dict),
             "request_json": {},
-            "image_url": f"https://firebasestorage.googleapis.com/v0/b/emonotate-356a9.appspot.com/o/image_{staging}_{curve.id}.png?alt=media",
             "stage": staging
         }
         template = 'backend/fold-line.html'
         response = render(request, template, context)
-        response.set_cookie('GCP_ACCESS_TOKEN', 'value')
         response.set_cookie('csrftoken', get_token(request))
         response.set_cookie('staging', staging)
         return response

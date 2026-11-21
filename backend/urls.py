@@ -1,6 +1,6 @@
 import os
 from django.urls import path
-from django.conf.urls import url, include
+from django.urls import re_path as url, include
 from django.conf.urls.static import static
 from django.contrib import admin
 
@@ -19,9 +19,10 @@ urlpatterns = [
     url('^$', index, name='index'),
 ]
 
-if os.environ['STAGE'] == 'DEVL':
+_stage = os.environ.get('STAGE', '')
+if _stage == 'DEVL':
     urlpatterns += static(STATIC_URL)
-elif os.environ['STAGE'] == 'ALPHA':
+elif _stage == 'ALPHA':
     urlpatterns += static(STATIC_URL, document_root=os.path.join(BASE_DIR, 'static'))
-elif os.environ['STAGE'] == 'PROD':
+elif _stage == 'PROD':
     urlpatterns += static(STATIC_URL)

@@ -4,7 +4,6 @@ import os
 import json
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
                                         BaseUserManager)
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
@@ -67,7 +66,7 @@ class EmailUserManager(BaseUserManager):
         return user
 
     def create_unique_user(self, email=None, is_test=False, username=None):
-        random_username_num = int(os.environ.get("RANDOM_USERNAME_NUM"))
+        random_username_num = int(os.environ.get("RANDOM_USERNAME_NUM", "12"))
         if not username:
             username = randomname(random_username_num)
         while True:
@@ -214,13 +213,6 @@ class YouTubeContent(Content):
     objects = BaseManager()
     video_id = models.CharField(max_length=128, unique=True)
 
-    def save(self, **kwargs):
-        try:
-            youtube = YouTubeContent.objects.get(video_id=self.video_id)
-        except YouTubeContent.DoesNotExist:
-            super(YouTubeContent, self).save(**kwargs)
-
-
 class Enquete(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(
@@ -245,7 +237,7 @@ class Curve(models.Model):
                              on_delete=models.CASCADE)
     content = models.ForeignKey(Content, on_delete=models.PROTECT)
     value_type = models.ForeignKey(ValueType, default=1, on_delete=models.CASCADE)
-    values = JSONField()
+    values = models.JSONField()
     version = models.CharField(max_length=16)
     room_name = models.CharField(max_length=32, default="")
     enquete = models.ManyToManyField(Enquete, through="EnqueteAnswer")
@@ -317,7 +309,7 @@ class Request(models.Model):
         null=True,
         on_delete=models.SET_NULL)
     is_required_free_hand = models.BooleanField(default=False)
-    values = JSONField(default=[], blank=True)
+    values = models.JSONField(default=list, blank=True)
     enquetes = models.ManyToManyField(Enquete, blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
     google_form = models.ForeignKey(GoogleForm, blank=True, null=True, on_delete=models.SET_NULL)
@@ -367,3 +359,18 @@ class GCPToken(models.Model):
     access_token = models.TextField(default="", unique=True)
     refresh_token = models.TextField(default="", unique=True)
     bucket_name = models.TextField(default="", unique=True)
+
+
+class CognitoIdentity(models.Model):
+    user = models.OneToOneField(EmailUser, on_delete=models.CASCADE)
+    pool_id = models.CharField(max_length=128)
+    subject = models.UUIDField()
+
+    class Meta:
+        unique_together = (("pool_id", "subject"),)
+
+
+class UploadedSource(models.Model):
+    content = models.OneToOneField(Content, on_delete=models.CASCADE, related_name="upload")
+    key = models.CharField(max_length=1024, unique=True)
+    mime_type = models.CharField(max_length=64)

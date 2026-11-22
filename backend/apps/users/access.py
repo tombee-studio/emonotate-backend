@@ -28,6 +28,12 @@ def readable_contents(user):
                                   Q(pk__in=requested.values("content")))
 
 
+def readable_curves(user):
+    """The user's own curves and the answers to the requests of the user."""
+    owned = Request.objects.filter(owner=user)
+    return Curve.objects.filter(Q(user=user) | Q(room_name__in=owned.values("room_name")))
+
+
 def check_value_type_unused(value_type, user):
     if (Curve.objects.filter(value_type=value_type).exclude(user=user).exists() or
             Request.objects.filter(value_type=value_type).exclude(owner=user).exists()):

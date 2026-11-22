@@ -40,6 +40,13 @@ def check_value_type_unused(value_type, user):
         raise PermissionDenied("ほかの利用者が使用しているため削除できません。")
 
 
+def check_axis_type_unused(value_type):
+    """The axis type decides the range of the saved curves."""
+    if (Curve.objects.filter(value_type=value_type).exists() or
+            Request.objects.filter(value_type=value_type).exists()):
+        raise PermissionDenied("使用中の評価軸の種類は変更できません。")
+
+
 def check_content_unused(content, user):
     if (Curve.objects.filter(content=content).exists() or
             Request.objects.filter(content=content).exclude(owner=user).exists()):

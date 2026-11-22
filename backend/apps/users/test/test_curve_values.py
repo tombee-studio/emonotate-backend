@@ -51,6 +51,29 @@ class CurveValuesTests(TestCase):
         self.assertEqual(self.save([{"x": -30, "y": 0}, {"x": 60, "y": 0}], version="1.0.0").status_code, 400)
         self.assertEqual(self.save([{"x": 0, "y": 1.2}, {"x": 60, "y": 0}], version="1.0.0").status_code, 400)
 
+    def test_axis_type_decides_the_range_of_new_curves(self):
+        upward = ValueType.objects.create(user=self.user, title="Surprise", axis_type=2)
+        below = [{"x": 0, "y": 0}, {"x": 1, "y": -0.5}]
+        above = [{"x": 0, "y": 0}, {"x": 1, "y": 1}]
+        for version, value_type, values, expected in (
+                ("arc-2", upward, below, 400), ("arc-2", upward, above, 201), ("arc-2", self.value_type, below, 201),
+                ("arc-1", upward, below, 201), ("1.0.0", upward, below, 201)):
+            response = self.save(values, version=version, value_type=value_type.pk)
+            self.assertEqual(response.status_code, expected, response.content)
+        # The old screens may overshoot, the new one does not.
+        self.assertEqual(self.save([{"x": 0, "y": 1.003}, {"x": 1, "y": 0}], version="arc-2").status_code, 400)
+        url = f"/api/curves/{self.save(below, version='arc-2').json()['id']}/"
+        response = self.client.patch(url, {"values": below, "value_type": upward.pk}, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_texts_use_characters(self):
+        values = [{"x": 0, "y": 0}, {"x": 2097152, "y": 1}]
+        self.assertEqual(self.save(values, self.text, "arc-2").status_code, 201)
+        self.assertEqual(self.save(values, self.text, "arc-1").status_code, 400)
+        values[1]["x"] += 1
+        self.assertEqual(self.save(values, self.text, "arc-2").status_code, 400)
+        self.assertEqual(self.save(values, self.video, "arc-2").status_code, 400)
+
     def test_invalid_values_are_rejected(self):
         good = {"x": 0, "y": 0}
         for values in (

@@ -326,6 +326,12 @@ class ValueTypeViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
     queryset = ValueType.objects.all().order_by('created')
     search_fields = ['title']
 
+    def perform_update(self, serializer):
+        axis_type = serializer.validated_data.get('axis_type', serializer.instance.axis_type)
+        if axis_type != serializer.instance.axis_type:
+            access.check_axis_type_unused(serializer.instance)
+        serializer.save()
+
     def perform_destroy(self, instance):
         access.check_value_type_unused(instance, self.request.user)
         instance.delete()

@@ -15,7 +15,6 @@ router.register(r'enquetes', EnqueteViewSet, basename='enquetes')
 router.register(r'requests', RequestViewSet, basename='requests')
 router.register(r'sections', SectionViewSet, basename='sections')
 router.register(r'google_forms', GoogleFormViewSet, basename='google_forms')
-router.register(r'curves_with_youtube', CurveWithYouTubeContentViewSet, basename='curve_with_youtube')
 
 urlpatterns = list(router.urls)
 urlpatterns += path('me/', Me.as_view(), name='login'),
@@ -25,7 +24,6 @@ urlpatterns += path('signup/', SignupAPIView.as_view(), name='signup'),
 urlpatterns += path('send/<int:pk>', send_request_mail),
 urlpatterns += path('get_download_curve_data/<int:pk>', get_download_curve_data),
 urlpatterns += path('download_curve_data/', download_curve_data),
-urlpatterns += path('reset_email_addresses/<int:pk>', reset_email_addresses),
 urlpatterns += path('change_email/', change_email),
 urlpatterns += path('merge_accounts/', merge_accounts),
 urlpatterns += path('participants/<int:pk>', ParticipantView.as_view(), name="participants"),

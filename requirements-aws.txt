@@ -13,3 +13,4 @@ redis>=5,<6
 requests>=2.32,<3
 rq>=1.16,<2
 webvtt-py>=0.4.6,<0.5
+whitenoise>=6.7,<7

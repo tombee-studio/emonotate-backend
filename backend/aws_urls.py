@@ -1,3 +1,4 @@
+from django.contrib import admin
 from django.urls import include, path
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -7,6 +8,7 @@ from users import views as users
 from users.urls import router
 
 urlpatterns = [
+    path("admin/", admin.site.urls),
     path("api/passport/", cognito.passport),
     path("api/cognito/login/", cognito.start),
     path("api/cognito/callback/", cognito.callback),

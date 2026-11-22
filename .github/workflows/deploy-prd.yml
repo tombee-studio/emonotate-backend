@@ -5,7 +5,7 @@ run-name: Deploy backend ${{ github.sha }} to prd
 on:
   push:
     branches:
-      - master
+      - main
 
 permissions:
   id-token: write
@@ -14,7 +14,7 @@ permissions:
 # Never run two backend deploys to the same environment at once; queue them instead.
 concurrency:
   group: deploy-backend-prd
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   deploy:
@@ -23,3 +23,10 @@ jobs:
       environment: prd
     secrets:
       aws_role_arn: ${{ secrets.AWS_CI_ROLE_ARN_PRD }}
+
+  release:
+    needs: deploy
+    permissions:
+      contents: write
+      pull-requests: read
+    uses: ./.github/workflows/release.yml

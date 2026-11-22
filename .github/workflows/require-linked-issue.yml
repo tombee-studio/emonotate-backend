@@ -1,6 +1,6 @@
 name: Require linked issue
 
-# Fails a PR to develop/master unless it is tied to a GitHub issue, either:
+# Fails a PR to develop/main unless it is tied to a GitHub issue, either:
 #   - the PR links an issue (closing keyword such as "Closes #13" in the body,
 #     or the PR's "Development" sidebar), or
 #   - the head branch is linked to an issue (issue page > Development).
@@ -9,7 +9,7 @@ on:
   pull_request:
     branches:
       - develop
-      - master
+      - main
     types: [opened, edited, reopened, synchronize, ready_for_review]
 
 permissions:

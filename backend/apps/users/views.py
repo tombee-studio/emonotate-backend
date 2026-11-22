@@ -35,6 +35,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from .sources import storage
 from . import access
+from .participants import ParticipantView
 from django.http import HttpResponse
 
 from django.contrib.auth import authenticate, login, logout
@@ -582,85 +583,6 @@ class InvitingTokenView(View):
             "is_error": False,
             "inviting_token": InvitingTokenSerializer(token_obj).data
         }, status=201)
-
-
-class ParticipantView(View):
-    @staticmethod
-    def json_dt_patch(o):
-        import datetime
-        from decimal import Decimal
-
-        if isinstance(o, datetime.date) or isinstance(o, datetime.datetime):
-            return o.strftime("%Y/%m/%d %H:%M:%S")
-        elif isinstance(o, Decimal):
-            return str(o)
-        return o
-
-    def get(self, request, pk=None, *args, **kwargs):
-        req = get_object_or_404(Request, pk=pk, owner=request.user)
-        if len(req.participants.all()) > 25:
-            return JsonResponse({
-                    "is_error": True,
-                    "error": "PARTICIPANT_VIEW001",
-                    "message": "参加者の人数が許容数を超えています",
-                    "number": len(req.participants.all())
-                },
-                status=200)
-        ser = ContactSerializer(req.participants.all(), many=True)
-        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
-        return JsonResponse({
-            "is_error": False,
-            "participants": json.loads(data)
-        }, status=200)
-    
-
-    def post(self, request, pk, *args, **kwargs):
-        req = get_object_or_404(Request, pk=pk, owner=request.user)
-        params = json.loads(request.body)
-        for email in params["emails"]:
-            try:
-                user = EmailUser.objects.get(email=email)
-            except EmailUser.DoesNotExist:
-                user = EmailUser.objects.create_unique_user(email)
-                user.email = email
-                user.save()
-            req.participants.add(user)
-            req.save()
-        if len(req.participants.all()) > 25:
-            return JsonResponse({
-                    "is_error": True,
-                    "error": "PARTICIPANT_VIEW001",
-                    "message": "参加者の人数が許容数を超えています",
-                    "number": len(req.participants.all())
-                },
-                status=200)
-        ser = ContactSerializer(req.participants.all(), many=True)
-        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
-        return JsonResponse({
-            "is_error": False,
-            "participants": json.loads(data)
-        }, status=200)
-    
-    def delete(self, request, pk, *args, **kwrags):
-        req = get_object_or_404(Request, pk=pk, owner=request.user)
-        params = json.loads(request.body)
-        delete_participants = req.participants.filter(email__in=params)
-        req.participants.remove(*delete_participants)
-        req.save()
-        if len(req.participants.all()) > 25:
-            return JsonResponse({
-                    "is_error": True,
-                    "error": "PARTICIPANT_VIEW001",
-                    "message": "参加者の人数が許容数を超えています",
-                    "number": len(req.participants.all())
-                },
-                status=200)
-        ser = ContactSerializer(req.participants.all(), many=True)
-        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
-        return JsonResponse({
-            "is_error": False,
-            "participants": json.loads(data)
-        }, status=200)
 
 
 class RelativeUsersView(View):

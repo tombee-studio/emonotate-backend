@@ -80,10 +80,12 @@ class AccessTests(TestCase):
                 self.assertNotIn("@example.org", response.content.decode())
                 self.assertNotIn("is_superuser", response.content.decode())
         data = self.api(self.owner).get(f"/api/requests/{self.request.pk}/").json()
-        self.assertEqual({item["email"] for item in data["participants"]},
-                         {"participant@example.org", "second@example.org"})
-        people = self.api(self.owner).get(f"/api/participants/{self.request.pk}").json()["participants"]
-        self.assertEqual(set(people[0]), {"id", "username", "email"})
+        self.assertEqual(data["participants_count"], 2)
+        self.assertNotIn("participants_count", self.api(self.participant).get(
+            f"/api/requests/{self.request.pk}/").json())
+        people = self.api(self.owner).get(f"/api/participants/{self.request.pk}").json()["models"]
+        self.assertEqual({item["email"] for item in people}, {"participant@example.org", "second@example.org"})
+        self.assertEqual(set(people[0]), {"id", "username", "email", "sended_mail", "sended_mail_message"})
         self.assert_status(404, self.api(self.researcher).get(f"/api/participants/{self.request.pk}"))
         related = self.api(self.relative).get("/api/relative_users/").json()["users"]
         self.assertEqual(set(related[0]), {"id", "username", "email"})

@@ -31,6 +31,7 @@ from .models import *
 from .serializers import *
 
 from django.conf import settings
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from .sources import storage
 from . import access
@@ -503,13 +504,16 @@ class RequestViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if "mode" in request.data:
             if request.data["mode"] == "duplicate":
+                enquetes = list(instance.enquetes.all())
                 instance.id = None
                 instance.owner = request.user
                 instance.room_name = ""
-                instance.save()
+                with transaction.atomic():
+                    instance.save()
+                    instance.enquetes.set(enquetes)
                 ser = self.get_serializer(instance)
                 return Response(ser.data, status=201)
-        serializer = self.get_serializer(instance, data=request.data)
+        serializer = self.get_serializer(instance, data=request.data, partial=kwargs.get('partial', False))
         if serializer.is_valid(raise_exception=True):
             serializer.save(owner=request.user)
             return Response(serializer.data, status=200)

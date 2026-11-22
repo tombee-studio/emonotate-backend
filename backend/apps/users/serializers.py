@@ -264,7 +264,8 @@ class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
     class Meta:
         model = Request
         fields = '__all__'
-        read_only_fields = ('owner',)
+        # The room name marks the answers, and a section or form is set by its own view.
+        read_only_fields = ('owner', 'room_name', 'section', 'google_form', 'state_processing_to_download')
     
     def to_representation(self, instance):
         def generate_user_json(user, request):
@@ -297,28 +298,6 @@ class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
         else:
             ret['is_included_section'] = False
         return ret
-    
-    def create(self, validated_data):
-        instance = Request.objects.create(
-            content=validated_data['content'],
-            owner=validated_data['owner'],
-            value_type=validated_data['value_type'],
-            title=validated_data['title'],
-            values=validated_data['values'],
-            description=validated_data['description']
-        )
-        return instance
-    
-    def update(self, instance, validated_data):
-        instance.content = validated_data['content']
-        instance.owner = validated_data['owner']
-        instance.value_type = validated_data['value_type']
-        instance.title = validated_data['title']
-        instance.values = validated_data['values']
-        instance.description = validated_data['description']
-        instance.is_required_free_hand = validated_data['is_required_free_hand']
-        instance.save()
-        return instance
 
 
 class InvitingTokenSerializer(serializers.ModelSerializer):

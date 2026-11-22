@@ -64,12 +64,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PublicUserSerializer(serializers.ModelSerializer):
     """What other users may see about a user."""
+    username = serializers.CharField(source='public_name')
+
     class Meta:
         model = User
         fields = ('id', 'username')
 
 
-class ContactSerializer(serializers.ModelSerializer):
+class ContactSerializer(PublicUserSerializer):
     """For the owner of a request or an invitation, who needs the address."""
     class Meta:
         model = User

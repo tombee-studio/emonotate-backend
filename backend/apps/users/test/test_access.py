@@ -3,6 +3,8 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import Group
 from django.db import connection
+from django.db.models import Value
+from django.db.models.functions import Concat
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
@@ -88,6 +90,30 @@ class AccessTests(TestCase):
         self.assert_status(404, self.api(self.researcher).get(f"/api/participants/{self.request.pk}"))
         related = self.api(self.relative).get("/api/relative_users/").json()["users"]
         self.assertEqual(set(related[0]), {"id", "username", "email"})
+
+    def test_usernames_that_are_addresses_are_hidden_from_other_users(self):
+        EmailUser.objects.filter(pk__in=(self.owner.pk, self.participant.pk)).update(
+            username=Concat("username", Value("@secret.example.org")))
+        owner, participant = f"利用者{self.owner.pk}", f"利用者{self.participant.pk}"
+        Curve.objects.create(user=self.participant, content=self.private, value_type=self.value_type, values=VALUES,
+                             version="arc-1", room_name=self.request.room_name)
+        as_second = self.api(self.second)
+        seen = as_second.get(f"/api/requests/{self.request.pk}/?format=json")
+        self.assertEqual(seen.json()["owner"], {"id": self.owner.pk, "username": owner})
+        responses = [seen] + [as_second.get(path) for path in (
+            "/api/requests/?format=json&role=participant", "/api/contents/?format=json", "/api/valuetypes/?format=json")]
+        as_owner = self.api(EmailUser.objects.get(pk=self.owner.pk))
+        people = as_owner.get(f"/api/participants/{self.request.pk}")
+        self.assertIn(participant, [item["username"] for item in people.json()["models"]])
+        answers = as_owner.get(f"/api/requests/{self.request.pk}/curves/?format=json")
+        self.assertEqual(answers.json()["models"][0]["user"]["username"], participant)
+        related = self.api(self.relative).get("/api/relative_users/")
+        self.assertEqual([item["username"] for item in related.json()["users"]], [owner])
+        for response in (*responses, people, answers, related):
+            self.assert_status(200, response)
+            self.assertNotIn("@secret", response.content.decode())
+        me = self.api(EmailUser.objects.get(pk=self.owner.pk)).get("/api/me/")
+        self.assertEqual(me.json()["username"], "owner@secret.example.org")
 
     def test_requests_are_read_by_owner_participants_and_relatives(self):
         path = f"/api/requests/{self.request.pk}/"

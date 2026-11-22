@@ -49,7 +49,7 @@ class ParticipantView(APIView):
         paginator = StandardPagination()
         page = paginator.paginate_queryset(rows.order_by("user__pk"), request)
         return paginator.get_paginated_response([{
-            "id": row.user.pk, "username": row.user.username, "email": row.user.email,
+            "id": row.user.pk, "username": row.user.public_name, "email": row.user.email,
             "sended_mail": row.sended_mail, "sended_mail_message": row.message,
         } for row in page])
 

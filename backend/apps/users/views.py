@@ -717,7 +717,7 @@ def send_request_mails(req, participants):
         for participant in clique:
             token = signing.dumps({"request": req.pk, "email": participant.email}, salt="request-email")
             link = settings.APPLICATION_URL + "api/cognito/login/?" + urlencode({"invitation": token})
-            description = f"{req.owner.username}さんからの依頼です。\n{req.description}\n{link}"
+            description = f"{req.owner.public_name}さんからの依頼です。\n{req.description}\n{link}"
             result = send_mail(participant, f"【Request】 {req.title}", description)
             membership = participant.relationparticipant_set.get(request=req)
             membership.sended_mail = result.ok

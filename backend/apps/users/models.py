@@ -161,6 +161,11 @@ class EmailUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
+    @property
+    def public_name(self):
+        """The name other users see; some old usernames are email addresses."""
+        return f"利用者{self.pk}" if "@" in self.username else self.username
+
     def __unicode__(self):
         return self.email
 

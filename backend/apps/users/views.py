@@ -23,6 +23,7 @@ from rest_framework.response import Response
 from rest_framework import filters
 
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
 
 from .models import *
@@ -30,9 +31,12 @@ from .models import *
 from .serializers import *
 
 from django.conf import settings
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from .sources import storage
 from . import access
+from .acceptance import check_accepted
+from .participants import ParticipantView
 from django.http import HttpResponse
 
 from django.contrib.auth import authenticate, login, logout
@@ -363,10 +367,15 @@ class SectionViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class GoogleFormViewSet(viewsets.ModelViewSet):
+class GoogleFormViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
     serializer_class = GoogleFormSerializer
     queryset = GoogleForm.objects.all().order_by('created').reverse()
     search_fields = ['title', 'created']
+
+    def get_readable(self):
+        from django.db.models import Q
+        requests = access.joined_requests(self.request.user)
+        return self.queryset.filter(Q(user=self.request.user) | Q(pk__in=requests.values('google_form')))
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -405,9 +414,13 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class OwnCurveViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
+        if self.action == 'retrieve':
+            return access.readable_curves(self.request.user)
         return super().get_queryset().filter(user=self.request.user)
 
+    @transaction.atomic
     def perform_create(self, serializer):
+        check_accepted(serializer.validated_data.get('room_name'), self.request.user)
         serializer.save(user=self.request.user)
 
     def check_unlocked(self, curve):
@@ -415,8 +428,11 @@ class OwnCurveViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("この曲線はロックされています。")
 
+    @transaction.atomic
     def perform_update(self, serializer):
-        self.check_unlocked(serializer.instance)
+        curve = serializer.instance
+        self.check_unlocked(curve)
+        check_accepted(serializer.validated_data.get('room_name', curve.room_name), self.request.user, curve)
         serializer.save(user=self.request.user)
 
     def perform_destroy(self, instance):
@@ -475,7 +491,16 @@ class RequestViewSet(viewsets.ModelViewSet):
             return access.relative_requests(self.request.user).order_by('created').reverse()
         else:
             return access.readable_requests(self.request.user).order_by('created').reverse()
-    
+
+    @action(detail=True, methods=['get'])
+    def curves(self, request, pk=None):
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
+        curves = Curve.objects.filter(room_name=req.room_name).select_related('user').order_by('-created', '-pk')
+        page = self.paginate_queryset(curves)
+        # The owner knows the addresses of the participants only.
+        emails = dict(req.participants.filter(pk__in=[curve.user_id for curve in page]).values_list('pk', 'email'))
+        return self.get_paginated_response(AnswerSerializer(page, many=True, context={'emails': emails}).data)
+
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('users.add_request'):
             return Response("permission denied", status=403)
@@ -491,13 +516,16 @@ class RequestViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if "mode" in request.data:
             if request.data["mode"] == "duplicate":
+                enquetes = list(instance.enquetes.all())
                 instance.id = None
                 instance.owner = request.user
                 instance.room_name = ""
-                instance.save()
+                with transaction.atomic():
+                    instance.save()
+                    instance.enquetes.set(enquetes)
                 ser = self.get_serializer(instance)
                 return Response(ser.data, status=201)
-        serializer = self.get_serializer(instance, data=request.data)
+        serializer = self.get_serializer(instance, data=request.data, partial=kwargs.get('partial', False))
         if serializer.is_valid(raise_exception=True):
             serializer.save(owner=request.user)
             return Response(serializer.data, status=200)
@@ -563,85 +591,6 @@ class InvitingTokenView(View):
         }, status=201)
 
 
-class ParticipantView(View):
-    @staticmethod
-    def json_dt_patch(o):
-        import datetime
-        from decimal import Decimal
-
-        if isinstance(o, datetime.date) or isinstance(o, datetime.datetime):
-            return o.strftime("%Y/%m/%d %H:%M:%S")
-        elif isinstance(o, Decimal):
-            return str(o)
-        return o
-
-    def get(self, request, pk=None, *args, **kwargs):
-        req = get_object_or_404(Request, pk=pk, owner=request.user)
-        if len(req.participants.all()) > 25:
-            return JsonResponse({
-                    "is_error": True,
-                    "error": "PARTICIPANT_VIEW001",
-                    "message": "参加者の人数が許容数を超えています",
-                    "number": len(req.participants.all())
-                },
-                status=200)
-        ser = ContactSerializer(req.participants.all(), many=True)
-        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
-        return JsonResponse({
-            "is_error": False,
-            "participants": json.loads(data)
-        }, status=200)
-    
-
-    def post(self, request, pk, *args, **kwargs):
-        req = get_object_or_404(Request, pk=pk, owner=request.user)
-        params = json.loads(request.body)
-        for email in params["emails"]:
-            try:
-                user = EmailUser.objects.get(email=email)
-            except EmailUser.DoesNotExist:
-                user = EmailUser.objects.create_unique_user(email)
-                user.email = email
-                user.save()
-            req.participants.add(user)
-            req.save()
-        if len(req.participants.all()) > 25:
-            return JsonResponse({
-                    "is_error": True,
-                    "error": "PARTICIPANT_VIEW001",
-                    "message": "参加者の人数が許容数を超えています",
-                    "number": len(req.participants.all())
-                },
-                status=200)
-        ser = ContactSerializer(req.participants.all(), many=True)
-        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
-        return JsonResponse({
-            "is_error": False,
-            "participants": json.loads(data)
-        }, status=200)
-    
-    def delete(self, request, pk, *args, **kwrags):
-        req = get_object_or_404(Request, pk=pk, owner=request.user)
-        params = json.loads(request.body)
-        delete_participants = req.participants.filter(email__in=params)
-        req.participants.remove(*delete_participants)
-        req.save()
-        if len(req.participants.all()) > 25:
-            return JsonResponse({
-                    "is_error": True,
-                    "error": "PARTICIPANT_VIEW001",
-                    "message": "参加者の人数が許容数を超えています",
-                    "number": len(req.participants.all())
-                },
-                status=200)
-        ser = ContactSerializer(req.participants.all(), many=True)
-        data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
-        return JsonResponse({
-            "is_error": False,
-            "participants": json.loads(data)
-        }, status=200)
-
-
 class RelativeUsersView(View):
     @staticmethod
     def json_dt_patch(o):
@@ -701,38 +650,21 @@ class ChangePasswordView(View):
         return HttpResponse("パスワードを変更しました", status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SetSectionView(View):
     def put(self, request, pk, *args, **kwargs):
-        params = json.loads(request.body)
-        try:
-            req = get_object_or_404(Request, pk=pk, owner=request.user)
-        except Request.DoesNotExist:
-            return HttpResponse("リクエストが存在しません", status=200)
-        try:
-            section = Section.objects.get(pk=params["section"], user=request.user)
-        except Section.DoesNotExist:
-            return HttpResponse("区間情報が存在しません", status=200)
-        req.section = section
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
+        req.section = get_object_or_404(Section, pk=json.loads(request.body)["section"], user=request.user)
         req.save()
         return HttpResponse("区間情報を変更しました", status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SetGoogleFormView(View):
     def put(self, request, pk, *args, **kwargs):
-        params = json.loads(request.body)
-        try:
-            req = get_object_or_404(Request, pk=pk, owner=request.user)
-        except Request.DoesNotExist:
-            return HttpResponse("リクエストが存在しません", status=200)
-        try:
-            google_form = GoogleForm.objects.get(pk=params["google_form"])
-        except GoogleForm.DoesNotExist:
-            return HttpResponse("区間情報が存在しません", status=200)
-        req.google_form = google_form
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
+        req.google_form = get_object_or_404(GoogleForm, pk=json.loads(request.body)["google_form"],
+                                            user=request.user)
         req.save()
-        return HttpResponse("区間情報を変更しました", status=200)
+        return HttpResponse("Google フォームを変更しました", status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

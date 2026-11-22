@@ -106,6 +106,21 @@ class ContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class AnswerSerializer(serializers.ModelSerializer):
+    """A row of the answers to a request; the points are read from the curve itself."""
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Curve
+        fields = ('id', 'created', 'user', 'kind', 'version', 'locked')
+
+    def get_user(self, curve):
+        data = PublicUserSerializer(curve.user).data
+        if curve.user_id in self.context['emails']:
+            data['email'] = self.context['emails'][curve.user_id]
+        return data
+
+
 class ReadableContentMixin:
     """Accept only contents the user can read, with the error of an unknown one."""
     def validate_content(self, content):
@@ -128,7 +143,7 @@ class SectionSerializer(ReadableContentMixin, serializers.ModelSerializer):
         try:
             webvtt.read_buffer(io.StringIO(value))
             return value
-        except webvtt.errors.MalformedCaptionError as er:
+        except (webvtt.errors.MalformedCaptionError, webvtt.errors.MalformedFileError):
             raise ValidationError("区間情報が正しい形式に則っていません。WebVTT形式で入力してください。")
 
 
@@ -171,7 +186,7 @@ class EnqueteSerializer(serializers.ModelSerializer):
 class GoogleFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = GoogleForm
-        fields = '__all__'
+        exclude = ('user',)
 
 
 class CurveSerializer(serializers.ModelSerializer):
@@ -248,30 +263,28 @@ class CurveSerializer(serializers.ModelSerializer):
 class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
     class Meta:
         model = Request
-        fields = '__all__'
-        read_only_fields = ('owner',)
+        exclude = ('participants',)
+        # The room name marks the answers, and a section or form is set by its own view.
+        read_only_fields = ('owner', 'room_name', 'section', 'google_form', 'state_processing_to_download')
     
+    def validate(self, attrs):
+        starts_at, ends_at = (attrs.get(name, getattr(self.instance, name, None)) for name in ('starts_at', 'ends_at'))
+        if starts_at and ends_at and starts_at >= ends_at:
+            raise serializers.ValidationError({'ends_at': '受付終了は受付開始より後にしてください。'})
+        return attrs
+
     def to_representation(self, instance):
-        def generate_user_json(user, request):
-            data = ContactSerializer(user).data
-            membership = user.relationparticipant_set.get(request=request)
-            data["sended_mail"] = membership.sended_mail
-            data["sended_mail_message"] = membership.message
-            return data
         ret = super().to_representation(instance)
         ret['owner'] = PublicUserSerializer(instance.owner).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        # The participants themselves are listed page by page in ParticipantView.
         viewer = getattr(self.context.get('request'), 'user', None)
-        if viewer != instance.owner:
-            ret['participants'] = []
-            ret['is_many_participants'] = False
-        elif len(ret['participants']) <= 10:
-            ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
-            ret['is_many_participants'] = False
-        else:
-            ret['participants'] = len(ret['participants'])
-            ret['is_many_participants'] = True
+        if viewer == instance.owner:
+            ret['participants_count'] = instance.participants.count()
+        if viewer:
+            from .acceptance import closed_reason
+            ret['closed_reason'] = closed_reason(instance, viewer)
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
         ret['has_google_form'] = ret['google_form'] != None
         if ret['google_form'] != None:
@@ -282,28 +295,6 @@ class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
         else:
             ret['is_included_section'] = False
         return ret
-    
-    def create(self, validated_data):
-        instance = Request.objects.create(
-            content=validated_data['content'],
-            owner=validated_data['owner'],
-            value_type=validated_data['value_type'],
-            title=validated_data['title'],
-            values=validated_data['values'],
-            description=validated_data['description']
-        )
-        return instance
-    
-    def update(self, instance, validated_data):
-        instance.content = validated_data['content']
-        instance.owner = validated_data['owner']
-        instance.value_type = validated_data['value_type']
-        instance.title = validated_data['title']
-        instance.values = validated_data['values']
-        instance.description = validated_data['description']
-        instance.is_required_free_hand = validated_data['is_required_free_hand']
-        instance.save()
-        return instance
 
 
 class InvitingTokenSerializer(serializers.ModelSerializer):

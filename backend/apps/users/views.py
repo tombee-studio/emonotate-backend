@@ -35,6 +35,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from .sources import storage
 from . import access
+from .acceptance import check_accepted
 from .participants import ParticipantView
 from django.http import HttpResponse
 
@@ -417,7 +418,9 @@ class OwnCurveViewSet(viewsets.ModelViewSet):
             return access.readable_curves(self.request.user)
         return super().get_queryset().filter(user=self.request.user)
 
+    @transaction.atomic
     def perform_create(self, serializer):
+        check_accepted(serializer.validated_data.get('room_name'), self.request.user)
         serializer.save(user=self.request.user)
 
     def check_unlocked(self, curve):
@@ -425,8 +428,11 @@ class OwnCurveViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("この曲線はロックされています。")
 
+    @transaction.atomic
     def perform_update(self, serializer):
-        self.check_unlocked(serializer.instance)
+        curve = serializer.instance
+        self.check_unlocked(curve)
+        check_accepted(serializer.validated_data.get('room_name', curve.room_name), self.request.user, curve)
         serializer.save(user=self.request.user)
 
     def perform_destroy(self, instance):

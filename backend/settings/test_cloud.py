@@ -1,4 +1,5 @@
 """Local settings for the Cognito and media integration tests."""
+import os
 from pathlib import Path
 import sys
 
@@ -6,6 +7,14 @@ sys.path.append(str(Path(__file__).resolve().parents[1] / 'apps'))
 
 SECRET_KEY = 'local-test-emonotate-secret'
 DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:'}}
+if os.environ.get('TEST_POSTGRES_PASSWORD'):
+    # For the tests that need row locks, which SQLite lacks.
+    DATABASES = {'default': {
+        'ENGINE': 'django.db.backends.postgresql', 'HOST': 'localhost', 'NAME': 'emonotate', 'USER': 'emonotate',
+        'PORT': os.environ.get('TEST_POSTGRES_PORT', '5432'), 'PASSWORD': os.environ['TEST_POSTGRES_PASSWORD'],
+    }}
+USE_TZ = False
+TIME_ZONE = 'Asia/Tokyo'
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 AUTH_USER_MODEL = 'users.EmailUser'
 INSTALLED_APPS = [

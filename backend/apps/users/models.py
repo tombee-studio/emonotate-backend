@@ -4,6 +4,7 @@ import os
 import json
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
                                         BaseUserManager)
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
@@ -314,6 +315,10 @@ class Request(models.Model):
     values = models.JSONField(default=list, blank=True)
     enquetes = models.ManyToManyField(Enquete, blank=True)
     expiration_date = models.DateTimeField(auto_now_add=True)
+    # When answers are accepted, and how many per person. Empty means no limit.
+    starts_at = models.DateTimeField(blank=True, null=True)
+    ends_at = models.DateTimeField(blank=True, null=True)
+    max_submissions = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
     google_form = models.ForeignKey(GoogleForm, blank=True, null=True, on_delete=models.SET_NULL)
     state_processing_to_download = models.IntegerField(choices=(
         (0,  'WAITING'),

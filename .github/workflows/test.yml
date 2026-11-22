@@ -71,3 +71,10 @@ jobs:
         run: |
           python manage.py test users.test \
             --settings=backend.settings.test_cloud --noinput
+
+      - name: Test simultaneous answers on PostgreSQL
+        env:
+          TEST_POSTGRES_PASSWORD: postgres
+        run: |
+          python manage.py test users.test.test_acceptance \
+            --settings=backend.settings.test_cloud --noinput

@@ -73,7 +73,7 @@ class RequestTests(TestCase):
         self.assertNotEqual(copied["room_name"], data["room_name"])
         self.assertEqual(self.ids(copied), keys)
         self.assertIs(copied["is_required_free_hand"], True)
-        self.assertEqual(copied["participants"], [])
+        self.assertEqual(copied["participants_count"], 0)
         self.assertEqual(self.ids(self.client.get(f"/api/requests/{data['id']}/").json()), keys)
 
     def test_fixed_fields_and_unknown_questions(self):

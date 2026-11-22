@@ -263,31 +263,19 @@ class CurveSerializer(serializers.ModelSerializer):
 class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
     class Meta:
         model = Request
-        fields = '__all__'
+        exclude = ('participants',)
         # The room name marks the answers, and a section or form is set by its own view.
         read_only_fields = ('owner', 'room_name', 'section', 'google_form', 'state_processing_to_download')
     
     def to_representation(self, instance):
-        def generate_user_json(user, request):
-            data = ContactSerializer(user).data
-            membership = user.relationparticipant_set.get(request=request)
-            data["sended_mail"] = membership.sended_mail
-            data["sended_mail_message"] = membership.message
-            return data
         ret = super().to_representation(instance)
         ret['owner'] = PublicUserSerializer(instance.owner).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
+        # The participants themselves are listed page by page in ParticipantView.
         viewer = getattr(self.context.get('request'), 'user', None)
-        if viewer != instance.owner:
-            ret['participants'] = []
-            ret['is_many_participants'] = False
-        elif len(ret['participants']) <= 10:
-            ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
-            ret['is_many_participants'] = False
-        else:
-            ret['participants'] = len(ret['participants'])
-            ret['is_many_participants'] = True
+        if viewer == instance.owner:
+            ret['participants_count'] = instance.participants.count()
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
         ret['has_google_form'] = ret['google_form'] != None
         if ret['google_form'] != None:

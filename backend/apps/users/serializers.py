@@ -62,14 +62,29 @@ class UserSerializer(serializers.ModelSerializer):
         return ret
 
 
+class PublicUserSerializer(serializers.ModelSerializer):
+    """What other users may see about a user."""
+    class Meta:
+        model = User
+        fields = ('id', 'username')
+
+
+class ContactSerializer(serializers.ModelSerializer):
+    """For the owner of a request or an invitation, who needs the address."""
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email')
+
+
 class ValueTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ValueType
         fields = '__all__'
+        read_only_fields = ('user',)
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
+        ret['user'] = PublicUserSerializer(instance.user).data
         return ret
 
 
@@ -77,10 +92,11 @@ class ContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Content
         fields = '__all__'
+        read_only_fields = ('user',)
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
+        ret['user'] = PublicUserSerializer(instance.user).data
         ret['is_youtube'] = hasattr(instance, 'youtubecontent')
         if ret['is_youtube']:
             ret['video_id'] = instance.youtubecontent.video_id
@@ -90,10 +106,22 @@ class ContentSerializer(serializers.ModelSerializer):
         return ret
 
 
-class SectionSerializer(serializers.ModelSerializer):
+class ReadableContentMixin:
+    """Accept only contents the user can read, with the error of an unknown one."""
+    def validate_content(self, content):
+        if self.instance and self.instance.content_id == content.pk:
+            return content
+        from .access import readable_contents
+        if not readable_contents(self.context['request'].user).filter(pk=content.pk).exists():
+            raise serializers.ValidationError(f'Invalid pk "{content.pk}" - object does not exist.')
+        return content
+
+
+class SectionSerializer(ReadableContentMixin, serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = '__all__'
+        read_only_fields = ('user',)
 
     def validate_webvtt(self, value):
         import webvtt
@@ -126,10 +154,11 @@ class YouTubeContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = YouTubeContent
         fields = '__all__'
+        read_only_fields = ('user',)
     
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
+        ret['user'] = PublicUserSerializer(instance.user).data
         return ret
 
 
@@ -149,6 +178,7 @@ class CurveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curve
         fields = '__all__'
+        read_only_fields = ('user',)
     
     def to_representation(self, instance):
         def generate_enquete_json(enquete, curve):
@@ -157,13 +187,23 @@ class CurveSerializer(serializers.ModelSerializer):
             data["answer"] = membership.answer
             return data
         ret = super().to_representation(instance)
-        ret['user'] = UserSerializer(User.objects.get(pk=ret['user'])).data
+        ret['user'] = PublicUserSerializer(instance.user).data
         ret['content'] = ContentSerializer(instance.content).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
         ret['enquete'] = [generate_enquete_json(enquete, instance) for enquete in Enquete.objects.filter(pk__in=ret['enquete'])]
         return ret
 
     def validate(self, attrs):
+        self.check_access(attrs)
+        if 'values' in attrs:
+            from .curve_values import clean_values
+            content = attrs.get('content') or self.instance.content
+            version = attrs.get('version') or self.instance.version
+            is_text = hasattr(content, 'upload') and content.upload.mime_type == 'text/plain'
+            try:
+                attrs['values'] = clean_values(attrs['values'], version, is_text)
+            except serializers.ValidationError as error:
+                raise serializers.ValidationError({'values': error.detail})
         answers = self.initial_data.get("enquete", [])
         if not isinstance(answers, list):
             raise serializers.ValidationError({"enquete": "Expected a list."})
@@ -177,6 +217,23 @@ class CurveSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"enquete": "Unknown or duplicate question."})
         return attrs
 
+    def check_access(self, attrs):
+        if 'request' not in self.context:
+            return
+        from rest_framework.exceptions import PermissionDenied
+        from .access import joined_requests, readable_contents
+        user = self.context['request'].user
+        content = attrs.get('content')
+        if (content and not (self.instance and self.instance.content_id == content.pk)
+                and not readable_contents(user).filter(pk=content.pk).exists()):
+            # The same error as for an unknown content.
+            raise serializers.ValidationError({"content": f'Invalid pk "{content.pk}" - object does not exist.'})
+        # A room name of a request marks the curve as an answer to it.
+        room_name = attrs.get('room_name')
+        if (room_name and Request.objects.filter(room_name=room_name).exists()
+                and not joined_requests(user).filter(room_name=room_name).exists()):
+            raise PermissionDenied("この依頼には回答できません。")
+
     def save(self, **kwargs):
         from django.db import transaction
         with transaction.atomic():
@@ -188,50 +245,28 @@ class CurveSerializer(serializers.ModelSerializer):
             return curve
 
 
-class CurveWithYouTubeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Curve
-        fields = '__all__'
-
-    def is_valid(self, raise_exception=False):
-        value_type = ValueType.objects.get_or_none(
-            title=self.initial_data["value_type"]["title"])
-        content = YouTubeContent.objects.get_or_none(
-            video_id=self.initial_data["youtube"]["video_id"])
-        if not content:
-            ser = YouTubeContentSerializer(data=self.initial_data["youtube"])
-            if ser.is_valid():
-                content = ser.save()
-            else:
-                return not bool(ser._errors)
-        if not value_type:
-            ser = ValueTypeSerializer(data=self.initial_data["value_type"])
-            if ser.is_valid():
-                value_type = ser.save()
-            else:
-                return not bool(ser._errors)
-        self.initial_data["content"] = content.id
-        self.initial_data["value_type"] = value_type.id
-        return super().is_valid(raise_exception)
-
-
-class RequestSerializer(serializers.ModelSerializer):
+class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
     class Meta:
         model = Request
         fields = '__all__'
+        read_only_fields = ('owner',)
     
     def to_representation(self, instance):
         def generate_user_json(user, request):
-            data = UserSerializer(user).data
+            data = ContactSerializer(user).data
             membership = user.relationparticipant_set.get(request=request)
             data["sended_mail"] = membership.sended_mail
             data["sended_mail_message"] = membership.message
             return data
         ret = super().to_representation(instance)
-        ret['owner'] = UserSerializer(User.objects.get(pk=ret['owner'])).data
+        ret['owner'] = PublicUserSerializer(instance.owner).data
         ret['content'] = ContentSerializer(Content.objects.get(pk=ret['content'])).data
         ret['value_type'] = ValueTypeSerializer(ValueType.objects.get(pk=ret['value_type'])).data
-        if len(ret['participants']) <= 10:
+        viewer = getattr(self.context.get('request'), 'user', None)
+        if viewer != instance.owner:
+            ret['participants'] = []
+            ret['is_many_participants'] = False
+        elif len(ret['participants']) <= 10:
             ret['participants'] = [generate_user_json(user, instance) for user in User.objects.filter(pk__in=ret['participants'])]
             ret['is_many_participants'] = False
         else:
@@ -247,9 +282,6 @@ class RequestSerializer(serializers.ModelSerializer):
         else:
             ret['is_included_section'] = False
         return ret
-    
-    def validate(self, attrs):
-        return attrs
     
     def create(self, validated_data):
         instance = Request.objects.create(

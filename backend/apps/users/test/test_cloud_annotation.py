@@ -1,3 +1,5 @@
+import os
+import re
 from urllib.parse import parse_qs, urlsplit
 from unittest.mock import patch
 from uuid import uuid4
@@ -8,7 +10,8 @@ from django.core.management import call_command, CommandError
 from io import StringIO
 from rest_framework.test import APIClient
 
-from users.models import CognitoIdentity, Curve, EmailUser, UploadedSource
+from users.models import (CognitoIdentity, Curve, EmailUser, Request, UploadedSource, ValueType,
+                          YouTubeContent)
 from users.util import prepare
 
 
@@ -78,6 +81,29 @@ class CloudAnnotationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response["Content-Type"].startswith("text/css"))
         response.close()
+
+    @patch.dict(os.environ, {"STAGE": "AWS"})
+    def test_input_screens_load_scripts_from_the_frontend(self):
+        user = EmailUser.objects.get(pk=self.sign_in()["id"])
+        content = YouTubeContent.objects.create(user=user, title="A video", video_id="abcdefghijk")
+        value_type = ValueType.objects.create(user=user, title="Joy")
+        item = Request.objects.create(owner=user, content=content, value_type=value_type, title="A request",
+                                      values=[])
+        curve = Curve.objects.create(user=user, content=content, value_type=value_type, version="1.0.0",
+                                     values=[{"x": 0, "y": 0}, {"x": 1, "y": 1}])
+        for screen, scripts in (
+                ("free-hand", ["utils", "MyYouTubeView", "GraphView", "FreeHandInputField",
+                               "ButtonAction", "ValueTypeList"]),
+                ("fold-line", ["utils", "MyYouTubeView", "FoldLineGraphView", "FoldLineInputField",
+                               "ButtonAction", "ValueTypeList"])):
+            for path in (f"/{screen}/?request={item.pk}", f"/{screen}/?video_id=abcdefghijk",
+                         f"/{screen}/{curve.pk}"):
+                with self.subTest(path=path):
+                    response = self.client.get(path)
+                    self.assertEqual(response.status_code, 200)
+                    # CloudFront serves /static/* from the emonotate-app bucket.
+                    local = re.findall(r'<script src="(/[^"]*)"', response.content.decode())
+                    self.assertEqual(local, [f"/static/users/js/{name}.js" for name in scripts])
 
     def test_restored_user_binding_is_idempotent(self):
         user = EmailUser.objects.create_user("restored", "reader@example.org")

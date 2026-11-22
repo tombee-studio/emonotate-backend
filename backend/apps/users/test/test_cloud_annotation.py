@@ -2,6 +2,7 @@ from urllib.parse import parse_qs, urlsplit
 from unittest.mock import patch
 from uuid import uuid4
 
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.core.management import call_command, CommandError
 from io import StringIO
@@ -50,6 +51,33 @@ class CloudAnnotationTests(TestCase):
         self.assertEqual(self.client.get("/api/me/").status_code, 401)
         self.assertEqual(self.sign_in("updated@example.org")["id"], user["id"])
         self.assertEqual(self.client.post("/api/login/", {"password": "old"}).status_code, 404)
+
+    def test_admin_requires_staff_cognito_session(self):
+        self.assertEqual(self.client.get("/admin/").status_code, 401)
+        user = EmailUser.objects.get(pk=self.sign_in()["id"])
+        self.assertRedirects(self.client.get("/admin/"), "/admin/login/?next=/admin/",
+                             fetch_redirect_response=False)
+
+        # A password must never open the admin, even for a superuser.
+        EmailUser.objects.create_superuser("root", "root@example.org", "password")
+        self.client.post("/admin/login/", {"username": "root", "password": "password"})
+        self.assertEqual(self.client.get("/admin/").status_code, 302)
+
+        user.is_staff = user.is_superuser = True
+        user.save()
+        self.assertEqual(self.client.get("/admin/").status_code, 200)
+        self.assertEqual(self.client.get("/admin/users/emailuser/").status_code, 200)
+        add = "/admin/auth/group/add/"
+        self.assertEqual(self.client.post(add, {"name": "Operators"}).status_code, 302)
+        self.assertTrue(Group.objects.filter(name="Operators").exists())
+        self.client.credentials()
+        self.assertEqual(self.client.post(add, {"name": "Forged"}).status_code, 403)
+
+    def test_admin_assets_are_served_below_admin(self):
+        response = self.client.get("/admin/static/admin/css/base.css")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response["Content-Type"].startswith("text/css"))
+        response.close()
 
     def test_restored_user_binding_is_idempotent(self):
         user = EmailUser.objects.create_user("restored", "reader@example.org")

@@ -1,12 +1,12 @@
 name: Test
 
-# Runs on PRs to develop/master and is reused by the deploy workflows,
+# Runs on PRs to develop/main and is reused by the deploy workflows,
 # so a failing test blocks both merging (with branch protection) and deploying.
 on:
   pull_request:
     branches:
       - develop
-      - master
+      - main
   workflow_call:
 
 permissions:

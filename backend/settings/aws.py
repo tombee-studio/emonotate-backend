@@ -24,7 +24,13 @@ if options.setdefault("sslmode", "require") not in ("require", "verify-ca", "ver
     raise ImproperlyConfigured("DATABASE_URL requires TLS")
 db.update(CONN_MAX_AGE=0, DISABLE_SERVER_SIDE_CURSORS=True)
 
-MIDDLEWARE = [*MIDDLEWARE, "users.cognito.RequireCognitoSession"]
+# WhiteNoise goes right after SecurityMiddleware (first in common.MIDDLEWARE).
+MIDDLEWARE = [
+    MIDDLEWARE[0],
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    *MIDDLEWARE[1:],
+    "users.cognito.RequireCognitoSession",
+]
 COGNITO_POOL_ID = os.environ["COGNITO_POOL_ID"]
 COGNITO_DOMAIN = os.environ["COGNITO_DOMAIN"]
 COGNITO_CLIENT_ID = os.environ["COGNITO_CLIENT_ID"]
@@ -49,8 +55,12 @@ MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaw
 
 # --- Static files ---
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATIC_URL = "/static/"
+# CloudFront sends /static/* to the frontend bucket and /admin/* to this app,
+# so the admin assets are served from the installed packages below /admin/.
+STATIC_ROOT = None
+STATIC_URL = "/admin/static/"
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = False
 STORAGES = {
     "default": {"BACKEND": "storages.backends.s3.S3Storage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},

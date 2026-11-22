@@ -143,7 +143,7 @@ class SectionSerializer(ReadableContentMixin, serializers.ModelSerializer):
         try:
             webvtt.read_buffer(io.StringIO(value))
             return value
-        except webvtt.errors.MalformedCaptionError as er:
+        except (webvtt.errors.MalformedCaptionError, webvtt.errors.MalformedFileError):
             raise ValidationError("区間情報が正しい形式に則っていません。WebVTT形式で入力してください。")
 
 
@@ -186,7 +186,7 @@ class EnqueteSerializer(serializers.ModelSerializer):
 class GoogleFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = GoogleForm
-        fields = '__all__'
+        exclude = ('user',)
 
 
 class CurveSerializer(serializers.ModelSerializer):

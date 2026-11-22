@@ -21,6 +21,8 @@ def prepare():
           'view_content',       'add_content',      'change_content', 'delete_content',
           'view_valuetype',     'add_valuetype',    'change_valuetype', 'delete_valuetype',
           'view_enquete', 'add_enquete', 'change_enquete', 'delete_enquete',
+          'view_section', 'add_section', 'change_section', 'delete_section',
+          'view_googleform', 'add_googleform', 'change_googleform', 'delete_googleform',
           'view_youtubecontent','add_youtubecontent', 'change_youtubecontent', 'delete_youtubecontent',
           'view_emailuser',     'add_emailuser',    'change_emailuser', 'delete_emailuser',
           'view_curve',         'add_curve',    'change_curve', 'delete_curve'])]:

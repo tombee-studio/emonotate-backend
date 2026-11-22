@@ -364,10 +364,15 @@ class SectionViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class GoogleFormViewSet(viewsets.ModelViewSet):
+class GoogleFormViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
     serializer_class = GoogleFormSerializer
     queryset = GoogleForm.objects.all().order_by('created').reverse()
     search_fields = ['title', 'created']
+
+    def get_readable(self):
+        from django.db.models import Q
+        requests = access.joined_requests(self.request.user)
+        return self.queryset.filter(Q(user=self.request.user) | Q(pk__in=requests.values('google_form')))
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -713,38 +718,21 @@ class ChangePasswordView(View):
         return HttpResponse("パスワードを変更しました", status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SetSectionView(View):
     def put(self, request, pk, *args, **kwargs):
-        params = json.loads(request.body)
-        try:
-            req = get_object_or_404(Request, pk=pk, owner=request.user)
-        except Request.DoesNotExist:
-            return HttpResponse("リクエストが存在しません", status=200)
-        try:
-            section = Section.objects.get(pk=params["section"], user=request.user)
-        except Section.DoesNotExist:
-            return HttpResponse("区間情報が存在しません", status=200)
-        req.section = section
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
+        req.section = get_object_or_404(Section, pk=json.loads(request.body)["section"], user=request.user)
         req.save()
         return HttpResponse("区間情報を変更しました", status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SetGoogleFormView(View):
     def put(self, request, pk, *args, **kwargs):
-        params = json.loads(request.body)
-        try:
-            req = get_object_or_404(Request, pk=pk, owner=request.user)
-        except Request.DoesNotExist:
-            return HttpResponse("リクエストが存在しません", status=200)
-        try:
-            google_form = GoogleForm.objects.get(pk=params["google_form"])
-        except GoogleForm.DoesNotExist:
-            return HttpResponse("区間情報が存在しません", status=200)
-        req.google_form = google_form
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
+        req.google_form = get_object_or_404(GoogleForm, pk=json.loads(request.body)["google_form"],
+                                            user=request.user)
         req.save()
-        return HttpResponse("区間情報を変更しました", status=200)
+        return HttpResponse("Google フォームを変更しました", status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

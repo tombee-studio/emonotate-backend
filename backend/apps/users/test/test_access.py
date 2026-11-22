@@ -1,5 +1,4 @@
 import json
-import os
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group
@@ -213,24 +212,12 @@ class AccessTests(TestCase):
         self.request.refresh_from_db()
         self.assertEqual(self.request.section, section)
 
-    @patch.dict(os.environ, {"STAGE": "AWS"})
-    def test_input_screens_follow_the_request_rules(self):
-        self.request.content = self.video
-        self.request.description = "</script><script>alert(1)</script>"
-        self.request.save()
-        for screen in ("free-hand", "fold-line"):
-            path = f"/{screen}/?request={self.request.pk}"
-            for user, expected in ((self.owner, 200), (self.participant, 200), (self.guest, 404),
-                                   (self.researcher, 404)):
-                self.assertEqual(self.api(user).get(path).status_code, expected)
-            page = self.api(self.participant).get(path).content.decode()
-            self.assertNotIn("<script>alert", page)
-            self.assertNotIn("second@example.org", page)
-            page = self.api(self.guest).get(f"/{screen}/", {
-                "video_id": 'x";alert(1)//\\', "room_name": "</script><script>alert(1)</script>"}).content.decode()
-            self.assertNotIn("<script>alert", page)
-            self.assertNotIn('";alert', page)
-            self.assertEqual(self.api(self.guest).get(f"/{screen}/?request=x").status_code, 404)
+    def test_axis_type_in_use_is_kept(self):
+        path, api = f"/api/valuetypes/{self.value_type.pk}/", self.api(self.owner)
+        self.assert_status(403, api.patch(path, {"axis_type": 2}, format="json"))
+        self.assert_status(200, api.patch(path, {"axis_type": 1, "title": "Renamed"}, format="json"))
+        unused = ValueType.objects.create(user=self.owner, title="Unused")
+        self.assert_status(200, api.patch(f"/api/valuetypes/{unused.pk}/", {"axis_type": 2}, format="json"))
 
     def test_owner_reads_the_answers_to_a_request(self):
         answers = [self.curve(user, room_name=self.request.room_name)

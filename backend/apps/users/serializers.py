@@ -215,8 +215,12 @@ class CurveSerializer(serializers.ModelSerializer):
             content = attrs.get('content') or self.instance.content
             version = attrs.get('version') or self.instance.version
             is_text = hasattr(content, 'upload') and content.upload.mime_type == 'text/plain'
+            # The model falls back to value type 1.
+            value_type = (attrs.get('value_type') or (self.instance and self.instance.value_type)
+                          or ValueType.objects.filter(pk=1).first())
             try:
-                attrs['values'] = clean_values(attrs['values'], version, is_text)
+                attrs['values'] = clean_values(attrs['values'], version, is_text,
+                                               bool(value_type) and value_type.axis_type == 2)
             except serializers.ValidationError as error:
                 raise serializers.ValidationError({'values': error.detail})
         answers = self.initial_data.get("enquete", [])

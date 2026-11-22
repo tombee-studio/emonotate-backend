@@ -273,6 +273,8 @@ class EnqueteAnswer(models.Model):
 
 
 class GoogleForm(models.Model):
+    # Forms saved before migration 0003 that no request uses have no owner.
+    user = models.ForeignKey(EmailUser, blank=True, null=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=1024, blank=True, default="")
     url = models.URLField(blank=False)
     created = models.DateTimeField(auto_now_add=True)

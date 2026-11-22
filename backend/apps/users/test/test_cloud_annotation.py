@@ -101,9 +101,10 @@ class CloudAnnotationTests(TestCase):
                 with self.subTest(path=path):
                     response = self.client.get(path)
                     self.assertEqual(response.status_code, 200)
-                    # CloudFront serves /static/* from the emonotate-app bucket.
+                    # CloudFront serves /static/* from the emonotate-app bucket. Browsers keep these files
+                    # for a year, so raise the version when one of them changes.
                     local = re.findall(r'<script src="(/[^"]*)"', response.content.decode())
-                    self.assertEqual(local, [f"/static/users/js/{name}.js" for name in scripts])
+                    self.assertEqual(local, [f"/static/users/js/{name}.js?v=2" for name in scripts])
 
     def test_restored_user_binding_is_idempotent(self):
         user = EmailUser.objects.create_user("restored", "reader@example.org")

@@ -106,6 +106,21 @@ class ContentSerializer(serializers.ModelSerializer):
         return ret
 
 
+class AnswerSerializer(serializers.ModelSerializer):
+    """A row of the answers to a request; the points are read from the curve itself."""
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Curve
+        fields = ('id', 'created', 'user', 'kind', 'version', 'locked')
+
+    def get_user(self, curve):
+        data = PublicUserSerializer(curve.user).data
+        if curve.user_id in self.context['emails']:
+            data['email'] = self.context['emails'][curve.user_id]
+        return data
+
+
 class ReadableContentMixin:
     """Accept only contents the user can read, with the error of an unknown one."""
     def validate_content(self, content):

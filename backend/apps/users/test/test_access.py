@@ -3,7 +3,9 @@ import os
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
 
 from users.models import (Content, Curve, EmailUser, Enquete, EnqueteAnswer, Request, Section, UploadedSource,
@@ -227,6 +229,47 @@ class AccessTests(TestCase):
             self.assertNotIn("<script>alert", page)
             self.assertNotIn('";alert', page)
             self.assertEqual(self.api(self.guest).get(f"/{screen}/?request=x").status_code, 404)
+
+    def test_owner_reads_the_answers_to_a_request(self):
+        answers = [self.curve(user, room_name=self.request.room_name)
+                   for user in (self.participant, self.second, self.guest)]
+        other = Request.objects.create(owner=self.researcher, content=self.video, value_type=self.value_type,
+                                       title="Other", values=[])
+        foreign = self.curve(self.participant, room_name=other.room_name)
+        path = f"/api/requests/{self.request.pk}/curves/"
+        api = self.api(self.owner)
+        data = api.get(path).json()
+        self.assertEqual([row["id"] for row in data["models"]], [curve.pk for curve in reversed(answers)])
+        self.assertEqual(data["models"][2]["user"], {"id": self.participant.pk, "username": "participant",
+                                                     "email": "participant@example.org"})
+        # Not a participant, so the owner does not see the address.
+        self.assertEqual(data["models"][0]["user"], {"id": self.guest.pk, "username": "guest"})
+        page = api.get(path, {"page": 2, "page_size": 2}).json()
+        self.assertEqual([row["id"] for row in page["models"]], [answers[0].pk])
+        self.assertEqual(page["pagination"]["total_entries"], 3)
+        for curve in answers:
+            self.assertEqual(api.get(f"/api/curves/{curve.pk}/").json()["values"], VALUES)
+            for method in ("put", "patch", "delete"):
+                self.assert_status(404, getattr(api, method)(f"/api/curves/{curve.pk}/"))
+        self.assert_status(404, api.get(f"/api/curves/{foreign.pk}/"))
+        self.assert_status(404, api.get(f"/api/requests/{other.pk}/curves/"))
+        for user in (self.participant, self.relative, self.researcher, self.guest):
+            self.assert_status(404, self.api(user).get(path))
+        for user in (self.second, self.relative, self.researcher):
+            self.assert_status(404, self.api(user).get(f"/api/curves/{answers[0].pk}/"))
+        self.assertEqual(api.get("/api/curves/").json()["models"], [])
+
+    def test_answers_are_listed_with_a_fixed_number_of_queries(self):
+        path = f"/api/requests/{self.request.pk}/curves/?page_size=50"
+        api = self.api(self.owner)
+        counts = []
+        for _ in range(2):
+            for _ in range(10):
+                self.curve(self.participant, room_name=self.request.room_name)
+            with CaptureQueriesContext(connection) as queries:
+                self.assert_status(200, api.get(path))
+            counts.append(len(queries))
+        self.assertEqual(counts[0], counts[1])
 
     @patch("users.views.storage")
     def test_export_is_for_the_owner(self, storage):

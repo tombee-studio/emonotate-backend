@@ -23,6 +23,7 @@ from rest_framework.response import Response
 from rest_framework import filters
 
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
 
 from .models import *
@@ -405,6 +406,8 @@ class CurveHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class OwnCurveViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
+        if self.action == 'retrieve':
+            return access.readable_curves(self.request.user)
         return super().get_queryset().filter(user=self.request.user)
 
     def perform_create(self, serializer):
@@ -475,7 +478,16 @@ class RequestViewSet(viewsets.ModelViewSet):
             return access.relative_requests(self.request.user).order_by('created').reverse()
         else:
             return access.readable_requests(self.request.user).order_by('created').reverse()
-    
+
+    @action(detail=True, methods=['get'])
+    def curves(self, request, pk=None):
+        req = get_object_or_404(Request, pk=pk, owner=request.user)
+        curves = Curve.objects.filter(room_name=req.room_name).select_related('user').order_by('-created', '-pk')
+        page = self.paginate_queryset(curves)
+        # The owner knows the addresses of the participants only.
+        emails = dict(req.participants.filter(pk__in=[curve.user_id for curve in page]).values_list('pk', 'email'))
+        return self.get_paginated_response(AnswerSerializer(page, many=True, context={'emails': emails}).data)
+
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('users.add_request'):
             return Response("permission denied", status=403)

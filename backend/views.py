@@ -9,10 +9,11 @@ from django.conf import settings
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, render, redirect
 
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 
 from users.serializers import UserSerializer, RequestSerializer, CurveSerializer
-from users.models import Request, Curve
+from users.access import joined_requests
+from users.models import Curve
 from django.views.generic import View, DetailView
 from django.middleware.csrf import get_token
 
@@ -47,26 +48,39 @@ def app(request):
     return render(request, template, context)
 
 
+def script_json(data):
+    """JSON that cannot close the <script> element it is written into."""
+    return json.dumps(data).replace("<", "\\u003C")
+
+
+def requested(request):
+    try:
+        pk = int(request.GET["request"])
+    except ValueError:
+        raise Http404
+    return get_object_or_404(joined_requests(request.user), pk=pk)
+
+
 class FreeHandView(View):
     def get(self, request, *args, **kwargs):
         curve_json = Curve.get_empty_json()
         if "request" in request.GET:
-            req = Request.objects.get(pk=int(request.GET.get("request")))
+            req = requested(request)
             video_id = req.content.youtubecontent.video_id
             curve_json["content"] = req.content.id
             curve_json["value_type"] = req.value_type.id
             curve_json["user"] = request.user.id
             curve_json["locked"] = True
             curve_json["room_name"] = req.room_name
-            request_json = RequestSerializer(req).data
+            request_json = RequestSerializer(req, context={"request": request}).data
             context = {
                 "is_ownself": request.user.is_authenticated,
                 "option": "new",
                 "video_id": video_id,
                 "has_google_form": req.google_form != None,
                 "request_model": req,
-                "curve_json": json.dumps(curve_json),
-                "request_json": json.dumps(request_json),
+                "curve_json": script_json(curve_json),
+                "request_json": script_json(request_json),
                 "stage": os.environ.get("STAGE").lower()
             }
             template = 'backend/free-hand.html'
@@ -82,7 +96,7 @@ class FreeHandView(View):
                 "is_ownself": request.user.is_authenticated,
                 "option": "new",
                 "video_id": video_id,
-                "curve_json": json.dumps(curve_json),
+                "curve_json": script_json(curve_json),
                 "request_json": {},
                 "stage": os.environ.get("STAGE").lower()
             }
@@ -102,7 +116,7 @@ class FreeHandDetailView(View):
             "is_ownself": curve.user.id == request.user.id,
             "option": "detail",
             "video_id": curve.content.youtubecontent.video_id,
-            "curve_json": json.dumps(curve_dict),
+            "curve_json": script_json(curve_dict),
             "request_json": {},
             "ogp_title": f"{curve.content.title}を視聴したときの私の{curve.value_type.title}曲線！！",
             "stage": staging
@@ -119,7 +133,7 @@ class FoldLineView(View):
         curve_json = Curve.get_empty_json()
         staging = os.environ.get("STAGE").lower()
         if "request" in request.GET:
-            req = Request.objects.get(pk=int(request.GET.get("request")))
+            req = requested(request)
             video_id = req.content.youtubecontent.video_id
             curve_json["content"] = req.content.id
             curve_json["value_type"] = req.value_type.id
@@ -128,15 +142,15 @@ class FoldLineView(View):
             curve_json["locked"] = True
             curve_json["room_name"] = req.room_name
             curve_json["kind"] = 2
-            request_json = RequestSerializer(req).data
+            request_json = RequestSerializer(req, context={"request": request}).data
             context = {
                 "is_ownself": request.user.is_authenticated,
                 "video_id": video_id,
                 "option": "new",
                 "has_google_form": req.google_form != None,
                 "request_model": req,
-                "curve_json": json.dumps(curve_json),
-                "request_json": json.dumps(request_json),
+                "curve_json": script_json(curve_json),
+                "request_json": script_json(request_json),
                 "stage": staging
             }
             template = 'backend/fold-line.html'
@@ -152,7 +166,7 @@ class FoldLineView(View):
                 "is_ownself": request.user.is_authenticated,
                 "option": "new",
                 "video_id": video_id,
-                "curve_json": json.dumps(curve_json)
+                "curve_json": script_json(curve_json)
             }
             template = 'backend/fold-line.html'
         response = render(request, template, context)
@@ -171,7 +185,7 @@ class FoldLineDetailView(View):
             "option": "detail",
             "is_ownself": curve.user.id == request.user.id,
             "video_id": curve.content.youtubecontent.video_id,
-            "curve_json": json.dumps(curve_dict),
+            "curve_json": script_json(curve_dict),
             "request_json": {},
             "stage": staging
         }

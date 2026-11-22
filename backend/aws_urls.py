@@ -26,7 +26,6 @@ urlpatterns = [
     path("api/send/<int:pk>", users.send_request_mail),
     path("api/get_download_curve_data/<int:pk>", users.get_download_curve_data),
     path("api/download_curve_data/", users.download_curve_data),
-    path("api/reset_email_addresses/<int:pk>", users.reset_email_addresses),
     path("api/participants/<int:pk>", users.ParticipantView.as_view()),
     path("api/inviting_tokens/", users.InvitingTokenView.as_view()),
     path("api/relative_users/", users.RelativeUsersView.as_view()),

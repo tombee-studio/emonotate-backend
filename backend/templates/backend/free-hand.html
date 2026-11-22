@@ -16,7 +16,7 @@
         <script src="/static/users/js/utils.js"></script>
         <script>
             let option = "{{option}}";
-            let youtubeID = "{{video_id}}";
+            let youtubeID = "{{video_id|escapejs}}";
             let youtubePlayerID = "player";
             let graphViewId = "stage_container";
             let curve = {{curve_json | safe}};

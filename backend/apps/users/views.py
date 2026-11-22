@@ -32,6 +32,7 @@ from .serializers import *
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from .sources import storage
+from . import access
 from django.http import HttpResponse
 
 from django.contrib.auth import authenticate, login, logout
@@ -301,11 +302,29 @@ class LogoutAPIView(View):
         return JsonResponse({'is_authenticated': False})
 
 
+class OwnerWriteMixin:
+    """Everyone can read what get_readable() allows; only the owner can change it."""
+    def get_readable(self):
+        return super().get_queryset()
+
+    def get_queryset(self):
+        if self.request.method not in ("GET", "HEAD", "OPTIONS"):
+            return super().get_queryset().filter(user=self.request.user)
+        return self.get_readable()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
-class ValueTypeViewSet(viewsets.ModelViewSet):
+class ValueTypeViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
     serializer_class = ValueTypeSerializer
     queryset = ValueType.objects.all().order_by('created')
     search_fields = ['title']
+
+    def perform_destroy(self, instance):
+        access.check_value_type_unused(instance, self.request.user)
+        instance.delete()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -318,31 +337,29 @@ class ValueTypeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ContentViewSet(viewsets.ModelViewSet):
+class ContentViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
     serializer_class = ContentSerializer
     queryset = Content.objects.all().order_by('created').reverse()
     search_fields = ['title']
 
+    def get_readable(self):
+        return access.readable_contents(self.request.user).order_by('-created')
 
-    def get_queryset(self):
-        from django.db.models import Q
-        if self.request.method not in ("GET", "HEAD", "OPTIONS"):
-            return self.queryset.filter(user=self.request.user)
-        return self.queryset.filter(Q(upload__isnull=True) | Q(user=self.request.user) |
-                                    Q(request__participants=self.request.user)).distinct()
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def perform_update(self, serializer):
-        serializer.save(user=self.request.user)
+    def perform_destroy(self, instance):
+        access.check_content_unused(instance, self.request.user)
+        instance.delete()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class SectionViewSet(viewsets.ModelViewSet):
+class SectionViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
     serializer_class = SectionSerializer
     queryset = Section.objects.all().order_by('created').reverse()
     search_fields = ['title', 'created']
+
+    def get_readable(self):
+        from django.db.models import Q
+        requests = access.joined_requests(self.request.user)
+        return self.queryset.filter(Q(user=self.request.user) | Q(pk__in=requests.values('section')))
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -357,6 +374,14 @@ class EnqueteViewSet(viewsets.ModelViewSet):
     serializer_class = EnqueteSerializer
     queryset = Enquete.objects.all().order_by('created').reverse()
     search_fields = ['title']
+
+    def perform_update(self, serializer):
+        access.check_enquete_unused(serializer.instance, self.request.user)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        access.check_enquete_unused(instance, self.request.user)
+        instance.delete()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -385,16 +410,18 @@ class OwnCurveViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    def perform_update(self, serializer):
-        if serializer.instance.locked:
+    def check_unlocked(self, curve):
+        if curve.locked:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("この曲線はロックされています。")
+
+    def perform_update(self, serializer):
+        self.check_unlocked(serializer.instance)
         serializer.save(user=self.request.user)
 
-
-class CurveWithYouTubeContentViewSet(OwnCurveViewSet):
-    serializer_class = CurveWithYouTubeSerializer
-    queryset = Curve.objects.all().order_by('created').reverse()
+    def perform_destroy(self, instance):
+        self.check_unlocked(instance)
+        instance.delete()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -416,14 +443,18 @@ class UserViewSet(viewsets.ModelViewSet):
             if self.request.method not in ('GET', 'HEAD', 'OPTIONS'):
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("アカウントはCognitoで管理されています。")
-        return super().get_queryset()
+        return super().get_queryset().filter(pk=self.request.user.pk)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class YouTubeContentViewSet(viewsets.ModelViewSet):
+class YouTubeContentViewSet(OwnerWriteMixin, viewsets.ModelViewSet):
     serializer_class = YouTubeContentSerializer
     queryset = YouTubeContent.objects.all().order_by('created').reverse()
     search_fields = ['=video_id']
+
+    def perform_destroy(self, instance):
+        access.check_content_unused(instance, self.request.user)
+        instance.delete()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -441,12 +472,9 @@ class RequestViewSet(viewsets.ModelViewSet):
         elif role == 'participant':
             return self.request.user.request_set.all().order_by('created').reverse()
         elif role == 'relative':
-            user = self.request.user
-            invited_user_requests = self.queryset.filter(owner__in=user.emailuser_set.all())
-            inviting_user_requests = self.queryset.filter(owner__in=user.inviting_users.all())
-            return invited_user_requests.union(inviting_user_requests).order_by('created').reverse()
+            return access.relative_requests(self.request.user).order_by('created').reverse()
         else:
-            return self.queryset.reverse()
+            return access.readable_requests(self.request.user).order_by('created').reverse()
     
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('users.add_request'):
@@ -557,7 +585,7 @@ class ParticipantView(View):
                     "number": len(req.participants.all())
                 },
                 status=200)
-        ser = UserSerializer(req.participants.all(), many=True)
+        ser = ContactSerializer(req.participants.all(), many=True)
         data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
         return JsonResponse({
             "is_error": False,
@@ -585,7 +613,7 @@ class ParticipantView(View):
                     "number": len(req.participants.all())
                 },
                 status=200)
-        ser = UserSerializer(req.participants.all(), many=True)
+        ser = ContactSerializer(req.participants.all(), many=True)
         data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
         return JsonResponse({
             "is_error": False,
@@ -606,7 +634,7 @@ class ParticipantView(View):
                     "number": len(req.participants.all())
                 },
                 status=200)
-        ser = UserSerializer(req.participants.all(), many=True)
+        ser = ContactSerializer(req.participants.all(), many=True)
         data = json.dumps(ser.data, default=ParticipantView.json_dt_patch)
         return JsonResponse({
             "is_error": False,
@@ -630,7 +658,7 @@ class RelativeUsersView(View):
         user = request.user
         invited_users = user.emailuser_set.all()
         inviting_users = user.inviting_users.all()
-        ser = UserSerializer(invited_users.union(inviting_users).order_by("id"), many=True)
+        ser = ContactSerializer(invited_users.union(inviting_users).order_by("id"), many=True)
         data = json.dumps(ser.data, default=RelativeUsersView.json_dt_patch)
         return JsonResponse({
             "is_error": False,
@@ -682,7 +710,7 @@ class SetSectionView(View):
         except Request.DoesNotExist:
             return HttpResponse("リクエストが存在しません", status=200)
         try:
-            section = Section.objects.get(pk=params["section"])
+            section = Section.objects.get(pk=params["section"], user=request.user)
         except Section.DoesNotExist:
             return HttpResponse("区間情報が存在しません", status=200)
         req.section = section
@@ -759,7 +787,7 @@ def send_request_mails(req, participants):
             membership.save()
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@require_http_methods(["POST"])
 def send_request_mail(request, pk):
     req = get_object_or_404(Request, pk=pk, owner=request.user)
     emails = request.GET.get("targets")
@@ -772,24 +800,8 @@ def send_request_mail(request, pk):
     send_request_mails(req, participants)
     req.expiration_date = datetime.now() + timedelta(minutes=30)
     req.save()
-    data = RequestSerializer(req).data
+    data = RequestSerializer(req, context={"request": request}).data
     return JsonResponse(data=data, status=200)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-def reset_email_addresses(request, pk):
-    request = get_object_or_404(Request, pk=pk, owner=request.user)
-    for participant in request.participants.all():
-        participant.email = ""
-        participant.save()
-    data = RequestSerializer(request).data
-    return JsonResponse(data=data)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-def get_email_list(request, pk):
-    request = Request.objects.get(pk=pk)
-    return HttpResponse(status=200)
 
 
 def s3_download_url(key):
@@ -803,11 +815,16 @@ def get_download_curve_data(request, pk):
     req = get_object_or_404(Request, pk=pk, owner=request.user)
     file_name = f"{req.room_name}.json"
     key = f"exports/{request.user.pk}/{file_name}"
-    curves = Curve.objects.filter(room_name=req.room_name)
+    curves = CurveSerializer(Curve.objects.filter(room_name=req.room_name), many=True).data
+    # The owner knows the participants, so their addresses stay in the export.
+    emails = dict(req.participants.values_list("pk", "email"))
+    for curve in curves:
+        if curve["user"]["id"] in emails:
+            curve["user"]["email"] = emails[curve["user"]["id"]]
     storage().put_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key,
-                         Body=json.dumps(CurveSerializer(curves, many=True).data), ContentType="application/json")
+                         Body=json.dumps(curves), ContentType="application/json")
     return JsonResponse({"state": "SUCCESSED", "url": s3_download_url(key), "file_name": file_name,
-                         "request": RequestSerializer(req).data})
+                         "request": RequestSerializer(req, context={"request": request}).data})
 
 
 @method_decorator(csrf_exempt, name='dispatch')

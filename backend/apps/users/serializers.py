@@ -267,6 +267,12 @@ class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
         # The room name marks the answers, and a section or form is set by its own view.
         read_only_fields = ('owner', 'room_name', 'section', 'google_form', 'state_processing_to_download')
     
+    def validate(self, attrs):
+        starts_at, ends_at = (attrs.get(name, getattr(self.instance, name, None)) for name in ('starts_at', 'ends_at'))
+        if starts_at and ends_at and starts_at >= ends_at:
+            raise serializers.ValidationError({'ends_at': '受付終了は受付開始より後にしてください。'})
+        return attrs
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret['owner'] = PublicUserSerializer(instance.owner).data
@@ -276,6 +282,9 @@ class RequestSerializer(ReadableContentMixin, serializers.ModelSerializer):
         viewer = getattr(self.context.get('request'), 'user', None)
         if viewer == instance.owner:
             ret['participants_count'] = instance.participants.count()
+        if viewer:
+            from .acceptance import closed_reason
+            ret['closed_reason'] = closed_reason(instance, viewer)
         ret['enquetes'] = [EnqueteSerializer(enquete).data for enquete in Enquete.objects.filter(pk__in=ret['enquetes'])]
         ret['has_google_form'] = ret['google_form'] != None
         if ret['google_form'] != None:

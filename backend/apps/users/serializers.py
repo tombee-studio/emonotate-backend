@@ -195,6 +195,15 @@ class CurveSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         self.check_access(attrs)
+        if 'values' in attrs:
+            from .curve_values import clean_values
+            content = attrs.get('content') or self.instance.content
+            version = attrs.get('version') or self.instance.version
+            is_text = hasattr(content, 'upload') and content.upload.mime_type == 'text/plain'
+            try:
+                attrs['values'] = clean_values(attrs['values'], version, is_text)
+            except serializers.ValidationError as error:
+                raise serializers.ValidationError({'values': error.detail})
         answers = self.initial_data.get("enquete", [])
         if not isinstance(answers, list):
             raise serializers.ValidationError({"enquete": "Expected a list."})
